@@ -1,10 +1,13 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 #	@(#) groupinfo.pl - Find high and low article numbers in groups
+#	$Header$
 #
 # groupinfo.pl groupname ...
 
-use Net::NNTP;
-use Newsgroup;
+use strict;
+
+use Net::NNTP qw();
+use Newsgroup qw();
 
 my $newsserver = $ENV{NNTPSERVER} || 'news.zeta.org.au';
 
@@ -14,15 +17,18 @@ if (!defined $s) {
 	exit(4);
 }
 
-foreach $group (@ARGV) {
+my $rc = 0;
+
+foreach my $group (@ARGV) {
 	my($art_n,$art_low,$art_high,$name) = $s->group($group);
 
 	if ($name eq '') {
-		print "$group does not exist.\n";
+		print "No such group: $group\n";
+		$rc |= 2;
 		next;
 	}
 
-	print "$group $art_n articles from $art_low to $art_high";
+	print "Ok: $group $art_n articles from $art_low to $art_high";
 
 	my $g = new Newsgroup(name=>$group, nntp_server=>$s);
 	my $flags = $g->group_flags();
@@ -38,4 +44,4 @@ foreach $group (@ARGV) {
 
 $s->quit();
 
-exit(0);
+exit($rc);
