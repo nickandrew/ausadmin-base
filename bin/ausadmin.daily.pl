@@ -39,12 +39,14 @@ sub realpost {
      my $filename=shift;
      my ($path,$vote,$name)=m{(.*)/([^/]*)/(.*)}g;
      
-     if ($debug) {
-	  warn "sendnewgroup.pl $path/$vote/$name $path/$vote/newgroup.post.real\n";
-     } else {
-	  system ("sendnewgroup.pl $path/$vote/$name $path/$vote/newgroup.post.real");
+     if (-e "$path/$vote/newgroup.post.real") {
+	  if ($debug) {
+	       warn "sendnewgroup.pl $path/$vote/$name $path/$vote/newgroup.post.real\n";
+	  } else {
+	       system ("sendnewgroup.pl $path/$vote/$name $path/$vote/newgroup.post.real");
+	  }
+	  
      }
-     
 }
 
 sub fakepost_phil {
@@ -53,7 +55,7 @@ sub fakepost_phil {
      my $filename=shift;
      my ($path,$vote,$name)=m{(.*)/([^/]*)/(.*)}g;
 
-     if (-e "newgroup.post.fake.phil") {
+     if (-e "$path/$vote/newgroup.post.fake.phil") {
 	  if ($debug) {
 	       warn ("sendnewgroup.pl $path/$vote/$name $path/$vote/newgroup.post.fake.phil\n");
 	  } else {

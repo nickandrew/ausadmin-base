@@ -14,7 +14,7 @@ open POST,">/tmp/schedule.$$.$^T" or die "Unable to create schedule.";
 
 while (<SCHED>) {
      my ($group,$firstpostdate,$interval,$count)=split /\t/;
-     
+
      if ($now>$firstpostdate) {
 	  &sendmessage($group);
 	  
@@ -46,3 +46,27 @@ sub sendmessage {
        system "cat $filename|signcontrol|rnews";
   }
 }
+
+__END__
+
+=pod
+
+=head1 NAME
+
+sendnewgroup schedulefilename newsgroupfilename
+
+=head1 SYNOPSIS
+
+posts newsgroupfilename dependent on the schedule layed out in 
+schedulefilename.  The format of this file is as followed.
+
+groupnanme\tnextdate\tintervil\tcount
+
+Where groupnanme is the name of the group (ignored present for backwards 
+compatablity.
+
+nextdate is the date when the next new group will be issued in seconds since 
+epock
+
+interval is the time between issueings in seconds.
+

@@ -1,7 +1,5 @@
 #!/usr/bin/perl -w
 
-sub strict;
-
 # Makes the Call For Votes post from a template and the group charter
 # and outputs to STDOUT. Also creates a group configuration file with
 # only one line - the end date (in system time (s))
@@ -120,8 +118,15 @@ Addresses of all voters will be published in the final voting results list.
   Download it from http://aus.news-admin.org/ausadmin.asc now!   --nick ]
 EOMEND
 
+
 close(P);
-# '
+
+for my $group (@newsgroup) {
+  open(CHARTER, ">$BaseDir/$group/charter") or die "Unable to write charter";
+  print CHARTER join "\n",@{$Charter{$newsgroup}};
+}
+
+
 
 # This sub grabs the required info from the RFD piped into the script.
 

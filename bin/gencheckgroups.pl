@@ -39,7 +39,7 @@ $now = sprintf "%d-%02d-%02d %02d:%02d:%02d", $year, $mon, $mday, $hour, $min, $
 	'X-PGPKey' => '',
 	'Organization' => '',
 	'Path' => 'aus.news-admin.org|ausadmin',
-	'Message-id' => "$^T$$ausadmin\@aus.news-admin.org",
+#	'Message-id' => "$^T$$ausadmin\@aus.news-admin.org",
         'Date' => "$mday $monthname $year $hour:$min:$sec",
 );
 

@@ -27,14 +27,14 @@ cp tmp/checkgroups.$$ data/checkgroups.msg
 #  Post the messages
 #----------------------------------------------------------------------------
 
-rnews < tmp/grouplist.$$
+inews -h  tmp/grouplist.$$
 s=$?
 if [ $s -ne 0 ] ; then
-	echo "inews returned status $s"
+	echo "rnews returned status $s"
 	rc=2
 fi
 
-rnews  < tmp/checkgroups.$$
+rnews -v tmp/checkgroups.$$
 s=$?
 if [ $s -ne 0 ] ; then
 	echo "inews returned status $s"
