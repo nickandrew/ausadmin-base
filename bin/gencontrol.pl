@@ -61,11 +61,13 @@ sub makemessage ( $$$ ) {
 	if ($newgroup) {
 		$post = donewgroup($moderated,$from,$vote);
 	} else {
+		# TODO ...  stuff for rmgroup
 		die "rmgroup not defined!";
-# Do stuff for rmgroup
 	}
 
-	open FILE,">$file" or die "Unable to open $file: $!";
+	if (!open(FILE, ">$file") {
+		die "Unable to open $file: $!";
+	}
 	print FILE $post;
 	close(FILE);
 }
@@ -82,7 +84,7 @@ sub donewgroup {
 
 	if (not $moderated) {
 	  
-		$post = <<"EOT";
+		$post = <<"EOF";
 From: $from
 Subject: Cmsg newgroup $name
 Newsgroups: aus.net.news,$name
@@ -102,7 +104,7 @@ CHARTER: $name
 $charter
 END CHARTER.
 
-EOT
+EOF
 	} else {
 		# Do stuff for moderated group  
 		die "Unable to write newgroup control msg for moderated group";

@@ -97,7 +97,7 @@ sub donewsgroup {
 	  
 	  my $ngline = read1line("vote/$vote/ngline");
 	  my $charter = readfile("vote/$vote/charter");
-	  my $post =<<"EOT";
+	  my $post =<<"EOF";
 From: $from
 Subject: Cmsg newgroup $name
 Newsgroups: aus.net.news,$name
@@ -113,7 +113,8 @@ $ngline
 
 This charter culled from the vote result announcement.
 $charter
-EOT
+EOF
+
 	  local *GLIST;
 	  open GLIST,">>data/ausgroups" or die "Can't open ausgroups.";
 	  print GLIST $ngline,"\n";
