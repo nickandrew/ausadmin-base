@@ -12,4 +12,13 @@ fn=messages/$ts.$suffix
 
 cat > $fn
 
-incoming.pl $fn | collater.pl
+incoming.pl $fn > $fn.votes
+rc=$?
+if [ $rc != 0 ] ; then
+	# No votes
+	rm -f $fn $fn.votes
+	exit 0
+fi
+
+collater.pl < $fn.votes
+exit 0

@@ -60,7 +60,9 @@ while ( <M> ) {
 close(M);
 
 if (not keys %vote) {
-	FailVote ( "no votes" );
+	# If there aren't any valid voting instructions in the message,
+	# then assume it is spam and ignore it utterly.
+	exit(2);
 }
 
 for (keys %vote) {
@@ -78,7 +80,7 @@ for (keys %vote) {
 	}
 
 	# Otherwise ...
-	FailVote ( "invalid vote" );
+	FailVote("invalid vote");
 }
 
 # Section 3 (see above)
