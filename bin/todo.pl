@@ -42,6 +42,7 @@ my %action_states = (
 	'rfd/posted' => 'In discussion, wait until ',
 	'vote/checking' => 'Check for multi-votes and forgeries then use action',
 	'vote/cfvnotposted' => 'Use action to post the CFV',
+	'vote/nocfv' => 'Vote setup, but no CFV',
 	'vote/running' => 'Wait for end of vote on ',
 );
 

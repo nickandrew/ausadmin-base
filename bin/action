@@ -379,7 +379,10 @@ sub check_rfd {
 	if ($answer =~ /v/i) {
 		print "Setting up vote now ...\n";
 		$v->setup_vote();
+		return 0;
 	}
+
+	return 8;
 }
 
 sub sign_rfd {
