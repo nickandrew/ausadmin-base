@@ -165,7 +165,7 @@ sub set_attr {
 	my $exists;
 	if (-f $path) {
 		$exists = 1;
-		if (!-f "$path/RCS/$attr_name") {
+		if (!-f "$datadir/$self->{name}/RCS/$attr_name,v") {
 			# check it in for the first time
 			system("ci -l $path < /dev/null");
 		}
