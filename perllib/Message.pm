@@ -189,10 +189,49 @@ my $freemail_regexes = [
 ];
 
 my $received_regex = {
-	'(qmail \d+ invoked from network);' => [],
-	'(qmail \d+ invoked by uid \d+);' => [],
-	'from ([a-zA-Z0-9.-]+) \((.*)\) by ([a-zA-Z0-9.-]+) with SMTP;' => [],
-	'from ([a-zA-Z0-9.-]+) \((.*)\) by ([a-zA-Z0-9.-]+) .*with ESMTP' => [],
+	'\(qmail \d+ invoked from network\);' => [],
+	'\(cpmta \d+ invoked from network\);' => [],
+	'\(qmail \d+ invoked by uid (\d+)\);' => [],
+
+	'\(from (\S+)\) by (\S+) \([0-9./]+\)' => [],
+	'by (\S+) \([0-9./]+\)' => [],
+	'by ([a-zA-Z0-9.-]+);' => [],
+	'by (\S+) with Internet Mail Service' => [],
+	'by (\S+) with Microsoft MAPI' => [],
+	'by (\S+) with Microsoft Mail' => [],
+	'by (\S+)\(Lotus SMTP MTA' => [],
+	'by (\S+) \(Postfix, from userid (\d+)\)' => [],
+	'by (\S+) \(Fastmailer' => [],
+	'by (\S+) \([0-9.]+.*SMI' => [],
+
+	'from mail pickup service' => [],
+	'from ccMail by (\S+) \(IMA' => [],
+
+	'from \[(\S+)\] by (\S+) \(SMTPD32' => [],
+	'from \[(\S+)\] by (\S+) \(NTMail' => [],
+	'from \[(\S+)\] by (\S+) with ESMTP' => [],
+	'from  \[(\S+)\] by (\S+) ' => [],
+
+	'from (\S+)\((\S+) (\S+)\) by ([a-zA-Z0-9.-]+) via smap' => [],
+	'from (\S+)\((\S+)\), claiming to be "\S+".* by ([a-zA-Z0-9.-]+),' => [],
+	'from (\S+)\((\S+)\) by ([a-zA-Z0-9.-]+) via smap' => [],
+
+	'from (\S+)\(([0-9.]+)\) via SMTP by ([a-zA-Z0-9.-]+),' => [],
+
+	'from (\S+) \(\[(.*)\]\) by ([a-zA-Z0-9.-]+)\(' => [],
+	'from (\S+) \[(.*)\] by ([a-zA-Z0-9.-]+) \[(\S+)\] with ' => [],
+	'from (\S+) \[(.*)\] by ([a-zA-Z0-9.-]+) with ' => [],
+	'from (\S+) \[(.*)\] by ([a-zA-Z0-9.-]+) with ' => [],
+	'from (\S+) \[(.*)\] by ([a-zA-Z0-9.-]+) \((.*)\) .*;' => [],
+
+	'from (\S+) by (\S+) for \[(\S+)\]' => [],
+	'from (\S+) by (\S+) \(PMDF' => [],
+	'from (\S+) by ([a-zA-Z0-9.-]+) with ' => [],
+	'from ([a-zA-Z0-9.-]+) \((\S+) \[(\S+)\]\) by ([a-zA-Z0-9.-]+) .*with ' => [],
+	'from ([a-zA-Z0-9.-]+) \((.*)\) by ([a-zA-Z0-9.-]+) .*with ' => [],
+	'from (\S+) \((.*)\) by ([a-zA-Z0-9.-]+) ' => [],
+	'from (.*) by (.*) with ' => [],
+	'from (.*) by (.*) ' => [],
 };
 
 sub check_received {
@@ -205,6 +244,10 @@ sub check_received {
 	foreach my $regex (keys %$received_regex) {
 		if ($header =~ /$regex/) {
 			print "Match! $1, $2, $3\n";
+			if ($1 eq '') {
+				# Unable to parse any actual data from it
+				print "Header: $header\n";
+			}
 			$match = 1;
 			last;
 		}
