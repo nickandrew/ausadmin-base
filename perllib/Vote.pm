@@ -79,6 +79,8 @@ sub new {
 		$self->{vote_dir} = $Vote::DEFAULT_VOTE_DIR;
 	}
 
+	$self->{rfd_min_days} ||= 21;
+
 	return $self;
 }
 
@@ -711,8 +713,6 @@ sub post_rfd {
 		die "RFD posting failed";
 	}
 
-	$self->audit("Posted signed RFD");
-
 	# Now note the date the RFD was posted
 	#
 	my $yyyymmdd = Ausadmin::today();
@@ -720,6 +720,14 @@ sub post_rfd {
 	open(F, ">$vote_dir/rfd_posted.cfg");
 	print F $yyyymmdd, "\n";
 	close(F);
+
+	my $future = DateFunc::addday($yyyymmdd, $self->{rfd_min_days});
+
+	open(F, ">$vote_dir/rfd_enddate.cfg");
+	print F $future, "\n";
+	close(F);
+
+	$self->audit("Posted signed RFD, discuss until: $future");
 
 	$self->set_state("rfd/posted");
 }
