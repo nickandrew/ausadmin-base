@@ -35,8 +35,7 @@ sub leftColumn {
 	my @contents;
 
 	push(@contents, <<EOF);
-    <td width="080" valign="top">
-     <font size=-1>
+    <td class="lhs" width="080" valign="top">
 EOF
 
 	push(@contents, View::MainPage::ausadminHeader());
@@ -47,7 +46,6 @@ EOF
 	push(@contents, relatedVotesList($ng));
 
 	push(@contents, <<EOF);
-     </font>
     </td>
 EOF
 
@@ -117,9 +115,9 @@ sub rightColumn {
 	push(@contents, <<EOF);
     <td valign="top">
      <center><h1>$ng</h1></center>
-     <hr>
+     <hr />
      <center><h2>$ngline</h2></center>
-     <hr>
+     <hr />
      <h3>Charter of $ng</h3>
       <blockquote>
       <pre>
@@ -128,7 +126,7 @@ $charter
       </blockquote>
      <h3>Activity graph of $ng (articles posted per day)</h3>
      <center>
-      <img src="/article_rate_png.cgi?newsgroup=$ng" alt="Article posting rate graph for $ng">
+      <img src="/article_rate_png.cgi?newsgroup=$ng" alt="Article posting rate graph for $ng" />
      </center>
      <p>The above graph is a moving average of the number of articles
      posted into $ng per day.
@@ -137,12 +135,13 @@ $charter
      the number of articles posted in the last 2 hours, times 12.</p>
      <h4>Weekly activity graph</h4>
      <center>
-      <img src="/article_rate_png.cgi?newsgroup=$ng&type=week" alt="Last 7 days article posting rates for $ng">
+      <img src="/article_rate_png.cgi?newsgroup=$ng&amp;type=week" alt="Last 7 days article posting rates for $ng" />
      </center>
      <h4>Monthly activity graph</h4>
      <center>
-      <img src="/article_rate_png.cgi?newsgroup=$ng&type=month" alt="Last 4 weeks article posting rates for $ng">
+      <img src="/article_rate_png.cgi?newsgroup=$ng&amp;type=month" alt="Last 4 weeks article posting rates for $ng" />
      </center>
+    </td>
 
 
 EOF
