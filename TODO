@@ -1,0 +1,9 @@
+TODO for ausadmin ...
+
+ - multiple-choice vote
+ - all messages (and header fields) created from templates
+ - auto update of "ausgroups" file
+ - auto update of charter on passed vote (done it?)
+ - CGIs to show more about every newsgroup
+ - Write some policies
+ - Populate the "data/Newsgroups" directory
