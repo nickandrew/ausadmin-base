@@ -34,7 +34,7 @@ of that newsgroup.
 Accepted votes are appended to the B<tally.dat> file in the vote
 directory in the format:
 
-	userid@domain newsgroup YES|NO|ABSTAIN time pathname
+	userid@domain newsgroup YES|NO|ABSTAIN time pathname NEW
 
 =cut
 
