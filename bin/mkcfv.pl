@@ -13,8 +13,8 @@ ReadCharter();
 
 for my $newsgroup (@newsgroup) {
 
-  $ConfigFile ="$BaseDir/$Newsgroup/endtime.cfg";
-  chop($VotePeriod = `cat $BaseDir/$Newsgroup/voteperiod`);
+  $ConfigFile ="$BaseDir/$newsgroup/endtime.cfg";
+  chop($VotePeriod = `cat $BaseDir/$newsgroup/voteperiod`);
   
   # Find the finish date for votes according to the VD (vote duration)
   $VD = $VotePeriod * 86400;
