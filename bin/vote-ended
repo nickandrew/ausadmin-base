@@ -1,0 +1,21 @@
+#!/bin/bash
+
+umask 022
+
+vote="$1"
+if [ "x$vote" = "x" ] ; then
+	echo "Usage: vote-ended news.group.name"
+	exit 2
+fi
+
+bin/genresult.pl $vote > tmp/result.$$
+s=$?
+if [ $s -ne 0 ] ; then
+	echo "genresult.pl failed, code $s"
+	exit 3
+fi
+
+cp -a tmp/result.$$ vote/$vote/conf/result
+echo "Result message now saved"
+
+exit 0
