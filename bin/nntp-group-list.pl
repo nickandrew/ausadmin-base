@@ -16,7 +16,7 @@ my $cfg = {
 	email_to => 'ausadmin@aus.news-admin.org',
 	hier_url => 'http://aus.news-admin.org/data/monitor.txt',
 	now => time(),
-	vers => 'Revision: 1.11',
+	vers => '1.10',
 };
 
 # Grab the list of hierarchies to monitor
@@ -28,6 +28,9 @@ if (! $response->is_success()) {
 my @hiers = split(/\s+/, $response->content());
 
 my $svr = new Net::NNTP($cfg->{news_server}) || die "Unable to connect to $cfg->{news_server}";
+# This is non-portable but the only way I could get the data cheaply
+$cfg->{banner} = ${*$svr}{'net_cmd_resp'}->[0] || 'none';
+chomp($cfg->{banner});
 $svr->reader() or die "mode reader command failed";
 
 my $config = join(' ', (map { "$_=\"$cfg->{$_}\"" } (sort (keys %$cfg))));
