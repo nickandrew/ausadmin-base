@@ -107,7 +107,7 @@ for my $group (@newsgroups) {
 	print P $group," ",$NGLine{$group},"\n";
 	local *NGLINE;
 	open NGLINE,">$BaseDir/$group/ngline" or die "Unable to open ngline $!";
-	print NGLINE "$group, "\t", $NGLine{$group}, "\n";
+	print NGLINE $group, "\t", $NGLine{$group}, "\n";
 	close NGLINE or die "Unable to close ngline";
 }
 

@@ -13,6 +13,6 @@ if ! [ -f $HDR -a -f $CONTENTS ] ; then
 	exit 3
 fi
 
-( cat $HDR ; echo "" ; cat $CONTENTS ) | post.pl
+( cat $HDR ; echo "" ; cat $CONTENTS ) | bin/post.pl
 
 exit 0
