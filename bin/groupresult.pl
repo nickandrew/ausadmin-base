@@ -5,22 +5,24 @@
 # $Revision$
 # $Date$
 
-$votedir = "vote";
+use Ausadmin;
 
-$vote = $ARGV[0];
+my $votedir = "vote";
 
-$now = time;
+my $vote = $ARGV[0];
 
-sub read1line {
-	my($path) = @_;
-	my($line);
-	if (!open(F, $path)) {
-		return "";
-	}
-	chop($line = <F>);
-	close(F);
-	return $line;
-}
+my $now = time();
+
+# sub read1line {
+# 	my($path) = @_;
+# 	my($line);
+# 	if (!open(F, $path)) {
+# 		return "";
+# 	}
+# 	chop($line = <F>);
+# 	close(F);
+# 	return $line;
+# }
 
 if ($vote eq "") {
 	print "groupresult.pl: No vote specified\n";
@@ -33,9 +35,11 @@ if (!-d "vote/$vote") {
 }
 
 # Get vote end date and vote pass/fail rule
-$end_date = read1line("vote/$vote/endtime.cfg");
-$voterule = read1line("vote/$vote/voterule");
-($numer, $denomer, $minyes) = split(/\s+/, $voterule);
+my $end_date = Ausadmin::read1line("vote/$vote/endtime.cfg");
+my $voterule = Ausadmin::read1line("vote/$vote/voterule");
+my($numer, $denomer, $minyes) = split(/\s+/, $voterule);
+my $rc = 0;
+my %tally;
 
 # barf if control files don't exist or other error
 if ($end_date eq "" || $minyes eq "") {
@@ -58,57 +62,84 @@ if (!open(T, "vote/$vote/tally.dat")) {
 }
 
 while (<T>) {
-	($email,$ng,$v,$ts,$path) = split;
+	my($email,$ng,$v,$ts,$path,$status) = split;
+
+	if (!exists $tally{$ng}) {
+		$tally{$ng} = {
+			'invalid' => 0,
+			'yes' => 0,
+			'no' => 0,
+			'abstain' => 0,
+			'voters' => [],
+			'invalid_voters' => []
+		};
+	}
+
 	if ($v ne "YES" && $v ne "NO" && $v ne "ABSTAIN") {
-		print "Unknown vote: $v (in $vote)\n";
-		$rc |= 16;
+		$tally{$ng}->{'invalid'}++;
+		push(@{$tally{$ng}->{'invalid_voters'}}, $email);
+		print STDERR "Unknown vote: $v (in $vote)\n";
 		next;
 	}
 
-	if (!defined($voters{$ng})) {
-		$voters{$ng} = [];
+	if ($status =~ /^(FORGE|INVALID|MULTI)/) {
+		$tally{$ng}->{'invalid'}++;
+		push(@{$tally{$ng}->{'invalid_voters'}}, $email);
+		next;
 	}
 
-	push(@{$voters{$ng}}, $email);
+	push(@{$tally{$ng}->{'voters'}}, $email);
 
 	if ($v eq "YES") {
-		$yes{$ng}++;
-		$newsgroups{$ng} = 1;
+		$tally{$ng}->{'yes'}++;
 	}
 
 	if ($v eq "NO") {
-		$no{$ng}++;
-		$newsgroups{$ng} = 1;
+		$tally{$ng}->{'no'}++;
 	}
 
 	if ($v eq "ABSTAIN") {
-		$abstain{$ng}++;
-		$newsgroups{$ng} = 1;
+		$tally{$ng}->{'abstain'}++;
 	}
 }
 
 close(T);
 
 # Output results
-foreach $ng (sort (keys %newsgroups)) {
-	print "Newsgroup: $ng\n";
-	print "  Yes: $yes{$ng}\n";
-	print "  No: $no{$ng}\n";
-	print "  Abstain: $abstain{$ng}\n";
+foreach my $ng (sort (keys %tally)) {
+	my $status;
+	my $yes = $tally{$ng}->{'yes'};
+	my $no = $tally{$ng}->{'no'};
+	my $abstain = $tally{$ng}->{'abstain'};
+	my $invalid = $tally{$ng}->{'invalid'};
 
-	if (($yes{$ng} >= ($yes{$ng} + $no{$ng}) * $numer / $denomer) && ($yes{$ng} - $no{$ng} >= $minyes)) {
+	if (($yes >= ($yes + $no) * $numer / $denomer) && ($yes - $no >= $minyes)) {
 		$status = "pass";
 	} else {
 		$status = "fail";
 	}
 
-	print "  Status: $status ($yes{$ng}:$no{$ng})\n";
+	print "Newsgroup: $ng\n";
+	print "Yes: $yes\n";
+	print "No: $no\n";
+	print "Abstain: $abstain\n";
+	print "Invalid: $invalid\n";
+	print "Status: $status\n";
 
-	print "  Voters:\n";
+	print "Voters:\n";
 
-	foreach $voter (sort @{$voters{$ng}}) {
+	foreach my $voter (sort @{$tally{$ng}->{'voters'}}) {
 		printf "   %s\n", $voter;
 	}
+
+	if (@{$tally{$ng}->{'invalid_voters'}}) {
+		print "Invalid Voters:\n";
+
+		foreach my $voter (sort @{$tally{$ng}->{'invalid_voters'}}) {
+			printf "   %s\n", $voter;
+		}
+	}
+
 	print "\n";
 }
 
