@@ -2,8 +2,7 @@ Todo ... vote counting for aus.sport.pro-wrestling and aus.sport.golf
 
 1 - rename messages - put filename in tally.dat I think, is easiest,
 after the timestamp. Looks like incoming/incoming.pl/collater.pl is
-already doing this. But it's broken, due to DF's stupid coding
-practices!
+already doing this.
 
 	fix-tally-path.pl fixes this
 

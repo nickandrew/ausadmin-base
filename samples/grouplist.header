@@ -1,0 +1,15 @@
+This is a list of all current newsgroups in the aus.* USENET hierarchy.
+This list will be posted on a regular basis to aus.net.news.
+
+Most versions of news support a "checkgroups" control message that
+can be used to help keep your active file in sync with the "standard"
+Usenet groups.  What follows is a skeleton checkgroups control message
+that you can customize and run locally to check your active file.
+
+The following should be extracted and then passed directly to your
+checkgroups script on standard input.  It can also be posted locally,
+with a distribution set to keep it internal to your local
+organization.  This is NOT the preferred method of operation, however,
+as distributions frequently leak to a wider distribution of machines.
+
+========================= cut to this line =========================
