@@ -44,8 +44,8 @@ my %vote;
 # Section 2 (see above)
 S2: while ( <> ) {
 	chomp;
-	if ( $_ =~ /^I vote [^\s]* (on|to|for) aus.*/i ) {
-		/^I vote ([^\s]*).*(aus[.a-z0-9+-]*).*/i;
+	if ( $_ =~ /I vote [^\s]* (on|to|for) aus.*/i ) {
+		/I vote ([^\s]*).*(aus[.a-z0-9+-]*).*/i;
 		$vote{$2} = $1;
 #		last S2;
 	}
