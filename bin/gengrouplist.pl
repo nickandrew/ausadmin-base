@@ -1,11 +1,16 @@
 #!/usr/bin/perl
-#	gengrouplist.pl
+#	@(#) gengrouplist.pl - Creates an informal list of newsgroups
+#
+# $Revision$
+# $Date$
 
 require "bin/postheader.pli";
 require "bin/misc.pli";
 
 $now = time;
 $postaddress = "ausadmin\@aus.news-admin.org";
+$grouplist = "data/ausgroups";
+
 if (-f "/usr/bin/pgps") {
 	$pgpcmd = "pgps -fat";
 } else {
@@ -14,8 +19,8 @@ if (-f "/usr/bin/pgps") {
 
 select(STDOUT); $| = 1;
 
-if (!-f "data/ausgroups") {
-	print "gengrouplist.pl: No list of newsgroups\n";
+if (! -f $grouplist) {
+	print "gengrouplist.pl: No list of newsgroups: $grouplist\n";
 	exit(3);
 }
 
@@ -34,8 +39,8 @@ $now = sprintf "%d-%02d-%02d %02d:%02d:%02d", $year, $mon, $mday, $hour, $min, $
 );
 
 # Open the groups file
-if (!open(C, "<data/ausgroups")) {
-	print "Unable to open data/ausgroups: $!\n";
+if (!open(C, "<$grouplist")) {
+	print "Unable to open $grouplist: $!\n";
 	exit(3);
 }
 

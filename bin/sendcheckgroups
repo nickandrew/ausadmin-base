@@ -1,6 +1,9 @@
 #!/bin/sh
 #	Create and post a newsgroups list to aus.net.news
 #	Create and post a signed checkgroups
+#
+# $Revision$
+# $Date$
 
 bin/gengrouplist.pl > tmp/grouplist.$$ 2> tmp/pgp.$$
 s=$?
@@ -16,9 +19,15 @@ if [ $s -ne 0 ] ; then
 	exit 3
 fi
 
+# Keep the latest version always
+cp tmp/grouplist.$$ data/grouplist.msg
+cp tmp/checkgroups.$$ data/checkgroups.msg
+
 inews -h < tmp/grouplist.$$
 s=$?
 if [ $s -ne 0 ] ; then
 	echo "inews returned status $s"
 fi
 
+# Don't post the checkgroups just yet
+exit 0
