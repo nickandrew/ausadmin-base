@@ -13,6 +13,7 @@ my $time = time();
 
 my @hiers = qw(aus bne canb melb syd);
 
+$| = 1;
 chdir('/home/ausadmin');
 open(LOG, ">>/home/ausadmin/tmp/nntpd.log");
 
