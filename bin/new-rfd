@@ -40,8 +40,6 @@ fn=RFD/$ts.rfd
 
 mkdir -p RFD
 
-echo "Copying proposal into $fn ..."
-
 tr -d '\r' > $fn
 s=$?
 
@@ -62,6 +60,15 @@ s=$?
 if [ $s != 0 ] ; then
 	echo "Unable to parse rfd $fn -- code $s - fatal"
 	exit 6
+fi
+
+groupinfo.pl `cat $BaseDir/$Proposal/distribution`
+s=$?
+
+if [ $s != 0 ] ; then
+	echo "groupinfo.pl returned code $s - one of the newsgroups in the"
+	echo "distribution may not exist"
+	exit 2
 fi
 
 echo "Good. Now do action $Proposal"
