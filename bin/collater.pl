@@ -11,6 +11,27 @@
 # 3. Otherwise adds vote
 # 4. Sends an acknowledgment
 
+=head1 NAME
+
+collater.pl - Record (or reject) incoming votes
+
+=head1 SYNOPSIS
+
+This program is called by B<bin/incoming> and should never be run
+directly.
+
+=head1 DESCRIPTION
+
+This program reads on its standard input, a sanitised set of votes
+in the format:
+
+	userid@domain newsgroup YES|NO|ABSTAIN time filename
+
+Each vote is compared against the vote directory for the stated
+newsgroup and accepted or rejected according to the voting status
+of that newsgroup.
+
+=cut
 
 use FileHandle;
 use Fcntl qw(:flock);
@@ -18,8 +39,28 @@ use Fcntl qw(:flock);
 my $HomeDir = "/virt/web/ausadmin";
 my $BaseDir = "$HomeDir/vote";
 
-while ( <> ) {
+while ( <STDIN> ) {
+	chomp;
 	my($EmailAddress, $Newsgroup, $Vote, $CTime, $fn) = split;
+
+	if ($Newsgroup !~ /^[a-z0-9+-]+\.[a-z0-9+-]+(\.[a-z0-9+-]+)*$/) {
+		FailVote($EmailAddress, "Invalid newsgroup name (must be of the format aus.whatever, in lower case");
+		next;
+	}
+
+	my $ng_dir = "$BaseDir/$Newsgroup";
+
+	eval {
+		# Use die to get our error message out ASAP
+		die "Invalid newsgroup $Newsgroup" if (!-d $ng_dir);
+		die "A vote for $Newsgroup has not (yet) started" if (!-f "$ng_dir/vote_start.cfg");
+		die "The vote for $Newsgroup has been cancelled" if (-f "$ng_dir/vote_cancel.cfg");
+	};
+
+	if ($@) {
+		FailVote($EmailAddress, $@);
+		next;
+	}
 
 	# Section 1 (see above)
 	if ( open( CONFIGFILE, "$BaseDir/$Newsgroup/endtime.cfg" ) ) {
@@ -126,8 +167,7 @@ final voting results.
 For a copy of the Call For Votes (CFV) email cfv\@aus.news-admin.org 
 indicating the newsgroup in the subject line.
 
-If you have a problem please contact the aus Newsgroup 
-Administrators Nick Andrew and David Formosa <ausadmin\@aus.news-admin.org>. ", $Newsgroup;
+If you have a problem please contact <ausadmin\@aus.news-admin.org>. ", $Newsgroup;
 
 		close( MAILPIPE );
 	} else {
