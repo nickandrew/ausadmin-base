@@ -67,35 +67,6 @@ if ($s) {
 # Compute the current vote state
 my $state = $v->state();
 
-
-# if (!-f "$ng_dir/voterule") {
-# 	gen_voterule();
-# }
-# 
-# if (-f "$ng_dir/voterule" && !-f "$ng_dir/endtime.cfg") {
-# 	setup_vote();
-# }
-# 
-# if (-f "$ng_dir/voterule" && -f "$ng_dir/endtime.cfg" && !-f "$ng_dir/cfv") {
-# 	gen_cfv();
-# }
-# 
-# if (-f "$ng_dir/cfv" && !-f "$ng_dir/posted.cfv") {
-# 	sign_cfv();
-# }
-# 
-# if (-f "$ng_dir/posted.cfv" && -f "$ng_dir/endtime.cfg" && !-f "$ng_dir/posted.cfg") {
-# 	post_cfv();
-# }
-
-#if ($state eq 'vote/checking') {
-#	gen_result();
-#}
-
-# if ($state eq 'complete/resultnotsigned') {
-# 	sign_result();
-# }
-
 # Loop through until we are unable to process anything more
 
 while (exists $state_actions->{$state}) {
