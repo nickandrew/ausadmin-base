@@ -1,0 +1,6 @@
+Make a vote
+
+mkvote aus.example rfd/aus.exampleq.rfd
+Create a new newsgroup
+
+gennewgroup.pl aus.cars.offroad
