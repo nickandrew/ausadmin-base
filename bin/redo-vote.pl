@@ -3,10 +3,36 @@
 #
 #	Usage: cd ~ausadmin ; redo-vote.pl newsgroup-name
 
+=head1 NAME
+
+redo-vote.pl - Get ready to run another vote on a newsgroup
+
+=head1 SYNOPSIS
+
+cd ~ausadmin ; redo-vote.pl newsgroup-name
+
+=head1 DESCRIPTION
+
+This program is used to start a new discussion on a newsgroup
+which was previously voted-on.
+
+It expects to find a completed vote (passed or failed) in
+the vote/$newsgroup directory. This directory is then renamed to
+vote/$newsgroup:yyyy-mm-dd where yyyy-mm-dd is the date of the
+start of the vote.
+
+In theory a newsgroup could be discussed only (RFD) with no vote
+and then abandoned, and another RFD resubmitted later with the
+same name. This program doesn't cater for that, yet.
+
+=cut
+
 use lib 'bin';
 use Newsgroup;
 
-my $newsgroup = shift @ARGV;
+my $newsgroup = shift @ARGV || usage();
+
+die "Invalid newsgroup: $newsgroup" if (!Newsgroup::validate($newsgroup));
 
 my $ng_dir = "vote/$newsgroup";
 
@@ -50,3 +76,7 @@ print "$ng_dir directory renamed to $old_dir.\n";
 print "Now run 'new-rfd newsgroup-name rfd-file' to setup the new vote.\n";
 
 exit(0);
+
+sub usage {
+	die "Usage: redo-vote.pl newsgroup-name";
+}
