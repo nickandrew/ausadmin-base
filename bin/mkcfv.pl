@@ -70,7 +70,7 @@ EOTOPBODY
 }
 
 for my $group (@newsgroup) {
-  print P $NGLine{$group},"\n";
+  print P $group $NGLine{$group},"\n";
 }
 
 print P <<"EOMIDBODY";
