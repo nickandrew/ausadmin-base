@@ -65,9 +65,6 @@ foreach my $group (sort @groups) {
 	next unless ($opts{'s'});
 
 	if (!defined $signed_booster || $control_text ne $current_booster) {
-		if ($limit-- == 0) {
-			last;
-		}
 
 		print "Sign newgroup.booster.ctl for $group? [y/N] ";
 		my $sign_it = <STDIN>;
@@ -79,6 +76,10 @@ foreach my $group (sort @groups) {
 				$ng->set_attr('newgroup.booster.sctl', $control_signed, "Changed signed booster newgroup");
 			}
 		}
+	}
+
+	if ($limit-- == 0) {
+		last;
 	}
 
 }
