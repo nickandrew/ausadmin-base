@@ -17,6 +17,14 @@ my $votedir = "vote";
 my $vote = $ARGV[0];
 my $now = time;
 
+die "Once only" if (-e "vote/$vote/once");
+
+{
+  local *ONCE;
+  open *ONCE,">>vote/$vote/once";
+  close *ONCE;
+}
+
 for my $file ("post.real","post.fake.phil","post.fake.robert") {
   checkmessage $file;
 }
@@ -104,7 +112,7 @@ $charter
 EOT
 	  local *GLIST;
 	  open GLIST,">>data/ausgroups" or die "Can't open ausgroups.";
-	  print GLIST $ngline;
+	  print GLIST $ngline,"\n";
 	  close GLIST;
 
 	  return $post;
