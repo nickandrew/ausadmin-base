@@ -60,8 +60,6 @@ foreach my $hier (@hiers) {
 		}
 	}
 
-	next unless (%gl);
-
 	# Now output all the group data
 	$s .= qq~ <hier name="$hier">\n~;
 
@@ -80,7 +78,7 @@ foreach my $hier (@hiers) {
 
 }
 
-$s .= qq~</grouplist>\n~;
+$s .= qq~</grouplist>~;
 
 my $ts;
 {
