@@ -11,11 +11,18 @@
 
 use Time::Local;
 use IO::Handle;
+use Getopt::Std;
+
+use lib 'bin';
+use Newsgroup;
 
 # Info Needed to run the script
-my $HomeDir = "/virt/web/ausadmin";
-my $BaseDir = "$HomeDir/vote";
+my $BaseDir = "./vote";
 
+my %opts;
+getopts('d', \%opts);
+
+die "In wrong directory - no $BaseDir" if (!-d $BaseDir);
 
 my $g = ReadRFD();
 
@@ -90,11 +97,22 @@ sub ReadRFD {
 	my @groups;
 	my %g;
 
+	my $old_state;
 	my $state;
 	my $groupname;
 
 	while ( <> ) {
 		chomp;
+
+		if ($opts{'d'} && $old_state ne $state) {
+			print STDERR "State: $old_state -> $state\n";
+			$old_state = $state;
+		}
+
+		if ($opts{'d'}) {
+			print STDERR "   $_\n";
+		}
+
 		if (/^Newsgroup(s?) line(s?):/i ) {
 			$state = 'ngline';
 			next;
@@ -190,8 +208,10 @@ sub ReadRFD {
 		}
 
 		if ($state eq 'distribution') {
-			if (/^\s+([a-z0-9.-]+)$/) {
-				push(@{$g{distribution}}, $1);
+			if (/^\s*(\S+)\s*$/) {
+				if (Newsgroup::validate($1)) {
+					push(@{$g{distribution}}, $1);
+				}
 			}
 			next;
 		}

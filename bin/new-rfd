@@ -43,7 +43,7 @@ if [ $s != 0 ] ; then
 	exit 6
 fi
 
-cd $BaseDir
+cd $HomeDir
 
 ~/bin/parse-rfd.pl < $fn
 s=$?
@@ -53,7 +53,7 @@ if [ $s != 0 ] ; then
 	exit 6
 fi
 
-cp $fn $Newsgroup/rfd
+cp $fn $BaseDir/$Newsgroup/rfd
 
 echo new-rfd Done at `date`
 
