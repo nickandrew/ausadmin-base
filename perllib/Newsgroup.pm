@@ -6,7 +6,7 @@ Newsgroup - a newsgroup
 
 =head1 SYNOPSIS
 
-use Newsgroup;
+ use Newsgroup;
 
  $nntp = new Net::NNTP(...)
 
