@@ -225,6 +225,10 @@ sub state {
 		return "vote/cfvnotposted";
 	}
 
+	if (-f "$ng_dir/vote_cancel.cfg") {
+		return "cancelled";
+	}
+
 	my $state = "vote/running";
 
 	my $end_time = $self->get_end_time();
