@@ -29,11 +29,11 @@ sub endtime {
      if (time>$endtime and not -e "$path/$vote/result") {
 	  if ($debug) {
 	       warn ("genresult.pl $vote >$path/$vote/result\n");
-	       warn ("inews -h $path/$vote/result\n");
+	       warn ("bin/post.pl < $path/$vote/result\n");
 	       
 	  } else {	       
 	       system ("bin/genresult.pl $vote >$path/$vote/result");
-	       system ("inews -h $path/$vote/result");
+	       system ("bin/post.pl < $path/$vote/result");
 	  }
      }
 }

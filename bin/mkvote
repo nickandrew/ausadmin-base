@@ -62,7 +62,7 @@ rm -f $HomeDir/CFV/$Newsgroup
 ln -s $BaseDir/$Newsgroup/posted.cfv $HomeDir/CFV/$Newsgroup
 
 # Post the CFV
-inews -h < $BaseDir/$Newsgroup/posted.cfv
+bin/post.pl < $BaseDir/$Newsgroup/posted.cfv
 
 
 echo Done at `date`
