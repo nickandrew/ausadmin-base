@@ -1,0 +1,215 @@
+#!/usr/bin/perl
+#	@(#) cancel-vote: prevent further voting, and report on the action
+#	Usage: cd ~ausadmin ; bin/cancel-vote newsgroup
+#
+# $Source$
+# $Revision$
+# $Date$
+#
+
+=head1 NAME
+
+cancel-vote - Prevent further voting on a currently active vote
+
+=head1 SYNOPSIS
+
+cd ~ausadmin
+
+cancel-vote [B<-c>] [B<-m>] [B<-p>] newsgroup-name
+
+=head1 DESCRIPTION
+
+A vote is started if certain control files exist in the vote/newsgroup
+directory. These control files are:
+
+	vote_start.cfg (contains the timestamp of the vote start time)
+	endtime.cfg (contains the timestamp of the vote cutoff time)
+	voterule (the parameters against which this ballot will be judged)
+
+A cancelled vote has two additional files in its directory:
+
+	vote_cancel.cfg (contains the timestamp of the cancel time)
+	cancel-notes.txt (contains the reason for the cancellation)
+
+=head2 Cancel Mode (default)
+
+This mode verifies that a vote is started, has not yet finished,
+and has not been cancelled.
+
+It aborts if the vote was not started (no vote_start.cfg file),
+if it has finished (time in endtime.cfg earlier than present time),
+or if it was already cancelled (vote_cancel.cfg exists).
+
+The program also aborts if cancel-notes.txt does not exist.
+
+Otherwise, the program creates vote_cancel.cfg.
+
+=head2 Already Cancelled Mode (B<-c> on the command line)
+
+This mode verifies that a vote has been cancelled.
+
+It aborts if the vote was not started (no vote_start.cfg file),
+or if vote_cancel.cfg does not exist.
+
+The program also aborts if cancel-notes.txt does not exist.
+
+=head2 Actions subsequent to cancellation
+
+Otherwise, the program creates vote_cancel.cfg
+and optionally posts the contents of the cancel-notes.txt
+file in a standard format (and PGP-signed)
+to the distribution list of the original Call-For-Votes.
+The program also optionally e-mails the above
+and all voters.
+
+=head1 OPTIONS
+
+B<-c>  Do not cancel the vote. No, this is not a typo. It means that we
+require the vote_cancel.cfg file to exist already, i.e. from a previous
+run of cancel-vote. Used when reposting cancellation messages.
+
+B<-m>  Send the cancellation message by e-mail
+to every address which voted in the now-cancelled vote.
+The default is to not send any E-mail.
+
+B<-p>  Post the cancellation message to all newsgroups in
+the vote's distribution file.
+The default is to not post the article.
+
+Note that use of all of "B<-c> B<-m> B<-p>" effectively tests whether a vote
+has been cancelled, and taking no other action, however actually
+using this for a test is not recommended because new flags may
+be added to this command which will change the default actions.
+
+=cut
+
+use Getopt::Std;
+use lib '.', 'bin';
+use Vote;
+
+my %opts;
+
+getopts('cmp', \%opts);
+
+my $BaseDir = './vote';
+my $newsgroup = shift @ARGV;
+my $now = time();
+
+# print "opt p is $opts{p}\n";
+
+die "Invalid newsgroup name" if ($newsgroup !~ /^[a-z0-9.-]+$/);
+die "No $BaseDir directory" if (!-d $BaseDir);
+die "No $BaseDir/$newsgroup directory" if (!-d "$BaseDir/$newsgroup");
+
+my $ng_dir = "$BaseDir/$newsgroup";
+
+# if (!-f "$ng_dir/vote_start.cfg") {
+# 	die "cancel-vote: No vote started for $newsgroup";
+# }
+
+if (!-f "$ng_dir/endtime.cfg") {
+	die "cancel-vote: No vote started for $newsgroup";
+}
+
+if ($opts{'c'}) {
+	if (!-f "$ng_dir/vote_cancel.cfg") {
+		die "cancel-vote: Vote not cancelled for $newsgroup";
+	}
+} else {
+	if (-f "$ng_dir/vote_cancel.cfg") {
+		die "cancel-vote: Vote already cancelled for $newsgroup";
+	}
+
+	open(F, "<$ng_dir/endtime.cfg");
+	my $t = <F>;
+	chomp $t;
+	close(F);
+
+	if ($t < $now) {
+		my $endtime = localtime($t);
+		die "cancel-vote: Vote for $newsgroup already ended at $endtime";
+	}
+
+	if (!-f "$ng_dir/cancel-notes.txt") {
+		die "cancel-vote: Missing cancel-notes.txt for $newsgroup";
+	}
+
+	# Create the cancel file
+
+	open(CT, ">$ng_dir/vote_cancel.cfg");
+	print CT $now, "\n";
+	close(CT);
+
+}
+
+if (!-f "$ng_dir/cancel-notes.txt") {
+	die "cancel-vote: Missing cancel-notes.txt for $newsgroup";
+}
+
+if ($opts{p}) {
+	# Generate a PGP-signed article announcing the cancellation
+
+	my $v = new Vote(name=>$newsgroup);
+
+	# Get info about this vote
+	my $start_time = $v->get_start_time();
+	my $end_time = $v->get_end_time();
+	my $cancel_time = $v->get_cancel_time();
+
+	# Collect the head
+	my $s = cancel_art_head($newsgroup);
+	$s .= "\n\n";
+	$s .= cancel_top($newsgroup, $start_time, $end_time, $cancel_time);
+	$s .= "\n\n";
+	my $lr = $v->read_file("cancel-notes.txt");
+	$s .= join('', @$lr);
+
+	print $s;
+}
+
+exit(0);
+
+sub cancel_art_head {
+	my $newsgroup = shift;
+
+	my @lines;
+
+	push(@lines, "From: <ausadmin\@aus.news-admin.org>");
+	push(@lines, "Subject: VOTE CANCELLED: $newsgroup");
+
+	my $fh = new IO::File("vote/$newsgroup/distribution");
+	die "Unable to read distribution for $newsgroup" if (!defined $fh);
+
+	my @groups;
+	while (<$fh>) {
+		chomp;
+		next if (/@/);		# Ignore e-mail addresses
+		push(@groups, $_);
+	}
+
+	push(@lines, "Newsgroups: " . join(',', sort(@groups)));
+	push(@lines, "Followup-To: aus.net.news");
+
+	return join("\n", @lines);
+}
+
+sub cancel_top {
+	my $newsgroup = shift;
+	my $start_time = shift;
+	my $end_time = shift;
+	my $cancel_time = shift;
+
+	
+	my @lines;
+	my $a;
+
+	push(@lines, "ausadmin\@aus.news-admin.org has cancelled the following vote:");
+	push(@lines, "");
+
+	push(@lines, sprintf("%-30s %s", "Newsgroup name(s):", $newsgroup));
+	push(@lines, sprintf("%-30s %s", "Vote start date:", $a = gmtime($start_time) . " UTC"));
+	push(@lines, sprintf("%-30s %s", "Vote was expected to end at:", $a = gmtime($end_time) . " UTC"));
+	push(@lines, sprintf("%-30s %s", "Vote was cancelled at:", $a = gmtime($cancel_time) . " UTC"));
+
+	return join("\n", @lines);
+}
