@@ -11,7 +11,11 @@ $BaseDir = "$HomeDir/vote";
 
 ReadCharter();
 
+die "You fool it didn't work can't create a blank one." unless @newsgroup;
+
 for my $newsgroup (@newsgroup) {
+
+  die "You fool it didn't work can't create a blank one." unless $newsgroup;
 
   $ConfigFile ="$BaseDir/$newsgroup/endtime.cfg";
   chop($VotePeriod = `cat $BaseDir/$newsgroup/voteperiod`);
@@ -33,6 +37,8 @@ select(STDOUT);
 $| = 1;
 
 #preprocess(STDOUT, "$BaseDir/conf/cfvtemplate.header");
+
+die "No distribution" unless $distribution;
 
 print <<"EOHEADERS";
 Subject: CFV: $newsgroup[0]
@@ -116,6 +122,7 @@ Addresses of all voters will be published in the final voting results list.
 
 [ Note: CFVs and control messages will be signed with the ausadmin key.
   Download it from http://aus.news-admin.org/ausadmin.asc now!   --nick ]
+
 EOMEND
 
 
@@ -168,6 +175,7 @@ DIST:	       while (<>) {
 		    last DIST if (/^Propo(?:nen?ts?|sers?):.*/i);
 		    $distribution .= "$_," if not /^\s*$/;
 	       }
+	       $distribution =~ /,$//;
 	  }
 #                      Propo   nent
 	  if ( $_ =~ /^Propo(?:nen?ts?|sers?):/i ) {
