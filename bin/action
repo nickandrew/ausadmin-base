@@ -1,0 +1,152 @@
+#!/usr/bin/perl
+#	@(#) action: Do the "next action" for a newsgroup
+#	Usage: action newsgroup-name
+#
+# $Source$
+# $Revision$
+# $Date$
+#
+
+=head1 NAME
+
+action - Do the "next action" for a newsgroup
+
+=head1 SYNOPSIS
+
+cd ~ausadmin
+action newsgroup-name
+
+=head1 DESCRIPTION
+
+TODO
+
+=cut
+
+use Time::Local;
+$| = 1;
+
+my $BaseDir = "./vote";
+
+die "No vote subdirectory (must cd to ~ausadmin)" if (!-d $BaseDir);
+
+my $newsgroup = shift @ARGV;
+
+# desired state: voting
+my $ng_dir = "$BaseDir/$newsgroup";
+
+die "No $ng_dir" if (!-d $ng_dir);
+die "No CFV directory" if (!-d "CFV");
+
+my $s = 0;
+
+foreach my $f (qw/charter distribution ngline proposer rationale/) {
+	if (!-f "$ng_dir/$f") {
+		print STDERR "No file $ng_dir/$f ...\n";
+		$s = 8;
+	}
+}
+
+if ($s) {
+	die "Some RFD files missing, setup the directory with new-rfd first!";
+}
+
+# Ready to make the CFV ?
+if (!-f "$ng_dir/voterule") {
+	print "Create voterule ? ";
+	my $answer = <STDIN>;
+	chomp($answer);
+	if ($answer !~ /^\s*y/i) {
+		die "Ok, try again later.\n";
+	}
+
+	my $vote_rule = "$ng_dir/voterule";
+	if (!-f "config/voterule") {
+		die "unable to create voterule: config/voterule does not exist!";
+	}
+
+	open(F, "<config/voterule");
+	my $vr = <F>;
+	close(F);
+	open(G, ">$vote_rule");
+	print G $vr;
+	close(G);
+
+	print "\nOkay.\n";
+}
+
+if (-f "$ng_dir/voterule" && !-f "$ng_dir/endtime.cfg") {
+	print "Start to accept votes now ? ";
+	my $answer = <STDIN>;
+	chomp($answer);
+	if ($answer !~ /^\s*y/i) {
+		die "Ok, try again later.\n";
+	}
+
+	my $rc = system("setup-vote $newsgroup");
+	if ($rc) {
+		die "setup-vote failed code $rc...!";
+	}
+
+	print "\nOkay.\n";
+}
+
+
+if (-f "$ng_dir/voterule" && -f "$ng_dir/endtime.cfg" && !-f "$ng_dir/cfv") {
+	print "Create CFV ? ";
+	my $answer = <STDIN>;
+	chomp($answer);
+	if ($answer !~ /^\s*y/i) {
+		die "Ok, try again later.\n";
+	}
+
+	my $rc = system("mkcfv.pl $newsgroup > $ng_dir/cfv");
+	if ($rc) {
+		unlink("$ng_dir/cfv");
+		die "mkcfv.pl failed code $rc...!";
+	}
+
+	print "\nOkay.\n";
+}
+
+if (-f "$ng_dir/cfv" && !-f "$ng_dir/posted.cfv") {
+	print "PGP-sign CFV ? ";
+	my $answer = <STDIN>;
+	chomp($answer);
+	if ($answer !~ /^\s*y/i) {
+		die "Ok, try again later.\n";
+	}
+
+	my $rc = system("pgp-sign < $ng_dir/cfv > $ng_dir/posted.cfv");
+	if ($rc) {
+		die "pgp-sign failed code $rc...!";
+	}
+
+	unlink("CFV/$newsgroup");
+	symlink("$ng_dir/posted.cfv", "CFV/$newsgroup");
+	print "\nOkay.\n";
+}
+
+if (-f "$ng_dir/posted.cfv" && -f "$ng_dir/endtime.cfg" && !-f "$ng_dir/posted.cfg") {
+	print "Post the signed CFV ? ";
+	my $answer = <STDIN>;
+	chomp($answer);
+	if ($answer !~ /^\s*y/i) {
+		die "Ok, try again later.\n";
+	}
+
+	my($sec,$min,$hour,$mday,$mon,$year) = localtime(time());
+	$mon++; $year += 1900;
+	my $yyyymmdd = sprintf "%d-%02d-%02d", $year,$mon,$mday;
+	open(F, ">$ng_dir/posted.cfg");
+	print F $yyyymmdd, "\n";
+	close(F);
+
+	my $rc = system("post.pl < $ng_dir/posted.cfv");
+	if ($rc) {
+		die "post failed code $rc...!";
+	}
+
+	print "\nOkay.\n";
+}
+
+exit(0);
