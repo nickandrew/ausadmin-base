@@ -59,7 +59,7 @@ sub write {
 
 	my %header = (
 		'Subject' => "List of $hier.* newsgroups at $now",
-		'Newsgroups' => 'aus.net.news,news.admin.hierarchies',
+		'Newsgroups' => 'aus.net.news,news.lists.misc',
 		'Followup-To' => '',
 	);
 
