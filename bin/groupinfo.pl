@@ -23,15 +23,21 @@ foreach my $group (@ARGV) {
 	my($art_n,$art_low,$art_high,$name) = $s->group($group);
 
 	if ($name eq '') {
-		print "No such group: $group\n";
+		print "Problem: No such group: $group\n";
 		$rc |= 2;
 		next;
 	}
 
-	print "Ok: $group $art_n articles from $art_low to $art_high";
-
 	my $g = new Newsgroup(name=>$group, nntp_server=>$s);
 	my $flags = $g->group_flags();
+
+	if ($flags eq 'm') {
+		print "Moderated: ";
+	} else {
+		print "Ok: ";
+	}
+
+	print "$group $art_n articles from $art_low to $art_high";
 
 	if ($flags eq 'm') {
 		print " moderated\n";
