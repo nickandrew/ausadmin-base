@@ -16,9 +16,6 @@ if (! -f "data/ausgroups") {
 	die "gencheckgroups.pl: No list of newsgroups\n";
 }
 
-my $checkgroups_header = readfile("data/checkgroups.header");
-my $checkgroups_footer = readfile("data/checkgroups.footer");
-
 my($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = localtime(time());
 
 $monthname=("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")[$mon];
@@ -56,15 +53,12 @@ if (!open(P, "|$signcmd")) {
 select(P);
 print_header(\%header);
 
-print P $checkgroups_header;
 print P "\n";
 
 while (<C>) {
 	print P $_;
 }
 close(C);
-
-print P $checkgroups_footer;
 
 close(P);
 
