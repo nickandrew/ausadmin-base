@@ -65,9 +65,10 @@ sub makemessage ( $$$ ) {
 		die "rmgroup not defined!";
 	}
 
-	if (!open(FILE, ">$file") {
+	if (!open(FILE, ">$file")) {
 		die "Unable to open $file: $!";
 	}
+
 	print FILE $post;
 	close(FILE);
 }
