@@ -24,13 +24,16 @@ TODO
 
 use Time::Local;
 use lib 'bin';
+use DateFunc;
 use Vote;
 
 $| = 1;
 
 my $BaseDir = "./vote";
+my $rfd_min_days = 21;
 
 my $state_actions = {
+	'rfd' => \&check_rfd,
 	'complete/resultnotposted' => \&post_result,
 	'complete/resultnotsigned' => \&sign_result,
 	'vote/checking' => \&gen_result,
@@ -96,6 +99,14 @@ if (!exists $state_actions->{$state}) {
 }
 
 exit(0);
+
+sub today {
+	my($sec,$min,$hour,$mday,$mon,$year) = localtime(time());
+	$mon++; $year += 1900;
+	my $yyyymmdd = sprintf "%d-%02d-%02d", $year,$mon,$mday;
+
+	return $yyyymmdd;
+}
 
 sub gen_result {
 	# Generate a result message
@@ -297,3 +308,46 @@ sub post_result {
 
 	return 0;
 }
+
+sub check_rfd {
+	# Get the rfd_posted.cfg (yyyy-mm-dd)
+	if (!-f "$ng_dir/rfd_posted.cfg") {
+		die "Augh. expected rfd_posted.cfg";
+	}
+
+	open(R, "<$ng_dir/rfd_posted.cfg") or die "Unable to open rfd_posted.cfg: $!";
+	my $rfd_posted = <R>;
+	chomp($rfd_posted);
+	close(R);
+
+	my $yyyymmdd = today();
+
+	if (DateFunc::days_between($rfd_posted, $yyyymmdd) < $rfd_min_days) {
+		die "RFD for $newsgroup was posted on $rfd_posted, not old enough for a decision";
+	}
+
+	# Otherwise, ask
+	print "(state=$state) RFD Abandoned or go to Vote [a,v] ? ";
+	my $answer = <STDIN>;
+	chomp($answer);
+	if ($answer !~ /^[av]$/i) {
+		die "Aborting\n";
+	}
+
+	if ($answer =~ /a/i) {
+		open(F, ">$ng_dir/rfd_cancel.cfg");
+		print F $yyyymmdd, "\n";
+		close(F);
+
+		print "Okay, I cancelled the RFD.\n";
+		return;
+	}
+
+	if ($answer =~ /v/i) {
+		print "Setting up vote now ...\n";
+		system("setup-vote $newsgroup");
+	}
+}
+
+
+

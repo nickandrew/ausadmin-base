@@ -20,6 +20,8 @@ Vote - a Vote of some kind
  $list_ref = $vote->get_tally();
  $string = $vote->state();		# return string representing vote's state
 
+ $vote->write_voterule($template);
+
 =cut
 
 package Vote;
@@ -35,7 +37,7 @@ sub new {
 	die "No name" if (!exists $self->{name});
 
 	if (!exists $self->{vote_dir}) {
-		$self->{vote_dir} = "vote";
+		$self->{vote_dir} = "./vote";
 	}
 
 	return $self;
@@ -283,6 +285,26 @@ sub audit {
 
 	$fh->print($ts, ' ', $message, "\n");
 	$fh->close();
+}
+
+sub write_voterule {
+	my $self = shift;
+	my $template = shift;
+
+	my $vote_dir = $self->ng_dir();
+	my $vote_rule = "$vote_dir/voterule";
+	if (!-f $vote_rule) {
+		if (!-f $template) {
+			die "write_voterule: $template does not exist!";
+		}
+
+		open(F, "<$template");
+		my $vr = <F>;
+		close(F);
+		open(G, ">$vote_rule");
+		print G $vr;
+		close(G);
+	}
 }
 
 

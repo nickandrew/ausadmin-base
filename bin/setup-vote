@@ -42,6 +42,8 @@ knows they can vote.
 =cut
 
 use Time::Local;
+use lib 'bin';
+use Vote;
 
 my $BaseDir = "./vote";
 
@@ -57,22 +59,13 @@ my @newsgroups = @ARGV;
 foreach my $newsgroup (@newsgroups) {
 	print "\nNewsgroup $newsgroup ...\n";
 
-	my $vote_rule = "$BaseDir/$newsgroup/voterule";
-	if (!-f $vote_rule) {
-		if (!-f "config/voterule") {
-			die "setup-vote: config/voterule does not exist!";
-		}
+	my $v = new Vote(name => $newsgroup);
+	my $vote_dir = $v->ng_dir();
 
-		open(F, "<config/voterule");
-		my $vr = <F>;
-		close(F);
-		open(G, ">$BaseDir/$newsgroup/voterule");
-		print G $vr;
-		close(G);
-	}
+	$v->write_voterule("config/voterule");
 
-	my $ConfigFile ="$BaseDir/$newsgroup/endtime.cfg";
-	my $start_file ="$BaseDir/$newsgroup/vote_start.cfg";
+	my $ConfigFile ="$vote_dir/endtime.cfg";
+	my $start_file ="$vote_dir/vote_start.cfg";
 
 	if (-f $ConfigFile) {
 		print "\tAlready has an endtime.cfg, skipping.\n";
@@ -117,6 +110,8 @@ foreach my $newsgroup (@newsgroups) {
 	open(T, ">$start_file");
 	print T $start_time, "\n";
 	close(T);
+
+	$v->audit("Setup vote to end at $endtime");
 }
 
 
