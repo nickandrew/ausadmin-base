@@ -1,6 +1,6 @@
 #!/usr/bin/perl
-#	format.pli - format a line
-
+#	@(#) misc.pli - miscellaneous functions
+# $Source$
 # $Revision$
 # $Date$
 

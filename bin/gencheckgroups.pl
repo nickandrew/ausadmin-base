@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-#	gencheckgroups.pl
+#	@(#) gencheckgroups.pl - Generate a checkgroups message
 #
 # $Source$
 # $Revision$
@@ -8,29 +8,28 @@
 require "bin/postheader.pli";
 require "bin/misc.pli";
 
-$now = time;
 $signcmd = "bin/signcontrol";
 
 select(STDOUT); $| = 1;
 
-if (!-f "data/ausgroups") {
+if (! -f "data/ausgroups") {
 	die "gencheckgroups.pl: No list of newsgroups\n";
 }
 
-$checkgroups_header = readfile("data/checkgroups.header");
-$checkgroups_footer = readfile("data/checkgroups.footer");
+my $checkgroups_header = readfile("data/checkgroups.header");
+my $checkgroups_footer = readfile("data/checkgroups.footer");
 
-($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = localtime(time);
+my($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = localtime(time());
 
 $monthname=("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")[$mon];
 
 $year += 1900; $mon++;
-$now = sprintf "%d-%02d-%02d %02d:%02d:%02d", $year, $mon, $mday, $hour, $min, $sec;
+my $now = sprintf "%d-%02d-%02d %02d:%02d:%02d", $year, $mon, $mday, $hour, $min, $sec;
 
 
 # Generate the message, header first
 
-%header = (
+my %header = (
 	'From' => '<ausadmin@aus.news-admin.org>',
 	'Subject' => 'checkgroups',
 	'Newsgroups' => 'aus.net.news',
@@ -40,7 +39,8 @@ $now = sprintf "%d-%02d-%02d %02d:%02d:%02d", $year, $mon, $mday, $hour, $min, $
 	'X-PGPKey' => '',
 	'Organization' => '',
 	'Path' => 'aus.news-admin.org|ausadmin',
-#	'Message-id' => "$^T$$ausadmin\@aus.news-admin.org",
+#	Note: Message-ID is added automatically by bin/signcontrol
+#	'Message-ID' => "$^T$$ausadmin\@aus.news-admin.org",
         'Date' => "$mday $monthname $year $hour:$min:$sec",
 );
 
@@ -50,7 +50,7 @@ if (!open(C, "<data/ausgroups")) {
 }
 
 if (!open(P, "|$signcmd")) {
-	die "Unable to open pipe to signcontrol!\n";
+	die "Unable to open pipe to $signcmd!\n";
 }
 
 select(P);

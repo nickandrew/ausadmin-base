@@ -21,6 +21,8 @@ if [ $s -ne 0 ] ; then
 	exit 3
 fi
 
+rm -f tmp/pgp.$$
+
 # Replace the current version with the latest
 
 mv tmp/grouplist.$$ data/grouplist.msg
@@ -31,17 +33,17 @@ mv tmp/checkgroups.$$ data/checkgroups.msg
 #----------------------------------------------------------------------------
 
 rc=0
-inews -h data/grouplist.msg
+bin/post.pl < data/grouplist.msg
 s=$?
 if [ $s -ne 0 ] ; then
-	echo "inews submission of data/grouplist.msg returned status $s"
+	echo "post.pl submission of data/grouplist.msg returned status $s"
 	rc=2
 fi
 
-inews -h data/checkgroups.msg
+bin/post.pl < data/checkgroups.msg
 s=$?
 if [ $s -ne 0 ] ; then
-	echo "inews submission of data/grouplist.msg returned status $s"
+	echo "post.pl submission of data/grouplist.msg returned status $s"
 	rc=4
 fi
 
