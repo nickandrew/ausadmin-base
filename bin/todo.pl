@@ -23,6 +23,7 @@ use lib 'bin';
 use Ausadmin;
 use Vote;
 use DateFunc;
+use Date::Format qw(time2str);
 
 my %action_states = (
 	'abandoned' => '',
@@ -41,7 +42,7 @@ my %action_states = (
 	'rfd/posted' => 'In discussion, wait until ',
 	'vote/checking' => 'Check for multi-votes and forgeries then use action',
 	'vote/cfvnotposted' => 'Use action to post the CFV',
-	'vote/running' => 'Wait for end of vote',
+	'vote/running' => 'Wait for end of vote on ',
 );
 
 if (!-d "./vote") {
@@ -81,6 +82,12 @@ foreach my $vote (sort @votes) {
 		if ($date le $today) {
 			$a = "Use action to abandon or post the CFV";
 		}
+	}
+
+	if ($state eq 'vote/running') {
+		my $end_time = $v->get_end_time();
+		my $ts = time2str("%Y-%m-%d", $end_time);
+		$a .= $ts;
 	}
 
 	if ($a ne '') {
