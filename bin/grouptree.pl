@@ -56,7 +56,7 @@ while (<INFILE>) {
 		$botloc=$yloc+12;
 		if (!$level2) {
 			$color=$blue;
-			print OUTFILE "<area shape=rect coords=\"50, $yloc, 100, $botloc\" href=\"/cgi-bin/groupinfo.cgi?Group=aus.$level1\">\n";
+			print OUTFILE "<area shape=rect coords=\"50, $yloc, 100, $botloc\" href=\"/cgi-bin/groupinfo.cgi?group=aus.$level1\">\n";
 		}
 		$im->string(gdSmallFont, 50, $yloc, $level1, $color);
 		$im->line(5,$yloc, 5, $yloc+12, $black);
@@ -71,7 +71,7 @@ while (<INFILE>) {
 		$botloc=$yloc+12;
 		if (!$level3) {
 			$color=$blue;
-			print OUTFILE "<area shape=rect coords=\"100, $yloc, 150, $botloc\" href=\"/cgi-bin/groupinfo.cgi?Group=aus.$level1.$level2\">\n";
+			print OUTFILE "<area shape=rect coords=\"100, $yloc, 150, $botloc\" href=\"/cgi-bin/groupinfo.cgi?group=aus.$level1.$level2\">\n";
 		}
 		$im->string(gdSmallFont, 100, $yloc, $level2, $color);
 		$im->line(5,$yloc, 5, $yloc+12, $black);
@@ -85,7 +85,7 @@ while (<INFILE>) {
 		$im->string(gdSmallFont, 150, $yloc, $level3, $blue);
 		$im->string(gdSmallFont, $descspace, $yloc, $description, $black);
 		$botloc=$yloc+12;
-		print OUTFILE "<area shape=rect coords=\"150, $yloc, 200, $botloc\" href=\"/cgi-bin/groupinfo.cgi?Group=aus.$level1.$level2.$level3\">\n";
+		print OUTFILE "<area shape=rect coords=\"150, $yloc, 200, $botloc\" href=\"/cgi-bin/groupinfo.cgi?group=aus.$level1.$level2.$level3\">\n";
 		$im->line(5,$yloc, 5, $yloc+12, $black);
 		$im->line(105, $yloc+6, 147, $yloc+6, $black);
 		$im->line(55, $yloc, 55, $yloc+12, $black);
@@ -97,7 +97,7 @@ while (<INFILE>) {
 
 binmode GIFFILE;
 print GIFFILE $im->gif;
-print OUTFILE "<img src=\"grouptree.gif\" usemap=\"\#groups\" border=0><br>\n";
+print OUTFILE "<img src=\"/cgi-bin/treegif.pl\" usemap=\"\#groups\" border=0><br>\n";
 print OUTFILE "</map></body></html>\n";
 close(INFILE);
 close(OUTFILE);
