@@ -38,7 +38,7 @@ getopts('dr', \%opts);
 my $debug=$opts{'d'};
 my $recount = $opts{'r'};
 
-my $postaddress = "aus group admin <ausadmin\@aus.news-admin.org>";
+my $postaddress = "ausadmin <ausadmin\@aus.news-admin.org>";
 my $organization = "aus.* newsgroups administration, see http://aus.news-admin.org/";
 
 my $vote = shift;
@@ -346,6 +346,9 @@ sub fail_msg() {
 	push(@body, "");
 
 	push(@body, format_para("For a group to pass, YES votes must be at least $numer/$denomer of all valid (YES and NO) votes. There must also be at least $minyes more YES votes than NO votes. Abstentions and Forgeries do not affect the outcome."));
+	push(@body, "");
+
+	push(@body, format_para("Votes marked with an asterisk were detected as forgeries and were not counted in the vote."));
 	push(@body, "");
 
 	push(@body, "\nVOTERS:");
