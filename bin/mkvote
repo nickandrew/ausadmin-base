@@ -1,14 +1,13 @@
 #!/bin/sh
 
 # Setup everything needed to start a new vote.
-#  - Create .qmail file (NOT NEEDED ANYMORE)
 #  - Create the usevote.cfg file
 #  - Create the Call For Votes
 #  - Post Call For Votes in aus.general and aus.net.news
 
 if [ $# -lt 1 ]
 then
-	echo usage: $0 newsgroup-name charter-info >&2
+	echo usage: $0 newsgroup-name charter-info-file >&2
 	exit 1
 fi
 
@@ -19,14 +18,6 @@ Info=$2
 # Commonly used variables
 HomeDir=/virt/web/ausadmin
 BaseDir=$HomeDir/vote
-
-# create the .qmail-newgroup files
-genqmail ()
-{
-	# Add rule to pipe incoming mail into the processvote script
-	echo "|$BaseDir/bin/incoming" > $HomeDir/.qmail-`echo $Newsgroup | tr \. :`
-	# Add rule to pipe CVF mail into the CFV-request script (later)
-}
 
 # make directories if they don't already exist
 gendirs ()
@@ -41,17 +32,22 @@ gendirs ()
 }
 
 # set up common environment
+cp $Info $BaseDir/tmp/info.$$
+s=$?
+if [ $s != 0 ] ; then
+	echo "Unable to copy $Info - fatal
+	exit 5
+fi
+
 cd $BaseDir
 
 # set up directories
 gendirs $Newsgroup $Newsgroup/conf $Newsgroup/votes 
 echo "2 3 10" > $Newsgroup/conf/voterule
+echo "14" > $Newsgroup/conf/voteperiod
 
-# Setup the qmail stuff (NOT NEEDED)
-# genqmail
-
-# Run the Perl script mkcvf to make the CFV then post it away!
-$BaseDir/bin/mkcfv.pl < $Info > $BaseDir/$Newsgroup/conf/posted.cfv
+# Run the Perl script mkcvf to make the CFV and PGP-sign it then post it away!
+tr -d '\r' < $Info | $BaseDir/bin/mkcfv.pl | pgp -f > $BaseDir/$Newsgroup/conf/posted.cfv
 ln -s $BaseDir/$Newsgroup/conf/posted.cfv $HomeDir/CFV/$Newsgroup
 
 # Post the CFG

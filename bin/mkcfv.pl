@@ -11,10 +11,11 @@ $VoteAddress = "vote\@aus.news-admin.org";
 $HomeDir = "/virt/web/ausadmin";
 $BaseDir = "$HomeDir/vote";
 $ConfigFile ="$BaseDir/$Newsgroup/conf/group.cfg";
+chop($VotePeriod =`cat $BaseDir/$Newsgroup/conf/voteperiod`);
 
 # Find the finish date for votes according to the VD (vote duration)
 # Currently set to 21days
-$VD = 21*24*60*60;
+$VD = $VotePeriod * 86400;
 
 ($day, $mon, $mday, $time, $year) = split /\s+/, gmtime( time + $VD );
 $EndDate = "$day, $mday $mon $year 00:00:00 GMT";
