@@ -203,10 +203,12 @@ EOF
 
 sub ausadminHeading {
 	my @contents;
+	my $hier = $ENV{AUSADMIN_HIER} || 'aus';
+
 	push(@contents, <<EOF);
    <center>
     <h1>
-     <font face=sans-serif>aus.* Newsgroup Administration</font>
+     <font face=sans-serif>$hier Newsgroup Administration</font>
     </h1>
    </center>
 EOF
@@ -215,6 +217,8 @@ EOF
 
 sub ausadminContents {
 	my @contents;
+	my $hier = $ENV{AUSADMIN_HIER} || 'aus';
+
 	push(@contents, <<EOF);
    <table cellpadding=5 cellspacing=0 width=100% border=0>
 EOF
@@ -222,7 +226,7 @@ EOF
 	push(@contents, Include::html('overview.html'));
 	push(@contents, ausadminSubHeadingRow("ausadmin Role"));
 	push(@contents, Include::html('role.html'));
-	push(@contents, ausadminSubHeadingRow("aus.* structure planning"));
+	push(@contents, ausadminSubHeadingRow("$hier structure planning"));
 	push(@contents, Include::html('structure.html'));
 	push(@contents, ausadminSubHeadingRow("ausadmin Policy"));
 	push(@contents, Include::html('policy.html'));

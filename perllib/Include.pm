@@ -13,7 +13,7 @@ use IO::File qw(O_RDONLY O_WRONLY O_APPEND O_CREAT O_EXCL);
 sub html {
 	my $file = shift;
 
-	my $path = "$ENV{AUSADMIN_HOME}/config/$file";
+	my $path = "$ENV{AUSADMIN_DATA}/Html/$file";
 
 	if (!-f $path || ! -r _) {
 		$path = "$ENV{AUSADMIN_WEB}/Html/$file";
