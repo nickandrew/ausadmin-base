@@ -37,6 +37,7 @@ package Newsgroup;
 
 use IO::File;
 use IPC::Open2;
+use Carp qw(confess);
 
 use Ausadmin;
 
@@ -303,6 +304,10 @@ sub list_newsgroups {
 	my $args = { @_ };
 
 	my $datadir = $args->{datadir} || $Newsgroup::DEFAULT_NEWSGROUP_DIR;
+
+	if (! $datadir) {
+		confess "No datadir";
+	}
 
 	# Ignore newsgroup names not containing a dot, and . and ..
 	opendir(D, $datadir);
