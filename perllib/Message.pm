@@ -70,12 +70,14 @@ sub parse {
 
 	my @lines = split(/\n/, $self->{data});
 	my $head = 1;
-	my $header;
+	my $header = '';
 	my @headers;
 	my @votes;
 
 	# Grab the From header
 	foreach (@lines) {
+
+#		print STDERR "Checking: $_\n";
 
 		if ($head) {
 			if ($_ eq '') {
@@ -129,6 +131,27 @@ sub headers {
 	my $self = shift;
 
 	return @{$self->{headers}};
+}
+
+=pod
+	$header = $m->first_header('from');
+
+Return the first header line (including the header name) which matches
+the supplied argument (case-insensitive).
+
+=cut
+
+sub first_header {
+	my $self = shift;
+	my $hdr = shift;
+
+	foreach my $l (@{$self->{headers}}) {
+		if ($l =~ /^$hdr:/i) {
+			return $l;
+		}
+	}
+
+	return undef;
 }
 
 # lowercase names of headers which we will use to extract info ...
@@ -330,7 +353,10 @@ sub check_received {
 
 			$data_hr->{match} = 1;
 			$data_hr->{regex} = $regex;
-			$data_hr->{references} = "$1, $2, $3";
+			$data_hr->{references} = '';
+			$data_hr->{references} .= (defined $1) ? "$1, " : ', ';
+			$data_hr->{references} .= (defined $2) ? "$2, " : ', ';
+			$data_hr->{references} .= (defined $3) ? "$3" : '';
 
 			# Ok, we got something. Now grab the contents and stick in hashref
 			my @refs = ($1,$2,$3,$4,$5,$6,$7,$8,$9);
@@ -479,7 +505,7 @@ sub header_info {
 			# Hmm. How do we get the data out? A regex!
 			Message::parse_header($2, $int_hr->{$hdr_name}, $data_hr);
 		} else {
-			print "Invalid header: $_\n";
+			print STDERR "Invalid header: $_\n";
 		}
 	}
 

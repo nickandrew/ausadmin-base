@@ -18,11 +18,18 @@ Ausadmin - misc functions class
  $ref = Ausadmin::read_keyed_file($path);
  @lines = Ausadmin::format_para($line)
  @lines = Ausadmin::centred_text(@lines)
+ Ausadmin::print_header(\%headers)
  $yyyymmdd = Ausadmin::today()
 
 =head1 DESCRIPTION
 
 This package provides some useful file I/O functions
+
+=head2 Ausadmin::print_header(\%headers)
+
+Update the default headers (which are hardcoded in this class) with
+the caller-supplied headers and output, to the current selected device,
+a message header block.
 
 =cut
 
@@ -147,6 +154,21 @@ sub today {
 	my $yyyymmdd = sprintf "%d-%02d-%02d", $year,$mon,$mday;
 
 	return $yyyymmdd;
+}
+
+=pod
+	$string = email_obscure($string)
+
+Obscure any Email address in the string (change @ to " at ").
+
+=cut
+
+sub email_obscure {
+	my $string = shift;
+
+	$string =~ s/\@/ at /g;
+
+	return $string;
 }
 
 1;
