@@ -47,7 +47,7 @@ foreach my $group (sort @groups) {
 	if ($control_text ne $current_booster) {
 		if ($opts{'s'}) {
 			# Save the current (or new) one
-			$ng->set_attr('newgroup.booster.ctl', $control_text);
+			$ng->set_attr('newgroup.booster.ctl', $control_text, "Changed booster newgroup");
 		} else {
 			if (defined $current_booster) {
 				print STDERR "NOT saving newgroup.booster.ctl because -s option not given!\n";
@@ -76,7 +76,7 @@ foreach my $group (sort @groups) {
 			my $control_signed = $ng->sign_control($control_text);
 
 			if (defined $control_signed) {
-				$ng->set_attr('newgroup.booster.sctl', $control_signed);
+				$ng->set_attr('newgroup.booster.sctl', $control_signed, "Changed signed booster newgroup");
 			}
 		}
 	}
