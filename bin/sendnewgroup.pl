@@ -30,7 +30,7 @@ sub read1line {
 
 sub checkmessage ( $ ) {
   my $file = shift;
-  local *FILE,*POST;
+  local (*FILE,*POST);
   
   if (not open FILE,"<vote/$vote/$file") {
     warn "Unable to open file $file $!\n";
