@@ -14,6 +14,10 @@ use Fcntl qw(:flock);
 my $xml = join('', <STDIN>);
 
 my $svr = XML::Simple::XMLin($xml, forcearray => 1);
+if (! %$svr) {
+	die "Reading - no data\n";
+}
+
 my $hierarchies = { };
 
 my $lock_file = "$ENV{AUSADMIN_HOME}/check-server";
@@ -97,6 +101,7 @@ sub process_server_report {
 
 	$result->{last_report} = $svr->{now};
 	$result->{last_email} = $svr->{my_email};
+	$result->{last_revision} = $svr->{vers};
 }
 
 sub check_existing_groups {
