@@ -5,7 +5,7 @@
 # $Revision$
 # $Date$
 #
-# Usage: incoming.pl filename
+# Usage: incoming.pl filename | collater.pl
 #
 # Processes any incoming mail
 # 1. Read in the message header and obtain the return email address
@@ -14,6 +14,7 @@
 # 3. Assign timestamp (time)
 # 4. output to STDOUT
 
+my $message_path = shift @ARGV;
 
 my $HomeDir = "/virt/web/ausadmin";
 my $BaseDir = "$HomeDir/vote";
@@ -24,7 +25,11 @@ my $BaseDir = "$HomeDir/vote";
 
 my $EmailAddress;
 
-while ( <> ) {
+if (!open(M, "<$message_path")) {
+	die "Unable to open $message_path for input ...!";
+}
+
+while ( <M> ) {
 	if ( $_ eq "\n" ) {
 		last;
 	}
@@ -45,13 +50,15 @@ if ( $EmailAddress eq "" ) {
 my %vote;
 
 # Section 2 (see above)
-while ( <> ) {
+while ( <M> ) {
 	chomp;
 	if ( $_ =~ /I vote [^\s]* (on|to|for) aus.*/i ) {
 		/I vote ([^\s]*).*(aus[.a-z0-9+-]*).*/i;
 		$vote{$2} = $1;
 	}
 }
+
+close(M);
 
 if (not keys %vote) {
 	FailVote ( "no votes" );
@@ -76,12 +83,12 @@ for (keys %vote) {
 }
 
 # Section 3 (see above)
-my $CTime = time();
+my $ts = time();
 
 # Output Results - Section 4 (see above)
 
 for (keys %vote) {
-	print "$EmailAddress $_ ",$vote{$_}," $CTime $ARGV[0]\n";
+	print "$EmailAddress $_ ", $vote{$_}, " $ts $message_path\n";
 }
 
 exit(0);
