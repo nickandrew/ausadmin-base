@@ -13,13 +13,17 @@ use Time::Local;
 use IO::Handle;
 
 # Info Needed to run the script
-my $VoteAddress = "vote\@aus.news-admin.org";
-my $BaseDir = "./vote";
-my $default_voteperiod = 21;		# days
+my $VoteAddress = 'vote\@aus.news-admin.org';
+my $BaseDir = './vote';
 
-my $VotePeriod = $default_voteperiod;
+my $sign_it = 1;
 
-die "No vote subdirectory (must cd to ~ausadmin)" if (!-d $BaseDir);
+die 'No vote subdirectory (must cd to ~ausadmin)' if (!-d $BaseDir);
+
+if ($ARGV[0] eq '-u') {
+	$sign_it = 0;
+	shift @ARGV;
+}
 
 my @newsgroups = @ARGV;
 
@@ -48,11 +52,11 @@ foreach my $newsgroup (@newsgroups) {
 
 	my $ConfigFile ="$BaseDir/$newsgroup/endtime.cfg";
 
-	my $end_time = read_file($ConfigFile);
+	my $end_time = read_line($ConfigFile);
 
 	# Now make the human-readable one
 
-	$EndDate = gmtime($end_time);
+	$EndDate = gmtime($end_time - 1);
 }
 
 # Opens the template Call For Votes file and constructs the actual CFV file
@@ -72,7 +76,12 @@ Followup-to: none
 
 EOHEADERS
 
-if (!open(P, "|pgp -s -f")) {
+my $cmd = "pgp -s -f";
+if ($sign_it == 0) {
+	$cmd = "cat";
+}
+
+if (!open(P, "|$cmd")) {
 	print STDERR "Unable to open a pipe to PGP: $!";
 	exit(3);
 }
