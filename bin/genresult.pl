@@ -254,20 +254,18 @@ sub fail_msg() {
 }
 
 sub setposts {
-
+  
   my ($groupname,$filename,$firstpostdate,$intervil,$count)=@_;
-
-	local *POST;
-
-	if (not open (POST,">vote/$vote/$name")) {
-	  print "Unable to mark group as passed\n";
-	  exit(8);
-	}
-
-#Post the next post after 5 days then after that at nth (My current guess 5) 
-#day intervils for 3 times.
-
-	print POST "$groupname\t$firstpostdate\t$intervil\t$count\n";
-	close POST;
-
+  
+  local *POST;
+  
+  if (not open (POST,">>vote/$vote/$name")) {
+    print "Unable to mark group as passed\n";
+    exit(8);
+  }
+    
+  print POST "$groupname\t$firstpostdate\t$intervil\t$count\n";
+  close POST;
+  
 }
+
