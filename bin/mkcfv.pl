@@ -76,6 +76,10 @@ EOTOPBODY
 
 for my $group (@newsgroup) {
   print P $group," ",$NGLine{$group},"\n";
+  local *NGLINE;
+  open NGLINE,"$BaseDir/$newsgroup/ngline";
+  print NGLINE,$NGLine{$group},"\n";
+  close NGLINE;
 }
 
 print P <<"EOMIDBODY";
@@ -175,7 +179,7 @@ DIST:	       while (<>) {
 		    last DIST if (/^Propo(?:nen?ts?|sers?):.*/i);
 		    $distribution .= "$_," if not /^\s*$/;
 	       }
-	       $distribution =~ /,$//;
+	       $distribution =~ s/,$//;
 	  }
 #                      Propo   nent
 	  if ( $_ =~ /^Propo(?:nen?ts?|sers?):/i ) {
