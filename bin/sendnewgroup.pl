@@ -20,17 +20,6 @@ for my $file ("post.real","post.fake.phil","post.fake.robert") {
   checkmessage $file;
 }
 
-sub read1line {
-  my($path) = @_;
-  my($line);
-  if (!open(F, $path)) {
-    return "";
-  }
-  chop($line = <F>);
-  close(F);
-  return $line;
-}
-
 sub checkmessage ( $ ) {
   my $file = shift;
   local (*FILE,*POST);
