@@ -54,13 +54,14 @@ if [ $s != 0 ] ; then
 	exit 7
 fi
 
-pgp -f < $HomeDir/tmp/cfv.$$ > $Newsgroup/conf/posted.cfv 2>$HomeDir/tmp/pgp.$$
+pgp -s -f < $HomeDir/tmp/cfv.$$ > $Newsgroup/conf/posted.cfv 2>$HomeDir/tmp/pgp.$$
 s=$?
 if [ $s != 0 ] ; then
 	echo "pgp signing failed -- code $s - fatal"
 	exit 8
 fi
 
+rm -f $HomeDir/CFV/$Newsgroup
 ln -s $BaseDir/$Newsgroup/conf/posted.cfv $HomeDir/CFV/$Newsgroup
 
 # Post the CFG
