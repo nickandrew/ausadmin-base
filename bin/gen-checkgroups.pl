@@ -39,7 +39,7 @@ open(GL, ">$grouplist") || die "Unable to open $grouplist for write: $!";
 print GL $s;
 close(GL);
 
-if ($opt_d) {
+if (! $opt_d) {
 	my $gl = new Checkgroups(signcmd => $signcmd, grouplist_file => $grouplist);
 	$gl->write("checkgroups.$$", $checkgroups_file);
 
