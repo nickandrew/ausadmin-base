@@ -50,7 +50,8 @@ foreach my $path (<vote/*/tally.dat>) {
 
 	while (<F>) {
 		chomp;
-		my($email,$vote,$choice,$ts,$p) = split(/\s/);
+		my($email,$vote,$choice,$ts,$p,$status) = split(/\s/);
+		$status ||= 'NEW';
 
 		my $ts2 = $ts;
 		if (!exists $message_path{$ts}) {
@@ -58,18 +59,35 @@ foreach my $path (<vote/*/tally.dat>) {
 			$ts2--;
 		}
 
-		if ($p eq '' && exists $message_path{$ts2}) {
+		if (!exists $message_path{$ts2}) {
+			# Unable to check this line at all
+			push(@lines, $_);
+			next;
+		}
+
+		# Otherwise ...
+
+		if ($p eq '') {
 			if ($message_path{$ts2} eq '') {
 				print "Note ... $ts2 in $path is uncertain.\n";
 				push(@lines, $_);
 			} else {
 				$p = $message_path{$ts2};
 				$changed++;
-				push(@lines, "$email $vote $choice $ts $p");
+				push(@lines, "$email $vote $choice $ts $p $status");
 			}
-		} else {
-			push(@lines, $_);
+
+			next;
 		}
+
+		if (!-f $p) {
+			$p = $message_path{$ts2};
+			$changed++;
+			push(@lines, "$email $vote $choice $ts $p $status");
+			next;
+		}
+
+		push(@lines, $_);
 	}
 
 	close(F);
