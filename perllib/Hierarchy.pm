@@ -4,6 +4,10 @@
 
 Hierarchy - a managed hierarchy
 
+=head1 DESCRIPTION
+
+Create and maintain all the necessary data structures for a hierarchy
+
 =head1 SYNOPSIS
 
  use Hierarchy;
@@ -13,6 +17,8 @@ Hierarchy - a managed hierarchy
 =cut
 
 package Hierarchy;
+
+use strict;
 
 use Carp qw(confess);
 
@@ -42,6 +48,28 @@ sub list {
 	}
 
 	return @list;
+}
+
+# ---------------------------------------------------------------------------
+# Create all the data structures for a hierarchy
+# ---------------------------------------------------------------------------
+
+sub create {
+	my $args = { @_ };
+
+	die "Need hier_name" if (! $args->{hier_name});
+
+	my $hier_name = $args->{hier_name};
+
+	my $data_dir = "$hier_name.data";
+
+	if (-e $data_dir) {
+		die "$data_dir exists already!";
+	}
+
+	foreach my $subdir ('', '/Html', '/Newsgroups', '/RCS') {
+		mkdir("$data_dir$subdir", 0755);
+	}
 }
 
 1;
