@@ -19,6 +19,13 @@ No files are changed or created by this program.
 
 =cut
 
+use lib 'bin';
+use Vote;
+
+my %action_states = (
+	'test/state' => 'Need action',
+);
+
 if (!-d "./vote") {
 	die "No ./vote directory - cd?";
 }
@@ -28,83 +35,25 @@ my @votes = grep { ! /^\./ } (readdir(D));
 closedir(D);
 
 foreach my $vote (@votes) {
-	my $d = "vote/$vote";
 
-	# Needs rfd if ...?
-	my $ok = 1;
-	foreach my $rfd_file (qw/charter distribution ngline proposer rationale/) {
-		if (!-f "$d/$rfd_file") {
-			$ok = 0;
-			print "$vote ... missing $rfd_file\n";
-			next;
-		}
+	my $v = new Vote(name => $vote);
 
-	}
-
-	if (!$ok) {
-		print "$vote ... is stuffed.\n";
+	if (!defined $v) {
+		print "$vote ... not a vote\n";
 		next;
 	}
 
-	if (!-f "$d/rfd") {
-		print "$vote ... needs an rfd (new-rfd $vote rfd-file)\n";
+	my $state = $v->state();
+
+	if (!exists $action_states{$state}) {
+		print "$vote ... Unknown state $state\n";
 		next;
 	}
 
-	if (!-f "$d/vote_start.cfg") {
-		# Vote not started, check if it's too early
-
-		my $now = time();
-		my $rfd_date = (stat("$d/rfd"))[9];
-		next if ($now - $rfd_date < 21 * 86400);
-		print "$vote ... ready to start vote when proponent requests\n";
-		next;
+	my $a = $action_states{$state};
+	if ($a ne '') {
+		print "$vote ... $a ($state)\n";
 	}
-
-	# Check if CFV posted
-	if (!-f "$d/posted.cfg") {
-		print "$vote ... no posted.cfg, so please post the CFV\n";
-		next;
-	}
-
-	# Check if vote cancelled
-	if (-f "$d/vote_cancel.cfg") {
-		# Check if cancel messages were created
-		if (!-f "$d/cancel-article.txt") {
-			print "$vote ... cancelled, but no cancel article\n";
-			next;
-		}
-
-		if (!-f "$d/cancel-email.txt") {
-			print "$vote ... cancelled, but no cancel email\n";
-			next;
-		}
-
-		# Otherwise it is cancelled properly, nothing to do
-		next;
-	}
-
-	if (!-f "$d/endtime.cfg") {
-		print "$vote ... vote not setup properly, no endtime.cfg\n";
-		next;
-	}
-
-	open(F, "<$d/endtime.cfg");
-	my $end_time = <F>;
-	chomp($end_time);
-
-	if (time() < $end_time) {
-		# Vote still running
-		next;
-	}
-
-	# Vote ended, check results and etc
-	if (!-f "$d/result") {
-		print "$vote ... vote ended, but no result file\n";
-	}
-
-	# There's no programmatic way for us to tell whether a vote
-	# passed or failed. So ignore here.
 }
 
 exit(0);
