@@ -31,13 +31,18 @@ Each vote is compared against the vote directory for the stated
 newsgroup and accepted or rejected according to the voting status
 of that newsgroup.
 
+Accepted votes are appended to the B<tally.dat> file in the vote
+directory in the format:
+
+	userid@domain newsgroup YES|NO|ABSTAIN time
+
 =cut
 
 use FileHandle;
+use IO::File;
 use Fcntl qw(:flock);
 
-my $HomeDir = "/virt/web/ausadmin";
-my $BaseDir = "$HomeDir/vote";
+my $BaseDir = "./vote";
 
 while ( <STDIN> ) {
 	chomp;
@@ -102,13 +107,14 @@ while ( <STDIN> ) {
 	}
 
 	# Section 3 (see above)
-	if ( open( TALLYFILE, ">>$BaseDir/$Newsgroup/tally.dat" ) ) {
-		flock(TALLYFILE, LOCK_EX);
-		print TALLYFILE "$EmailAddress $Newsgroup $Vote $CTime $fn\n";
-		close(TALLYFILE);
-	} else {
-		die "Collater failed (couldn't open/create tally file)";
+	my $tf = new IO::File("$BaseDir/$Newsgroup/tally.dat", O_WRONLY|O_APPEND|O_CREAT, 0640);
+	die "Collater failed (couldn't create/append tally file: $!" if (!defined $tf);
+	flock($tf, LOCK_EX);
+	$tf->print("$EmailAddress $Newsgroup $Vote $CTime $fn\n");
+	if (!$tf->close()) {
+		die "Error writing to tally file for $Newsgroup";
 	}
+
 	AckVote($EmailAddress, $Vote, $Newsgroup);	
 }
 # End of main loop
@@ -125,7 +131,7 @@ sub FailVote {
 		print MAILPIPE "Subject: Vote Failed ($_[0])\n";
 		print MAILPIPE "X-Automated-Reply: this message was sent by an auto-reply program\n\n";
 
-		if ( open ( ERRORMSG, "$HomeDir/config/votefail.msg" ) ) {
+		if ( open ( ERRORMSG, "config/votefail.msg" ) ) {
 			while ( <ERRORMSG> ) {
 				chomp;
 				print MAILPIPE "$_\n";
@@ -134,14 +140,15 @@ sub FailVote {
 		} else {
 			print MAILPIPE "Your vote failed, but I couldn't open my error message file\n";
 			print MAILPIPE "so please contact ausadmin\@aus.news-admin.org for assistance.\n";
-			print STDERR "Couldn't open votefail.msg!";
+			print STDERR "Couldn't open votefail.msg!\n";
 		}
 
 		close( MAILPIPE );
 	} else {
 		die "MAILPIPE failed";
 	}
-	print STDERR "Collater failed ($_[0])";
+
+	print STDERR "Collater failed ($_[0])\n";
 	exit(0);
 }
 
