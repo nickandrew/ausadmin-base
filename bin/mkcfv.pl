@@ -115,14 +115,16 @@ I vote NO on aus.silly.group
 I vote YES on aus.good.group
 
 You may also ABSTAIN in place of YES/NO - this will not affect the outcome.
-Anything else may be rejected by the automatic vote counting program.  
+Anything else may be rejected by the automatic vote counting program.
 ausadmin will respond to your received ballots with a personal
 acknowledgement by E-mail - if you do not receive one within 24 hours, try
 again. It's your responsibility to make sure your vote is registered
 correctly.
 
-Only one vote per person, no more than one vote per E-mail address.
-Addresses of all voters will be published in the final voting results list.
+Only one vote per person, no more than one vote per E-mail address.  Votes
+from invalid emails may be rejected.  Addresses of all voters will be 
+published in the final voting results list.
+
 
 [ Note: CFVs and control messages will be signed with the ausadmin key.
   Download it from http://aus.news-admin.org/ausadmin.asc now!   --nick ]
@@ -156,11 +158,9 @@ GROUP:	       while (<>) {
 		    } else {
 			 last GROUP;
 		    }
-		    
 	       }
-	       
 	  }
-	  
+
 	  if ( $_ =~ /^Moderated:.*/i ) {
 	       s/^Moderator:\s*(.*)/$1/i;
 	       $moderated{$newsgroup}=1;
@@ -168,7 +168,6 @@ GROUP:	       while (<>) {
 		    last if (/^End moderator info/i);
 		    push @{$moderator{$newsgroup}},$_;
 	       }
-	       
 	  }
 
 
@@ -192,22 +191,19 @@ PROP:	       while (<>) {
 	       }
 	  }
 
-	  
+
 	  if (/^rationale:.*/i ) {
 	       while ( <> ) {
-		    last if (/^END CHARTER/i);		 
+		    last if (/^END CHARTER/i);
 		    chomp;
 		    push @{$Charter{$newsgroup}},$_;
 	       }
 	  }
-	  
-
      }
 
      $distribution = join ',',
 	  grep /^\s*([-\w.]+)\s*$/,
 	       split '\s*\,\s*',$distribution;
-	   
 }
 
 =pod
