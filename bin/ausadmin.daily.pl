@@ -33,7 +33,7 @@ sub endtime {
 	       
 	  } else {	       
 	       system ("bin/genresult.pl $vote >$path/$vote/result");
-	       system ("bin/post.pl < $path/$vote/result");
+#	       system ("bin/post.pl < $path/$vote/result");
 	  }
      }
 }
