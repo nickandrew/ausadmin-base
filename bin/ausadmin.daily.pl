@@ -9,7 +9,7 @@ getopts("d");
 
 my $debug=$opt_d;
 
-chdir 'find /virt/web/ausadmin/';
+chdir '/virt/web/ausadmin/';
 
 sub endtime {
      local *FILE;
@@ -28,7 +28,7 @@ sub endtime {
 	       warn ("inews -h $path/$vote/result\n");
 	       
 	  } else {	       
-	       system ("genresult.pl $vote >$path/$vote/result") or die;
+	       system ("genresult.pl $vote >$path/$vote/result") or die "System failed for $vote";
 	       system ("inews -h $path/$vote/result") or die;
 	  }
      }
@@ -100,7 +100,7 @@ sub creategroup {
 	       warn ("gennewgroup.pl $vote\n");
 	       
 	  } else {	       
-	       system ("gennewgroup.pl $vote") or die;
+	       system ("gennewgroup.pl $vote");
 	  }
      }
 }
