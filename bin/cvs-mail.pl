@@ -1,14 +1,17 @@
 #!/usr/bin/perl -w
-
-use strict;
-
+#
+# $Source$
+# $Revision$
+# $Date$
+#
 # Usage: cvs-mail.pl filename
-
+#
 # Proccesses incoming mail for ausadmin adding
-
 # X-PTS-Account: ausadmin
 # X-PTS-Status: open
 # X-PTS-Handled: dformosa
+
+use strict;
 
 my $ttsid = 'zz-pts@staff.zeta.org.au';
 my $admin = 'dformosa@zeta.org.au';

@@ -1,7 +1,9 @@
 #!/usr/bin/perl
 #	gennewgroup.pl vote
-#	$Revision$
-#	$Date$
+#
+# $Source$
+# $Revision$
+# $Date$
 
 use strict;
 require "bin/misc.pli";

@@ -1,4 +1,8 @@
 #!/usr/bin/perl -w
+#
+# $Source$
+# $Revision$
+# $Date$
 
 # Commonly used variables
 

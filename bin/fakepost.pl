@@ -1,5 +1,9 @@
 #!/usr/bin/perl -w
-
+#
+# $Source$
+# $Revision$
+# $Date$
+#
 # Generate headers so that it looks like that it has been posted via 
 # a system.
 

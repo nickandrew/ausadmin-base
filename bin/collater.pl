@@ -1,16 +1,17 @@
 #!/usr/bin/perl
-
+#
+# $Source$
 # $Revision$
 # $Date$
-
-
-use FileHandle;
-
+#
 # Processes any incoming votes from incoming.pl
 # 1. Checks whether the newsgroup is valid
 # 2. Checks to see whether user has already voted
 # 3. Otherwise adds vote
 # 4. Sends an acknowledgment
+
+
+use FileHandle;
 
 $LOCK_SH = 1;
 $LOCK_EX = 2;

@@ -1,7 +1,8 @@
 #!/usr/bin/perl -w
-
-#	$Revision$
-#	$Date$
+#
+# $Source$
+# $Revision$
+# $Date$
 
 
 use strict;

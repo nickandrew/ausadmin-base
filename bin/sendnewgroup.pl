@@ -1,4 +1,6 @@
 #!/usr/bin/perl -w
+#
+# $Source$
 # $Revision$
 # $Date$
 
@@ -81,10 +83,10 @@ sendnewgroup schedulefilename newsgroupfilename
 posts newsgroupfilename dependent on the schedule layed out in 
 schedulefilename.  The format of this file is as followed.
 
-groupnanme\tnextdate\tintervil\tcount
+groupname\tnextdate\tinterval\tcount
 
-Where groupnanme is the name of the group (ignored present for backwards 
-compatablity.
+Where groupname is the name of the group (ignored present for backwards 
+compatibility.
 
 nextdate is the date when the next new group will be issued in seconds since 
 epock

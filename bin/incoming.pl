@@ -1,11 +1,12 @@
 #!/usr/bin/perl
 #	@(#) incoming.pl
 #
-# Usage: incoming.pl filename
-
+# $Source$
 # $Revision$
 # $Date$
-
+#
+# Usage: incoming.pl filename
+#
 # Processes any incoming mail
 # 1. Read in the message header and obtain the return email address
 #    - otherwise die. Each vote needs a return email address.

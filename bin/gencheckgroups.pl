@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 #	gencheckgroups.pl
-
+#
+# $Source$
 # $Revision$
 # $Date$
 

@@ -1,5 +1,9 @@
 #!/usr/bin/perl -w
-
+#
+# $Source$
+# $Revision$
+# $Date$
+#
 # Makes the Call For Votes post from a template and the group charter
 # and outputs to STDOUT. Also creates a group configuration file with
 # only one line - the end date (in system time (s))

@@ -1,5 +1,9 @@
 #!/usr/bin/perl
 #	groupresult.pl vote
+#
+# $Source$
+# $Revision$
+# $Date$
 
 $votedir = "vote";
 

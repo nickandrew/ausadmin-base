@@ -1,7 +1,9 @@
 #!/usr/bin/perl -w
 #	genresult.pl vote
-#	$Revision$
-#	$Date$
+#
+# $Source$
+# $Revision$
+# $Date$
 
 use Getopt::Std;
 use vars '$opt_d';

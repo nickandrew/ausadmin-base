@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 #	@(#) gengrouplist.pl - Creates an informal list of newsgroups
 #
+# $Source$
 # $Revision$
 # $Date$
 
