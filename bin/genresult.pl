@@ -328,11 +328,11 @@ sub pass_msg() {
 	}
 
 	my $now = time();
-	makegroup($ng, $time + 5 * 86400);
+	makegroup($ng, $now + 5 * 86400);
 
-	setposts($ng, "post.real", $time + 5 * 86400, 5 * 86400, 3);
-	setposts($ng, "post.fake.phil", $time + 10 * 86400, 5 * 86400, 3);
-	setposts($ng, "post.fake.robert", $time + 15 * 86400, 5 * 86400, 3);
+	setposts($ng, "post.real", $now + 5 * 86400, 5 * 86400, 3);
+	setposts($ng, "post.fake.phil", $now + 10 * 86400, 5 * 86400, 3);
+	setposts($ng, "post.fake.robert", $now + 15 * 86400, 5 * 86400, 3);
 }
 
 sub fail_msg() {
