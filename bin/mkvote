@@ -32,10 +32,10 @@ gendirs ()
 }
 
 # set up common environment
-cp $Info $BaseDir/tmp/info.$$
+cp $Info $HomeDir/tmp/info.$$
 s=$?
 if [ $s != 0 ] ; then
-	echo "Unable to copy $Info - fatal
+	echo "Unable to copy $Info - fatal"
 	exit 5
 fi
 
