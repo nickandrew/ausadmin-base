@@ -1,0 +1,12 @@
+#!/bin/bash
+
+ts=`date '+%Y%m%d-%H%M%S'`.$$
+fn=messages/$ts
+cd ~
+#cat > /tmp/vote.$$
+cat > $fn
+
+HomeDir=/virt/web/ausadmin
+BaseDir=$HomeDir/vote
+
+$BaseDir/bin/incoming.pl $fn < $fn | $BaseDir/bin/collater.pl
