@@ -1,5 +1,7 @@
 #!/usr/bin/perl
-#	@(#) misc.pli - miscellaneous functions
+#	@(#) Ausadmin.pm - miscellaneous ausadmin specific functions
+
+# $Id$
 # $Source$
 # $Revision$
 # $Date$
@@ -24,6 +26,15 @@ This package provides some useful file I/O functions
 
 
 package Ausadmin;
+
+my %ph_defaults = (
+	'Newsgroups' => 'aus.general,aus.net.news',
+	'From' => 'aus group admin <ausadmin@aus.news-admin.org>',
+	'Organization' => 'aus.* newsgroups administration, see http://aus.news-admin.org/',
+	'X-PGPKey' => 'at http://aus.news-admin.org/ausadmin.asc',
+	'Followup-To' => 'aus.net.news'
+);
+
 
 sub read1line {
 	my($path) = @_;
@@ -90,6 +101,25 @@ sub centred_text {
 	}
 
 	return @output;
+}
+
+sub print_header {
+	my($hashref) = @_;
+	my %headers = %$hashref;
+
+	foreach my $header (keys %Ausadmin::ph_defaults) {
+		if (!defined($headers{$header})) {
+			$headers{$header} = $Ausadmin::ph_defaults{$header};
+		}
+	}
+
+	foreach my $header (keys %headers) {
+		if ($headers{$header} ne "") {
+			print "$header: $headers{$header}\n";
+		}
+	}
+
+	print "\n";
 }
 
 1;

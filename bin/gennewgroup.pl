@@ -6,7 +6,8 @@
 # $Date$
 
 use strict;
-require "bin/misc.pli";
+use lib 'bin';
+use Ausadmin;
 
 # Take in the file name, check it and then if necessary post off a
 # newgroup or rmgroup message.
@@ -95,8 +96,8 @@ sub donewsgroup {
 
      if (not $moderated) {
 	  
-	  my $ngline = read1line("vote/$vote/ngline");
-	  my $charter = readfile("vote/$vote/charter");
+	  my $ngline = Ausadmin::read1line("vote/$vote/ngline");
+	  my $charter = Ausadmin::readfile("vote/$vote/charter");
 	  my $post =<<"EOF";
 From: $from
 Subject: Cmsg newgroup $name

@@ -5,8 +5,8 @@
 # $Revision$
 # $Date$
 
-require "bin/postheader.pli";
-require "bin/misc.pli";
+use lib 'bin';
+use Ausadmin;
 
 my $postaddress = "ausadmin\@aus.news-admin.org";
 my $grouplist = "data/ausgroups";
@@ -15,8 +15,8 @@ if (! -f $grouplist) {
 	die "gengrouplist.pl: No list of newsgroups: $grouplist\n";
 }
 
-my $grouplist_header = readfile("data/grouplist.header");
-my $grouplist_footer = readfile("data/grouplist.footer");
+my $grouplist_header = Ausadmin::readfile("data/grouplist.header");
+my $grouplist_footer = Ausadmin::readfile("data/grouplist.footer");
 
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = localtime(time);
 $year += 1900; $mon++;
@@ -34,7 +34,7 @@ if (!open(C, "<$grouplist")) {
 	die "Unable to open $grouplist: $!\n";
 }
 
-print_header(\%header);
+Ausadmin::print_header(\%header);
 
 # Can't send this in @body because an extra blank line will be added
 # push(@body, $grouplist_header);
@@ -51,4 +51,3 @@ close(C);
 print $grouplist_footer;
 
 exit(0);
-

@@ -1,11 +1,12 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 #
 # $Source$
 # $Revision$
 # $Date$
 
 use strict;
-require "bin/misc.pli";
+use lib 'bin';
+use Ausadmin;
 
 my $debug=0;
 my $schedule=shift;
@@ -59,12 +60,12 @@ sub sendmessage {
   #  my $filename=shift;
   die "Newgroup message file $filename not made" if not -e $filename;
   if ($debug) {
-    print "cat $filename | bin/post.pl";
+    print "bin/post.pl < $filename";
   } else {
     if ($filename =~ /fake/) {
-      system "cat $filename | bin/post.pl";
+      system "bin/post.pl < $filename";
     } else {
-      system "cat $filename | bin/signcontrol | bin/post.pl";
+      system "bin/signcontrol < $filename | bin/post.pl";
     }  
   }
   

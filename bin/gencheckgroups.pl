@@ -5,20 +5,20 @@
 # $Revision$
 # $Date$
 
-require "bin/postheader.pli";
-require "bin/misc.pli";
+use lib 'bin';
+use Ausadmin;
 
-$signcmd = "bin/signcontrol";
+my $signcmd = "bin/signcontrol";
 
 select(STDOUT); $| = 1;
 
-if (! -f "data/ausgroups") {
+if (!-f "data/ausgroups") {
 	die "gencheckgroups.pl: No list of newsgroups\n";
 }
 
 my($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = localtime(time());
 
-$monthname=("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")[$mon];
+my $monthname=("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")[$mon];
 
 $year += 1900; $mon++;
 my $now = sprintf "%d-%02d-%02d %02d:%02d:%02d", $year, $mon, $mday, $hour, $min, $sec;
@@ -51,7 +51,7 @@ if (!open(P, "|$signcmd")) {
 }
 
 select(P);
-print_header(\%header);
+Ausadmin::print_header(\%header);
 
 print P "\n";
 
