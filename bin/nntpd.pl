@@ -61,6 +61,12 @@ while (1) {
 		next;
 	}
 
+	if (/^list/) {
+		out("215 listing active\n");
+		list_hiers(undef);
+		next;
+	}
+
 	if (/list newsgroups( (.*))?/) {
 		my $regex = $2;
 		if ($regex) {
@@ -148,3 +154,11 @@ sub list_newsgroups {
 	close(F);
 }
 
+sub list_hiers {
+	my($regex) = @_;
+
+	foreach my $hier (@hiers) {
+		list_active($hier, $regex);
+	}
+	out(".\n");
+}
