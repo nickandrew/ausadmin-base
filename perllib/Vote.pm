@@ -12,6 +12,7 @@ Vote - a Vote of some kind
 
  my $vote = new Vote(name => 'aus.history');
  $vote_dir = $vote->ng_dir();		# returns relative path of vote's dir
+ $config_path = $vote->ng_dir($filename) # returns rel path of this config file
  $time = $vote->get_start_time();
  $time = $vote->get_end_time();
  $time = $vote->get_cancel_time();
@@ -19,6 +20,8 @@ Vote - a Vote of some kind
  $list_ref = $vote->get_distribution();
  $list_ref = $vote->get_tally();
  $string = $vote->state();		# return string representing vote's state
+ $string = $vote->get_state();		# read state from file first, calc 2nd
+ $state = $vote->set_state($state);	# set state in file
 
  $vote->write_voterule($template);
 
@@ -75,14 +78,17 @@ sub _read_file {
 
 sub ng_dir {
 	my $self = shift;
+	my $file = shift;
 
-	if (exists $self->{ng_dir}) {
-		return $self->{ng_dir};
+	if (!exists $self->{ng_dir}) {
+		$self->{ng_dir} = "$self->{vote_dir}/$self->{name}";
 	}
 
-	my $ng_dir = "$self->{vote_dir}/$self->{name}";
+	if (defined $file) {
+		return "$self->{ng_dir}/$file";
+	}
 
-	return $ng_dir;
+	return $self->{ng_dir};
 }
 
 sub get_start_time {
@@ -196,7 +202,7 @@ sub check_files {
 }
 
 
-# $string = $vote->state() ...
+# $string = $vote->calc_state() ...
 
 sub state {
 	my $self = shift;
@@ -307,5 +313,93 @@ sub write_voterule {
 	}
 }
 
+sub get_state {
+	my $self = shift;
+
+	my $vote_dir = $self->ng_dir();
+	my $state_file = "$vote_dir/state";
+
+	if (-f $state_file) {
+		my $state = read1line($state_file);
+		return $state;
+	}
+
+	# Otherwise, calculate the state and save it in the file
+	my $state = $self->state();
+
+	return $self->set_state($state);
+}
+
+sub set_state {
+	my $self = shift;
+	my $new_state = shift;
+
+	my $vote_dir = $self->ng_dir();
+	my $state_file = "$vote_dir/state";
+
+	open(F, ">$state_file");
+	print F $new_state, "\n";
+	close(F);
+
+	return $new_state;
+}
+
+sub count_votes {
+	my $self = shift;
+	my $tally_file = $self->ng_dir("tally.dat");
+	my $name = $self->{name};
+
+	my $results = {
+		yes => 0,
+		no => 0,
+		abstain => 0,
+		forge => 0,
+		informal => 0
+	};
+
+	my @voters;
+
+	# Open the tally file and munch it
+	if (!open(T, "<$tally_file")) {
+		die "Vote $name has no tally file.\n";
+	}
+
+	while (<T>) {
+		my($email,$ng,$v,$ts,$path) = split;
+
+		$v=lc($v);
+
+		if (!exists $results->{$v}) {
+			# This is a vote type we don't know about
+			$v = 'informal';
+		}
+
+		$results->{$v}++;
+
+		push(@voters, [$email, $v]);
+
+	}
+
+	close(T);
+
+	return($results, \@voters);
+}
+
+# returns 'pass' or 'fail'
+
+sub calc_result {
+	my $self = shift;
+
+	my $voterule = $self->_read_config_line("voterule");
+	my($numer,$denomer,$minyes) = split(/\s+/, $voterule);
+
+	my($results,$voters) = $self->count_votes();
+
+	if (($results->{yes} >= ($results->{yes} + $results->{no}) * $numer / $denomer) && ($results->{yes} - $results->{no} >= $minyes)) {
+		return 'pass';
+	}
+
+	return 'fail';
+}
 
 1;
