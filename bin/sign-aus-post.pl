@@ -8,7 +8,7 @@ use strict;
 
 my $filename=shift;
 
-system 'pico $filename' or die "Can't edit file\n";
+system "pico $filename" or die "Can't edit file\n";
 
 open POST,"<$filename" or die "Unable to open $filename $!";
 
