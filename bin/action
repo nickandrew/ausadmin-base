@@ -250,18 +250,18 @@ sub post_cfv {
 		die "Ok, try again later.\n";
 	}
 
+	my $rc = system("post.pl < $ng_dir/posted.cfv");
+	$v->audit("posted CFV (code $rc)");
+	if ($rc) {
+		die "post failed code $rc...!";
+	}
+
 	my($sec,$min,$hour,$mday,$mon,$year) = localtime(time());
 	$mon++; $year += 1900;
 	my $yyyymmdd = sprintf "%d-%02d-%02d", $year,$mon,$mday;
 	open(F, ">$ng_dir/posted.cfg");
 	print F $yyyymmdd, "\n";
 	close(F);
-
-	my $rc = system("post.pl < $ng_dir/posted.cfv");
-	$v->audit("posted CFV (code $rc)");
-	if ($rc) {
-		die "post failed code $rc...!";
-	}
 
 	print "\nOkay.\n";
 
@@ -280,18 +280,18 @@ sub post_result {
 		die "Ok, try again later.\n";
 	}
 
+	my $rc = system("post.pl < $ng_dir/result");
+	$v->audit("posted result (code $rc)");
+	if ($rc) {
+		die "post failed code $rc...!";
+	}
+
 	my($sec,$min,$hour,$mday,$mon,$year) = localtime(time());
 	$mon++; $year += 1900;
 	my $yyyymmdd = sprintf "%d-%02d-%02d", $year,$mon,$mday;
 	open(F, ">$ng_dir/result_posted.cfg");
 	print F $yyyymmdd, "\n";
 	close(F);
-
-	my $rc = system("post.pl < $ng_dir/result");
-	$v->audit("posted result (code $rc)");
-	if ($rc) {
-		die "post failed code $rc...!";
-	}
 
 	print "\nOkay.\n";
 
