@@ -6,19 +6,19 @@
 # $Date$
 #
 # Makes the Call For Votes post from a template and the group charter
-# and outputs to STDOUT. Also creates a group configuration file with
-# only one line - the end date (in system time (s))
+# and outputs to STDOUT (after signing through pgp).
 
 use Time::Local;
 use IO::Handle;
 
 # Info Needed to run the script
 my $VoteAddress = "vote\@aus.news-admin.org";
-my $HomeDir = "/virt/web/ausadmin";
-my $BaseDir = "$HomeDir/vote";
+my $BaseDir = "./vote";
 my $default_voteperiod = 21;		# days
 
 my $VotePeriod = $default_voteperiod;
+
+die "No vote subdirectory (must cd to ~ausadmin)" if (!-d $BaseDir);
 
 my @newsgroups = @ARGV;
 
@@ -28,7 +28,9 @@ my $distribution = read_file("$BaseDir/$newsgroups[0]/distribution");
 
 die "No proposer" if (!defined $proposer);
 die "No distribution" if (!@$distribution);
-my $g;
+
+# Store all the group info in $g
+my $g = { };
 
 foreach my $newsgroup (@newsgroups) {
 	
@@ -43,30 +45,11 @@ foreach my $newsgroup (@newsgroups) {
 
 	my $ConfigFile ="$BaseDir/$newsgroup/endtime.cfg";
 
-	if (open(VP, "<$BaseDir/$newsgroup/voteperiod")) {
-		$VotePeriod = <VP>;
-		chomp($VotePeriod);
-		close(VP);
-	}
-
-	# Find the finish date for votes according to the VD (vote duration)
-	$VD = $VotePeriod * 86400;
-
-	# Find the gmt end time
-	my($sec,$min,$hour,$mday,$mon,$year) = gmtime(time() + $VD);
-
-	# Extend it to nearly midnight
-	($hour,$min,$sec) = (23,59,59);
-	my $then = timegm($sec,$min,$hour,$mday,$mon,$year);
+	my $end_time = read_file($ConfigFile);
 
 	# Now make the human-readable one
 
-	$EndDate = gmtime($then);
-
-	# And write to control file
-	open(T, ">$ConfigFile");
-	print T $then + 1, "\n";
-	close(T);
+	$EndDate = gmtime($end_time);
 }
 
 # Opens the template Call For Votes file and constructs the actual CFV file
@@ -101,7 +84,7 @@ foreach my $newsgroup (@newsgroups) {
 		$ng = "Moderated newsgroup";
 	}
 
-	print P "\t\t$ng $newsgroup\n";
+	print P "\t\t\t\t$ng $newsgroup\n";
 }
 
 print P "\n";
@@ -160,7 +143,7 @@ Anything else may be rejected by the automatic vote counting program.
 The ausadmin system will respond to your received ballots with a personal
 acknowledgement by E-mail so you must send from your real e-mail address,
 not a spam-block address. If you do not receive an acknowledgement within
-24 hours, try again. It's your responsibility to make sure your vote is
+24 hours, try again. It is your responsibility to make sure your vote is
 registered correctly.
 
 Only one vote per person, no more than one vote per E-mail address.
