@@ -5,17 +5,24 @@
 #	Released under GPL
 
 use Net::NNTP qw();
+use LWP::UserAgent qw();
 
 my $cfg = {
 	news_server => 'freenews.iinet.net.au',
 	my_email => 'you@example.com',
 	email_to => 'ausadmin@aus.news-admin.org',
-	hier_url => 'http://aus.news-admin.org/monitor.txt',
+	hier_url => 'http://aus.news-admin.org/data/monitor.txt',
 	now => time(),
 	vers => '$Revision$',
 };
 
-my @hiers = ('aus.*', 'bne.*', 'canb.*');
+# Grab the list of hierarchies to monitor
+my $ua = new LWP::UserAgent();
+my $response = $ua->get($cfg->{hier_url});
+if (! $response->is_success()) {
+	die "Unable to connect to $cfg->{hier_url} to download the list of hierarchies";
+}
+my @hiers = split(/\s+/, $response->content());
 
 my $svr = new Net::NNTP($cfg->{news_server}) || die "Unable to connect to $cfg->{news_server}";
 $svr->reader() or die "mode reader command failed";
@@ -24,9 +31,7 @@ my $config = join(' ', (map { "$_=\"$cfg->{$_}\"" } (sort (keys %$cfg))));
 
 my $s = qq~<grouplist $config >\n~;
 
-
 foreach my $hier (@hiers) {
-	$s .= qq~ <hier name="$hier">\n~;
 	my %gl;
 
 	my $active = $svr->active($hier);
@@ -46,7 +51,10 @@ foreach my $hier (@hiers) {
 		}
 	}
 
+	next unless (%gl);
+
 	# Now output all the group data
+	$s .= qq~ <hier name="$hier">\n~;
 
 	foreach my $ng (sort (keys %gl)) {
 		my $r = $gl{$ng};
