@@ -11,8 +11,8 @@ use Net::SMTP qw();
 my $cfg = {
 	news_server => $ENV{NNTPSERVER} || 'news.example.com',
 	my_email => $ENV{MAIL_FROM} || 'you@example.com',
-	email_mode => 'sendmail',		# sendmail or smtp
-	mail_server => 'aus.news-admin.org',
+	email_mode => 'smtp',		# sendmail or smtp
+	mail_server => $ENV{MAILSERVER} || die 'MAILSERVER must be set to smtp server hostname',
 	email_to => 'ausadmin@aus.news-admin.org',
 	hier_url => 'http://aus.news-admin.org/data/monitor.txt',
 	now => time(),
