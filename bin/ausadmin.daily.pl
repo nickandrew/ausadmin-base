@@ -4,7 +4,6 @@ use strict;
 use Getopt::Std;
 use vars '$opt_d';
 
-#This hash maps files to what action should be done on that file.
 
 getopts("d");
 
@@ -41,9 +40,9 @@ sub realpost {
      
      if (-e "$path/$vote/newgroup.post.real") {
 	  if ($debug) {
-	       warn "sendnewgroup.pl $path/$vote/newgroup.post.real\n";
+	       warn "sendnewgroup.pl $path/$vote/$name $path/$vote/newgroup.post.real\n";
 	  } else {
-	       system ("sendnewgroup.pl $path/$vote/newgroup.post.real");
+	       system ("sendnewgroup.pl $path/$vote/$name $path/$vote/newgroup.post.real");
 	  }
 	  
      }
@@ -57,9 +56,9 @@ sub fakepost_phil {
 
      if (-e "$path/$vote/newgroup.post.fake.phil") {
 	  if ($debug) {
-	       warn ("sendnewgroup.pl $path/$vote/newgroup.post.fake.phil\n");
+	       warn ("sendnewgroup.pl $path/$vote/$name $path/$vote/newgroup.post.fake.phil\n");
 	  } else {
-	       system ("sendnewgroup.pl $path/$vote/newgroup.post.fake.phil");
+	       system ("sendnewgroup.pl $path/$vote/$name $path/$vote/newgroup.post.fake.phil");
 	  }
      }
      
@@ -81,6 +80,7 @@ sub fakepost_robert {
      }
 }
 
+#This hash maps files to what action should be done on that file.
 
 my $action = {
 	      "endtime.cfg" => \&endtime,
