@@ -13,7 +13,7 @@ setup-vote - Create the control files for running a vote
 
 =head1 SYNOPSIS
 
-cd ~asadmin
+cd ~ausadmin
 setup-vote newsgroup-name ...
 
 =head1 DESCRIPTION
@@ -38,6 +38,7 @@ exists (it must contain a timestamp later than the current time).
 After this program has been run, use mkcfv.pl to create the
 pgp-signed Call-For-Votes (CFV) message and post it, so everybody
 knows they can vote.
+
 =cut
 
 use Time::Local;

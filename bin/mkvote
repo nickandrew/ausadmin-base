@@ -22,49 +22,45 @@ Newsgroup="$1"
 # Commonly used variables
 HomeDir=~ausadmin
 BaseDir=$HomeDir/vote
+ng_dir=$BaseDir/$Newsgroup
 
 # set up common environment
 
-cd $BaseDir
+cd $HomeDir
 
 # Check that vote directory exists, and other files needed to create a vote
-if [ ! -d $Newsgroup ] ; then
-	echo No directory $BaseDir/$Newsgroup
+if [ ! -d $ng_dir ] ; then
+	echo No directory $ng_dir
 	exit 8
 fi
 
 # Expect all these files ..
 s=0
 for i in charter distribution ngline proposer rationale ; do
-	if [ ! -f $Newsgroup/$i ] ; then
-		echo Missing $Newsgroup/$i - run new-rfd first
+	if [ ! -f $ng_dir/$i ] ; then
+		echo Missing $ng_dir/$i - run new-rfd first
 		s=8
 	fi
-fi
+done
 
 if [ $s != 0 ] ; then
 	echo Unable to make vote due to missing RFD files
 	exit $s
 fi
 
-if [ -e $Newsgroup/endtime.cfg ] ; then
+if [ -e $ng_dir/endtime.cfg ] ; then
 	echo Vote already started on $Newsgroup
 	exit 8
 fi
 
-# cp ~/config/voterule $Newsgroup/voterule
-
 ~/bin/setup-vote $Newsgroup
 
-# This will be obsoleted by vote_start.cfg soon
-cp $Newsgroup/vote_start.cfg $Newsgroup/starttime.cfg
-
 # Run the Perl script mkcfv to make the CFV and PGP-sign it then post it away!
-mkcfv.pl $Newsgroup > $Newsgroup/posted.cfv 2>$HomeDir/tmp/pgp.$$
+mkcfv.pl $Newsgroup > $ng_dir/posted.cfv 2>$HomeDir/tmp/pgp.$$
 s=$?
 if [ $s != 0 ] ; then
 	echo "Unable to make Call For Votes -- code $s - fatal"
-	cat $Newsgroup/posted.cfv 2>$HomeDir/tmp/pgp.$$
+	cat $ng_dir/posted.cfv 2>$HomeDir/tmp/pgp.$$
 	exit 7
 fi
 
@@ -73,7 +69,7 @@ ln -s $BaseDir/$Newsgroup/posted.cfv $HomeDir/CFV/$Newsgroup
 
 
 # Post the CFV
-echo `date '+%s'` > $Newsgroup/posted.cfg
+echo `date '+%s'` > $ng_dir/posted.cfg
 ~/bin/post.pl < $BaseDir/$Newsgroup/posted.cfv
 
 echo Done at `date`
