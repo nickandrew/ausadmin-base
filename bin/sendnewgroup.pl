@@ -117,15 +117,13 @@ EOT
     $post .= "\nThis control message has been forged as \"$from\" for the benefit of those\nsites still honouring his posts.  If you are one of those sites please see \<URL:http://aus.news-admin.org/\>.";
   }
   local *NEWS;
-  if (not open (NEWS,"|pgpverify|inews -h")) {
-    print "Unable to fork for pgpverify due to $!\n";
-    exit (4);
+  if (not open (NEWS,"|pgpverify")) {
+    die "Unable to fork for pgpverify due to $!\n";
   }
   
   print NEWS $post;
 
   if (not close NEWS) {
-    print "Unable to run pgpverify due to $!\n";
-    exit (5);
+    die "Unable to run pgpverify due to $!\n";
   } 
 }

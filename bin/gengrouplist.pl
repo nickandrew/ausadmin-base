@@ -12,16 +12,15 @@ $postaddress = "ausadmin\@aus.news-admin.org";
 $grouplist = "data/ausgroups";
 
 if (-f "/usr/bin/pgps") {
-	$pgpcmd = "pgps -fat";
+     $pgpcmd = "pgps -fat";
 } else {
-	$pgpcmd = "pgp -fast";
+     $pgpcmd = "pgp -fast";
 }
 
 select(STDOUT); $| = 1;
 
 if (! -f $grouplist) {
-	print "gengrouplist.pl: No list of newsgroups: $grouplist\n";
-	exit(3);
+     die "gengrouplist.pl: No list of newsgroups: $grouplist\n";
 }
 
 $grouplist_header = readfile("data/grouplist.header");
@@ -34,14 +33,13 @@ $now = sprintf "%d-%02d-%02d %02d:%02d:%02d", $year, $mon, $mday, $hour, $min, $
 # Generate the message, header first
 
 %header = (
-	'Subject' => "List of aus.* newsgroups at $now",
-	'Newsgroups' => 'aus.net.news'
-);
+	   'Subject' => "List of aus.* newsgroups at $now",
+	   'Newsgroups' => 'aus.net.news'
+	  );
 
 # Open the groups file
 if (!open(C, "<$grouplist")) {
-	print "Unable to open $grouplist: $!\n";
-	exit(3);
+     die "Unable to open $grouplist: $!\n";
 }
 
 print_header(\%header);
@@ -52,14 +50,13 @@ print_header(\%header);
 push(@body, $grouplist_footer);
 
 if (!open(P, "|$pgpcmd")) {
-	print "Unable to open pipe to pgp!\n";
-	exit(7);
+     die "Unable to open pipe to pgp!\n";
 }
 
 print P $grouplist_header;
 
 while (<C>) {
-	print P $_;
+     print P $_;
 }
 close(C);
 
@@ -68,3 +65,4 @@ print P $grouplist_footer;
 close(P);
 
 exit(0);
+

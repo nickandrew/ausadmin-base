@@ -1,23 +1,25 @@
 #!/usr/bin/perl
 
+# $Revision$
+# $Date$
+
 use GD;
 $inputfile="ausgroups";
 $outputfile="ausgroups.html";
 $giffile="grouptree.gif";
 
 if (!open(INFILE, "<$inputfile")) {
-	print "Cannot open $inputfile: $!\n";
-	exit(1);
+	die "Cannot open $inputfile: $!\n";
 }
 if (!open(OUTFILE, ">$outputfile")) {
-	print "Cannot open $outputfile: $!\n";
-	exit(1);
+	die "Cannot open $outputfile: $!\n";
 }
 if (!open(GIFFILE, ">$giffile")) {
-	print "Cannot open $giffile: $!\n";
-	exit(1);
+	die "Cannot open $giffile: $!\n";
 }
-undef @unsorted, @groups;
+
+#undef @unsorted;
+#undef @groups;
 
 print OUTFILE "<html><title>Australian Newsgroups Overview</title><body bgcolor=\#FFFFFF>\n";
 print OUTFILE "<map name=\"groups\">\n";

@@ -1,6 +1,10 @@
 #!/usr/bin/perl
 #	Emit a series of links to newsgroups work in progress
 
+# $Revision$
+# $Date$
+
+
 chdir "../Wip";
 $count = 0;
 for $fn (<*>) {

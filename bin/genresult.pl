@@ -78,8 +78,8 @@ if (!-d "vote/$vote") {
 }
 
 # Get vote end date and vote pass/fail rule
-$ts_start = read1line("vote/$vote/posted.cfg");
-$ts_end = read1line("vote/$vote/group.cfg");
+$ts_start = read1line("vote/$vote/starttime.cfg");
+$ts_end = read1line("vote/$vote/endtime.cfg");
 $ngline = read1line("vote/$vote/ngline");
 $voterule = read1line("vote/$vote/voterule");
 $rationale = readfile("vote/$vote/rationale");
@@ -261,7 +261,7 @@ sub setposts {
   
   local *POST;
   
-  if (not open (POST,">>vote/$vote/$name")) {
+  if (not open (POST,">>vote/$vote/$filename")) {
     print STDERR "Unable to mark group as passed\n";
     exit(8);
   }

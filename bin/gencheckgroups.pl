@@ -1,6 +1,10 @@
 #!/usr/bin/perl
 #	gencheckgroups.pl
 
+# $Revision$
+# $Date$
+
+
 require "bin/postheader.pli";
 require "bin/misc.pli";
 
@@ -10,8 +14,7 @@ $signcmd = "bin/signcontrol";
 select(STDOUT); $| = 1;
 
 if (!-f "data/ausgroups") {
-	print "gencheckgroups.pl: No list of newsgroups\n";
-	exit(3);
+	die "gencheckgroups.pl: No list of newsgroups\n";
 }
 
 $checkgroups_header = readfile("data/checkgroups.header");
@@ -36,13 +39,11 @@ $now = sprintf "%d-%02d-%02d %02d:%02d:%02d", $year, $mon, $mday, $hour, $min, $
 
 # Open the groups file
 if (!open(C, "<data/ausgroups")) {
-	print "Unable to open data/ausgroups: $!\n";
-	exit(3);
+	die "Unable to open data/ausgroups: $!\n";
 }
 
 if (!open(P, "|$signcmd")) {
-	print "Unable to open pipe to signcontrol!\n";
-	exit(7);
+	die "Unable to open pipe to signcontrol!\n";
 }
 
 select(P);

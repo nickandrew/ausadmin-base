@@ -12,8 +12,8 @@ $BaseDir = "$HomeDir/vote";
 ReadCharter();
 
 for my $newsgroup (@newsgroup) {
-  
-  $ConfigFile ="$BaseDir/$Newsgroup/group.cfg";
+
+  $ConfigFile ="$BaseDir/$Newsgroup/endtime.cfg";
   chop($VotePeriod = `cat $BaseDir/$Newsgroup/voteperiod`);
   
   # Find the finish date for votes according to the VD (vote duration)
@@ -112,7 +112,7 @@ sub ReadCharter {
   while ( <STDIN> ) {
     chomp;
     if ( $_ =~ /^Newsgroup:.*/i ) {
-      $_ = <STDIN>
+      $_ = <STDIN>;
       s/^([^\s]+)\s+(.*)/$1/i;
       push @Newsgroup,$1;
       $newsgroup=$1;

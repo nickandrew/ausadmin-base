@@ -1,6 +1,10 @@
 #!/usr/bin/perl
 #	format.pli - format a line
 
+# $Revision$
+# $Date$
+
+
 sub read1line {
 	my($path) = @_;
 	my($line);

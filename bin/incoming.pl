@@ -35,29 +35,36 @@ if ( $EmailAddress eq "" ) {
 	die "NO RETURN EMAIL ADDRESS SUPPLIED IN HEADER";
 }
 
+my %vote;
 
 # Section 2 (see above)
 S2: while ( <STDIN> ) {
 	chomp;
 	if ( $_ =~ /^I vote [^\s]* (on|to|for) aus.*/i ) {
-		s/^I vote ([^\s]*).*(aus[^\s]*).*/$1-$2/i;
-		( $Vote, $Newsgroup ) = split( "-" );
-		last S2;
+		/^I vote ([^\s]*).*(aus[^\s]*).*/i;
+		$vote{$2} = $1;
+#		last S2;
 	}
 }
-if ($Vote eq "") {
+
+if (not keys %vote) {
 	FailVote ( "no votes" );
 }
-elsif ( ($Vote !~ /^yes$/i) & ($Vote !~ /^no$/i) & ($Vote !~ /^abstain$/i) ) {
-	FailVote ( "invalid vote" );
-}
 
+for (values %vote) {
+  if (not (/^yes$/i or /^no$/i or /^abstain$/i)) {
+    FailVote ( "invalid vote" );
+  }	
+}
 
 # Section 3 (see above)
 $CTime = time;
 
 # Output Results - Section 4 (see above)
-print "$EmailAddress $Newsgroup $Vote $CTime $ARGV[0]\n";
+
+for (keys %vote) {
+  print "$EmailAddress $Newsgroup $Vote $CTime $ARGV[0]\n";
+}
 
 
 # This sub returns a message (using sendmail) to say the vote failed
