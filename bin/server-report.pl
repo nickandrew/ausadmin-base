@@ -29,7 +29,7 @@ From: ausadmin\@aus.news-admin.org (Ausadmin)
 Subject: Newsserver analysis report ($today)
 Newsgroups: aus.net.news,aus.computers.linux
 
-Ausadmin (with the help of linux-using volunteers) monitors
+Ausadmin (with the help of *nix-using volunteers) monitors
 the list of groups on several newsservers in order to identify
 differences compared to the canonical list maintained by ausadmin.
 
@@ -113,12 +113,12 @@ print <<EOF;
 -------------------------------------------------------------------------
 
 If you can assist in this effort to keep all the Australian
-newsservers up-to-date and you are a Linux user, please do this
+newsservers up-to-date and you are a *nix user, please do this
 test first:
 
 	perl -MNet::NNTP -MLWP::UserAgent -e ''
 
-If the perl command returned with no output, then your linux
+If the perl command returned with no output, then your *nix
 box has all the necessary libraries installed to run the group
 list client. Please download:
 
