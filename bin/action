@@ -38,6 +38,7 @@ my $state_actions = {
 	'rfd/posted' => \&check_rfd,
 	'rfd/unposted' => \&post_rfd,
 	'rfd/unsigned' => \&sign_rfd,
+	'complete/pass/unsigned' => \&sign_control,
 	'complete/resultnotposted' => \&post_result,
 	'complete/resultnotsigned' => \&sign_result,
 	'vote/checking' => \&gen_result,
@@ -442,5 +443,25 @@ sub post_rfd {
 sub pause_running {
 	print "(state=$state) Nothing to do, vote is currently running.\n";
 	die;
+}
+
+sub sign_control {
+	# Sign the control message
+	print "(state=$state) Sign control.msg ? ";
+	my $answer = <STDIN>;
+	chomp($answer);
+	if ($answer !~ /^\s*y/i) {
+		die "Ok, try again later.\n";
+	}
+
+	my $rc = system("bin/signcontrol < $ng_dir/control.msg > $ng_dir/control.signed");
+	$v->audit("PGP-signed control message (code $rc)");
+	if ($rc) {
+		die "pgp-sign failed code $rc...!";
+	}
+
+	print "\nOkay.\n";
+
+	return 0;
 }
 
