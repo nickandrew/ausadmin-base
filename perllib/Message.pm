@@ -313,10 +313,6 @@ my $received_regex = [
 	['from ([a-zA-Z0-9.-]+) \(unverified\) by ([a-zA-Z0-9.-]+)', ['src-name', 'dst-hostname']],
 	['from ([a-zA-Z0-9.-]+) \(([a-zA-Z0-9.-]+)\) by ([a-zA-Z0-9.-]+)', ['src-name', 'src-hostname', 'dst-hostname']],
 
-	# from ess-p-144-134-68-109.mega.tmns.net.au(144.134.68.109), claiming to be "james" via SMTP by buffy.tpgi.com.au, id smtpdMwvR45;
-
-	['from ([a-zA-Z0-9.-]+)\(([0-9.]+)\), claiming to be "([^"]+)" via SMTP by ([a-zA-Z0-9.-]+)', ['src-hostname', 'src-ip', 'src-name']],
-
 
 	['from localhost \((\S+)@localhost\) by ([a-zA-Z0-9.-]+)', ['src-userid', 'dst-hostname']],
 
