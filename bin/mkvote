@@ -75,7 +75,7 @@ ln -s $BaseDir/$Newsgroup/posted.cfv $HomeDir/CFV/$Newsgroup
 
 
 # Post the CFV
-echo `date +%s` > $Newsgroup/posted.cfg
+echo `date '+%s'` > $Newsgroup/posted.cfg
 ~/bin/post.pl < $BaseDir/$Newsgroup/posted.cfv
 
 echo Done at `date`
