@@ -3,6 +3,8 @@
 
 package View::MainPage;
 
+use strict;
+
 use VoteList qw();
 
 sub output {
