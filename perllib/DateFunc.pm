@@ -119,18 +119,17 @@ sub addday {
 }
 
 # $days = days_between($start_date, $end_date)
-# Returns a minimum value of 1 if the days are the same!
-# This function sucks because its calculation is inclusive! 4,3,2,1,2,3,4!
 
 sub days_between {
 	my($start_date, $end_date) = @_;
-	my $days = 1;
+	my $days = 0;
 	my $sign = 1;
 
 	if ($start_date gt $end_date) {
 		my $temp_date = $start_date;
 		$start_date = $end_date;
 		$end_date = $temp_date;
+		$sign = -1;
 	}
 
 	while ($start_date lt $end_date) {
