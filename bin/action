@@ -37,6 +37,7 @@ my $state_actions = {
 	'complete/resultnotposted' => \&post_result,
 	'complete/resultnotsigned' => \&sign_result,
 	'vote/checking' => \&gen_result,
+	'vote/running' => \&pause_running,
 	'vote/cfvnotposted' => \&post_cfv,
 	'vote/cfvnotsigned' => \&sign_cfv,
 	'vote/nocfv' => \&gen_cfv,
@@ -349,5 +350,8 @@ sub check_rfd {
 	}
 }
 
-
+sub pause_running {
+	print "(state=$state) Nothing to do, vote is currently running.\n";
+	die;
+}
 
