@@ -1,4 +1,6 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
+
+sub strict;
 
 # Makes the Call For Votes post from a template and the group charter
 # and outputs to STDOUT. Also creates a group configuration file with
@@ -19,11 +21,11 @@ for my $newsgroup (@newsgroup) {
   # Find the finish date for votes according to the VD (vote duration)
   $VD = $VotePeriod * 86400;
   
-  ($day, $mon, $mday, $time, $year) = split /\s+/, gmtime( time + $VD );
+  ($day, $mon, $mday, undef, $year) = split /\s+/, gmtime( time + $VD );
   $EndDate = "$day, $mday $mon $year 00:00:00 GMT";
   system("date --date '$day $mon $mday 00:00:00 GMT $year' +%s > $ConfigFile");
   
-  $ExpireDate = "$day, $mday $mon $year 00:00:00 GMT";
+#  $ExpireDate = "$day, $mday $mon $year 00:00:00 GMT";
     
 }
 
@@ -35,8 +37,8 @@ $| = 1;
 #preprocess(STDOUT, "$BaseDir/conf/cfvtemplate.header");
 
 print <<"EOHEADERS";
-Subject: CFV: $Newsgroup[0]
-From: ausadmin\@aus.news-admin.org
+Subject: CFV: $newsgroup[0]
+From: $VoteAddress
 Newsgroups: $distribution
 
 EOHEADERS
@@ -46,20 +48,34 @@ if (!open(P, "|pgp -s -f")) {
 	exit(3);
 }
 
+if ($moderated{$newsgroup[0]}) {
+
 print P <<"EOTOPBODY";
                            CALL FOR VOTES
-                 $moderated{$topnewsgroup} $topnewsgroup
+                 Moderated  $newsgroup[0]
 
 Newsgroups line(s)
 EOTOPBODY
 
-for my $group (@Newsgroup) {
+} else {
+
+print P <<"EOTOPBODY";
+                           CALL FOR VOTES
+                 UnModerated  $newsgroup[0]
+
+Newsgroups line(s)
+EOTOPBODY
+
+  
+}
+
+for my $group (@newsgroup) {
   print P $NGLine{$group},"\n";
 }
 
 print P <<"EOMIDBODY";
 
-Votes must be received by $ExpireDate
+Votes must be received by $EndDate
 
 This vote is being conducted by ausadmin. For voting questions contact 
 ausadmin\@aus.news-admin.org. For questions about the proposed group contact 
@@ -67,7 +83,7 @@ $Proposer.
 
 EOMIDBODY
 
-for my $group (@Newsgroup) {
+for my $group (@newsgroup) {
   print P "RATIONALE: $group\n",join "\n",@{$Charter{$newsgroup}};
 }
 
@@ -104,11 +120,11 @@ Addresses of all voters will be published in the final voting results list.
 EOMEND
 
 close(P);
+# '
 
 # This sub grabs the required info from the RFD piped into the script.
 
 sub ReadCharter {
-     $CNoL = 0;
      while ( <> ) {
 	  chomp;
 	  if ( $_ =~ /^Newsgroup line:/i ) {
@@ -117,9 +133,9 @@ GROUP:	       while (<>) {
 		    last GROUP if (/^rationale:.*/i);
 
 		    if (/^([^\s]+)\s+(.*)/i) {
-			 push @Newsgroup,$1;
+			 push @newsgroup,$1;
 			 $newsgroup=$1;
-			 $NGLine{$newsgroup}=$_;
+			 $NGLine{$newsgroup}=$2;
 		    } else {
 			 last GROUP;
 		    }
@@ -130,25 +146,25 @@ GROUP:	       while (<>) {
 	  
 	  if ( $_ =~ /^Moderated:.*/i ) {
 	       s/^Moderator:\s*(.*)/$1/i;
-	       $Moderated{$newsgroup}=1;
+	       $moderated{$newsgroup}=1;
 	       while (<>) {
 		    last if (/^End moderator info/i);
-		    push @{$Moderator{$newsgroup}},$_;
+		    push @{$moderator{$newsgroup}},$_;
 	       }
 	       
 	  }
 
 
-	  if ($_ =~ /DISTRIBUTION:/i) {
+	  if ($_ =~ /^DISTRIBUTION:/i) {
 DIST:	       while (<>) {
 		    chomp;
-		    last DIST if (/^Proponet:.*/i);
-		    $distribution .= $_ if not /^\s*$/;
+		    last DIST if (/^Proponets?:.*/i);
+		    $distribution .= "$_," if not /^\s*$/;
 	       }
 	  }
 
-	  if ( $_ =~ /^Proponet:.*/i ) {
-	       s/^Proposer:\s*(.*)/$1/i;
+	  if ( $_ =~ /^Propo(?:nets?|sers?):.*/i ) {
+	       s/^Propo(?:nets?|sers?):\s*(.*)/$1/i;
 	       $Proposer=$_;
 	  }
 
