@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+#	@(#) collater.pl - Record incoming votes
 #
 # $Source$
 # $Revision$
@@ -12,59 +13,65 @@
 
 
 use FileHandle;
+use Fcntl qw(:flock);
 
-$LOCK_SH = 1;
-$LOCK_EX = 2;
-$LOCK_UN = 8;
+my $HomeDir = "/virt/web/ausadmin";
+my $BaseDir = "$HomeDir/vote";
 
-$HomeDir = "/virt/web/ausadmin";
-$BaseDir = "$HomeDir/vote";
-
-BIG:while ( <> ) {
-	($EmailAddress, $Newsgroup, $Vote, $CTime, $fn) = split;
+while ( <> ) {
+	my($EmailAddress, $Newsgroup, $Vote, $CTime, $fn) = split;
 
 	# Section 1 (see above)
 	if ( open( CONFIGFILE, "$BaseDir/$Newsgroup/endtime.cfg" ) ) {
 		chomp( $_ = <CONFIGFILE> );
-		$VoteTime = $_;
+		my $VoteTime = $_;
 		close( CONFIGFILE );
 		if ($CTime > $VoteTime) {
-			FailVote( "$Newsgroup vote ended" );
+			FailVote($EmailAddress, "$Newsgroup vote ended" );
 			next;
 		}
 	} else {
-		FailVote( "invalid newsgroup" );
+		FailVote($EmailAddress, "invalid newsgroup $Newsgroup" );
 		next;
 	}
 
 	# Section 2 (see above)
 	if ( open( TALLYFILE, "$BaseDir/$Newsgroup/tally.dat" ) ) {
+		my $found = 0;
+
 		while( <TALLYFILE> ) {
 			chomp;
-			($EA, $NG, $V, $CT, $FN) = split;
+			my($EA, $NG, $V, $CT, $FN) = split;
 			if ( $EmailAddress eq $EA ) {
-				FailVote( "already voted on $Newsgroup" );
-				next BIG;
+				$found = 1;
+				last;
 			}
 		}
 		close( TALLYFILE );
+
+		if ($found) {
+			FailVote($EmailAddress, "already voted on $Newsgroup" );
+			next;
+		}
 	}
 
 	# Section 3 (see above)
 	if ( open( TALLYFILE, ">>$BaseDir/$Newsgroup/tally.dat" ) ) {
-		flock( TALLYFILE, $LOCK_EX );
+		flock(TALLYFILE, LOCK_EX);
 		print TALLYFILE "$EmailAddress $Newsgroup $Vote $CTime $fn\n";
-		close( TALLYFILE );
+		close(TALLYFILE);
 	} else {
 		die "Collater failed (couldn't open/create tally file)";
 	}
-	AckVote();	
+	AckVote($EmailAddress, $Vote, $Newsgroup);	
 }
 # End of main loop
 
 
 # This sub returns a message (using sendmail) to say the vote failed
 sub FailVote {
+	my $EmailAddress = shift;
+
 	$ENV{'MAILHOST'}="aus.news-admin.org";
 	if ( open ( MAILPIPE, "|/usr/sbin/sendmail $EmailAddress ausadmin\@aus.news-admin.org" ) ) {
 		print MAILPIPE "From: ausadmin\@aus.news-admin.org (aus Newsgroup Administration)\n";
@@ -72,7 +79,7 @@ sub FailVote {
 		print MAILPIPE "Subject: Vote Failed ($_[0])\n";
 		print MAILPIPE "X-Automated-Reply: this message was sent by an auto-reply program\n\n";
 
-		if ( open ( ERRORMSG, "$BaseDir/conf/votefail.msg" ) ) {
+		if ( open ( ERRORMSG, "$HomeDir/config/votefail.msg" ) ) {
 			while ( <ERRORMSG> ) {
 				chomp;
 				print MAILPIPE "$_\n";
@@ -94,6 +101,10 @@ sub FailVote {
 
 # This sub returns a message (using sendmail) to say the vote was accepted
 sub AckVote {
+	my $EmailAddress = shift;
+	my $Vote = shift;
+	my $Newsgroup = shift;
+
 	$ENV{'MAILHOST'}="aus.news-admin.org";
 	if ( open ( MAILPIPE, "|/usr/sbin/sendmail $EmailAddress" ) ) {
 		print MAILPIPE "From: ausadmin\@aus.news-admin.org (aus Newsgroup Administration)\n";

@@ -1,12 +1,11 @@
 #!/bin/bash
+#	@(#) incoming - Save a received message and process it
+
+cd ~ausadmin
 
 ts=`date '+%Y%m%d-%H%M%S'`.$$
 fn=messages/$ts
-cd ~
-#cat > /tmp/vote.$$
-cat > $fn
 
-HomeDir=/virt/web/ausadmin
-BaseDir=$HomeDir/vote
+cat > $fn
 
 bin/incoming.pl $fn | bin/collater.pl

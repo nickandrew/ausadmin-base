@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-#	@(#) incoming.pl
+#	@(#) incoming.pl - parse a message
 #
 # $Source$
 # $Revision$
@@ -15,15 +15,18 @@
 # 4. output to STDOUT
 
 
-$HomeDir = "/virt/web/ausadmin";
-$BaseDir = "$HomeDir/vote";
+my $HomeDir = "/virt/web/ausadmin";
+my $BaseDir = "$HomeDir/vote";
 
 
 # Section 1 and 2 (see above)
 # Read in headers
-S1: while ( <> ) {
+
+my $EmailAddress;
+
+while ( <> ) {
 	if ( $_ eq "\n" ) {
-		last S1;
+		last;
 	}
 	chomp;
 	if ( ($_ =~ /^From:.*/) && ($EmailAddress eq "") ) {
@@ -42,12 +45,11 @@ if ( $EmailAddress eq "" ) {
 my %vote;
 
 # Section 2 (see above)
-S2: while ( <> ) {
+while ( <> ) {
 	chomp;
 	if ( $_ =~ /I vote [^\s]* (on|to|for) aus.*/i ) {
 		/I vote ([^\s]*).*(aus[.a-z0-9+-]*).*/i;
 		$vote{$2} = $1;
-#		last S2;
 	}
 }
 
@@ -74,7 +76,7 @@ for (keys %vote) {
 }
 
 # Section 3 (see above)
-$CTime = time;
+my $CTime = time();
 
 # Output Results - Section 4 (see above)
 
@@ -82,6 +84,7 @@ for (keys %vote) {
 	print "$EmailAddress $_ ",$vote{$_}," $CTime $ARGV[0]\n";
 }
 
+exit(0);
 
 # This sub returns a message (using sendmail) to say the vote failed
 sub FailVote {
@@ -92,7 +95,7 @@ sub FailVote {
 		print MAILPIPE "Subject: Vote Failed ($_[0])\n";
 		print MAILPIPE "X-Automated-Reply: this message was sent by an auto-reply program\n";
 
-		if ( open ( ERRORMSG, "$BaseDir/conf/parsefail.msg" ) ) {
+		if ( open ( ERRORMSG, "$HomeDir/config/parsefail.msg" ) ) {
 			while ( <ERRORMSG> ) {
 				chomp;
 				print MAILPIPE "$_\n";
@@ -116,7 +119,7 @@ sub FailVote {
 # This sub returns the email address out of a "from" field
 sub GetAddr {
 
-	$Address = $_[0];
+	my $Address = $_[0];
 
 	# This bit removes any unwanted parts from the email address
 	if ( $Address =~ /<.*>/ ) {
