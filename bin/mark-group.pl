@@ -7,7 +7,7 @@ mark-group.pl - Mark some messages as being multi-votes
 
 =head1 SYNOPSIS
 
- mark-group.pl [-n] vote-name filename ... > new-tally-file
+ mark-group.pl [-n] vote-name filename ...
 
 =head1 DESCRIPTION
 

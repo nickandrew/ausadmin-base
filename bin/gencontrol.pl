@@ -135,7 +135,6 @@ CHARTER: $name
 
 $charter
 END CHARTER.
-
 EOF
 
 	return $post;

@@ -87,6 +87,7 @@ my %ips;
 foreach my $r (@list) {
 	my $data_hr = $r->{data_hr};
 	my $m = $r->{message};
+	my $path = $r->{path};
 
 	if (exists $data_hr->{mailer}) {
 		my $lr = $data_hr->{mailer};
@@ -112,7 +113,7 @@ foreach my $r (@list) {
 
 			# Output to stderr if we couldn't parse it
 			if ($data_hash->{match} == 0) {
-				print STDERR "Unable to parse: $hdr\n";
+				print STDERR "$path: Unable to parse: $hdr\n";
 			}
 
 			# Interesting data types are: src-ip, src-fw-ip, src-ident
