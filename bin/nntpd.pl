@@ -17,7 +17,7 @@ $| = 1;
 chdir('/home/ausadmin');
 open(LOG, ">>/home/ausadmin/tmp/nntpd.log");
 
-out("200 Hello this is the ausadmin newsserver for various hierarchies\n");
+out("200 ausadmin newsserver welcomes $ENV{TCPREMOTEHOST}\n");
 
 while (<STDIN>) {
 	last if ($errs >= 4);
