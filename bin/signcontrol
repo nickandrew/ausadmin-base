@@ -1,6 +1,10 @@
 #!/usr/bin/perl -w
-# written April 1996, tale@uunet.uu.net (David C Lawrence)
-# Version 1.1
+# written April 1996, tale@isc.org (David C Lawrence)
+# Version 1.3
+#
+# Changes from 1.2.3 to 1.3:
+#  -- skip minor pgp signature headers like "charset:" after "version:" header
+#     and until the empty line that starts the base64 signature block
 
 # CONFIGURATION
 
@@ -21,6 +25,7 @@ $pgpheader = "X-PGP-Sig";
 # with these values.  no sanity checking is done on what you put here.
 # also, Subject: is forced to be the Control header prepending by "cmsg".
 # also, Newsgroups: is forced to be just the group being added/removed.
+#                   (but is taken as-is for checkgroups)
 $force{'Path'} = 'bounce-back';
 $force{'From'} = 'aus.* Newsgroups Administration <ausadmin@aus.news-admin.org>';
 $force{'Approved'} = 'ausadmin@aus.news-admin.org';
@@ -34,7 +39,13 @@ $id_host = 'aus.news-admin.org';
 # how can a standards-compliant date header be generated?
 # this gets substituted into a perl backtick expression,
 # so be careful with the quoting.
-$get_date = "/bin/date -u '+%a, %-d %h %Y %T %Z'";
+# -0000 is hardcoded here as GMT/UTC zone because in some installations 
+# the %Z flag does not work.
+$get_date = "/bin/date -u '+%a, %-d %h %Y %T -0000'";
+
+# this expression works with SunOS 4's date; note that a formatted date string 
+# is not used because it doesn't support four digit years
+# $get_date = '/bin/date -u | /bin/awk \'{print $1 ",", $3, $2, $6, $4, $5}\'';
 
 # headers to sign.  Sender is included because non-PGP authentication uses it.
 @signheaders = ('Subject', 'Control', 'Message-ID', 'Date', 'From', 'Sender');
@@ -175,9 +186,9 @@ readhead
     }
   }
 
-  chop($date = `$get_date`);
-  $header{'Date'} = $date;
   $header{'Message-ID'} = '<' . time . ".$$\@$id_host>";
+  $header{'Date'} = `$get_date`;
+  chop($header{'Date'}) if $header{'Date'};
 
   for (@ignoreheaders) {
     $die .= "ignored header $_ also has forced value set\n" if $force{$_};
@@ -197,8 +208,10 @@ readhead
       ($action, $group, $moderated) = ($1, $2, $3);
       $die .= "$0: group name $group is not standards-compliant\n"
         if $group !~ /^$grouppat$/ && $action eq 'new';
+      $die .= "$0: no group to rmgroup on Control: line\n"
+        if ! $group && $action eq 'rm';
       $header{'Subject'} = "cmsg $header{'Control'}";
-      $header{'Newsgroups'} = $group;
+      $header{'Newsgroups'} = $group unless $action eq 'check';
     } else {
       $die .= "$0: bad Control format: $header{'Control'}\n";
     }
@@ -249,10 +262,10 @@ readbody
     }
     if ($moderated) {
       $die .= "$0: Group submission address not formatted correctly\n"
-        if $body !~ /\nGroup submission address:  \S+@\S+\.\S+\n/m;
+        if $body !~ /\nGroup submission address:   ?\S+@\S+\.\S+\n/m;
       $mods = "( |\n[ \t]+)\\([^)]+\\)\n\n";
       $die .= "$0: Moderator contact address not formatted correctly\n"
-        if $body !~ /\nModerator contact address: \S+@\S+\.\S+$mods/m;
+        if $body !~ /\nModerator contact address:  ?\S+@\S+\.\S+$mods/m;
     }
   }
   # rmgroups have freeform bodies
@@ -314,9 +327,9 @@ signit
     unless /^Version: (\S+)$/;
   $header{$pgpheader} = "$1 $signheaders";
 
-  chomp($_ = <FH>);
-  chomp($_ = <FH>) if (/^Charset/);
-  die "$0: didn't find an empty line after PGP Version\n" unless /^$/;
+  do {                # skip other pgp headers like "charset:" until empty line
+    $_ = <FH>;        # ... is charset significant to this application?
+  } while ! /^$/;
 
   while (<FH>) {
     chomp;
