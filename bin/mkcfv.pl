@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 #
 # $Source$
 # $Revision$
@@ -8,31 +8,50 @@
 # and outputs to STDOUT. Also creates a group configuration file with
 # only one line - the end date (in system time (s))
 
+use Time::Local;
+
 # Info Needed to run the script
-$VoteAddress = "vote\@aus.news-admin.org";
-$HomeDir = "/virt/web/ausadmin";
-$BaseDir = "$HomeDir/vote";
+my $VoteAddress = "vote\@aus.news-admin.org";
+my $HomeDir = "/virt/web/ausadmin";
+my $BaseDir = "$HomeDir/vote";
+my $default_voteperiod = 21;		# days
 
-ReadCharter();
+my $VotePeriod = $default_voteperiod;
 
-die "You fool it didn't work can't create a blank one." unless @newsgroup;
+my @newsgroups = ReadCharter();
 
-for my $newsgroup (@newsgroup) {
+die "You fool it didn't work can't create a blank one." unless @newsgroups;
 
-  die "You fool it didn't work can't create a blank one." unless $newsgroup;
+foreach my $newsgroup (@newsgroups) {
 
-  $ConfigFile ="$BaseDir/$newsgroup/endtime.cfg";
-  chop($VotePeriod = `cat $BaseDir/$newsgroup/voteperiod`);
-  
-  # Find the finish date for votes according to the VD (vote duration)
-  $VD = $VotePeriod * 86400;
-  
-  ($day, $mon, $mday, undef, $year) = split /\s+/, gmtime( time + $VD );
-  $EndDate = "$day, $mday $mon $year 00:00:00 GMT";
-  system("date --date '$day $mon $mday 00:00:00 GMT $year' +%s > $ConfigFile");
-  
-#  $ExpireDate = "$day, $mday $mon $year 00:00:00 GMT";
-    
+	die "You fool it didn't work can't create a blank one." unless $newsgroup;
+
+	my $ConfigFile ="$BaseDir/$newsgroup/endtime.cfg";
+
+	if (open(VP, "<$BaseDir/$newsgroup/voteperiod")) {
+		$VotePeriod = <VP>;
+		chop($VotePeriod);
+		close(VP);
+	}
+
+	# Find the finish date for votes according to the VD (vote duration)
+	$VD = $VotePeriod * 86400;
+
+	# Find the gmt end time
+	my($sec,$min,$hour,$mday,$mon,$year) = gmtime(time() + $VD);
+
+	# Extend it to nearly midnight
+	($hour,$min,$sec) = (23,59,59);
+	my $then = timegm($sec,$min,$hour,$mday,$mon,$year);
+
+	# Now make the human-readable one
+
+	$EndDate = gmtime($then);
+
+	# And write to control file
+	open(T, ">$ConfigFile");
+	print T $then + 1, "\n";
+	close(T);
 }
 
 # Opens the template Call For Votes file and constructs the actual CFV file
@@ -44,8 +63,13 @@ $| = 1;
 
 die "No distribution" unless $distribution;
 
+my $subject = "CFV: $newsgroups[0]";
+if ($newsgroups[1]) {
+	$subject = "CFV: $newsgroups[0] and others";
+}
+
 print <<"EOHEADERS";
-Subject: CFV: $newsgroup[0]
+Subject: $subject
 From: $VoteAddress
 Newsgroups: $distribution
 Followup-to: poster
@@ -57,60 +81,61 @@ if (!open(P, "|pgp -s -f")) {
 	exit(3);
 }
 
-if ($moderated{$newsgroup[0]}) {
+if ($moderated{$newsgroups[0]}) {
 
-print P <<"EOTOPBODY";
+	print P <<"EOTOPBODY";
                            CALL FOR VOTES
-                 Moderated newsgroup $newsgroup[0]
+                 Moderated newsgroup $newsgroups[0]
 
 Newsgroups line(s)
 EOTOPBODY
 
 } else {
 
-print P <<"EOTOPBODY";
+	print P <<"EOTOPBODY";
                            CALL FOR VOTES
-                 UnModerated newsgroup $newsgroup[0]
+                 UnModerated newsgroup $newsgroups[0]
 
 Newsgroups line(s)
 EOTOPBODY
 
-  
+
 }
 
-for my $group (@newsgroup) {
-  print P $group," ",$NGLine{$group},"\n";
-  local *NGLINE;
-  open NGLINE,">$BaseDir/$newsgroup/ngline" or die "Unable to open ngline $!";
-  print NGLINE $group," ",$NGLine{$group},"\n";
-  close NGLINE or die "Unable to close ngline";
+
+for my $group (@newsgroups) {
+	print P $group," ",$NGLine{$group},"\n";
+	local *NGLINE;
+	open NGLINE,">$BaseDir/$group/ngline" or die "Unable to open ngline $!";
+	print NGLINE "$group, "\t", $NGLine{$group}, "\n";
+	close NGLINE or die "Unable to close ngline";
 }
 
 print P <<"EOMIDBODY";
 
 Votes must be received by $EndDate
 
-This vote is being conducted by ausadmin. For voting questions contact 
-ausadmin\@aus.news-admin.org. For questions about the proposed group contact 
+This vote is being conducted by ausadmin. For voting questions contact
+ausadmin\@aus.news-admin.org. For questions about the proposed group contact
 $Proposer.
 
 EOMIDBODY
 
-for my $group (@newsgroup) {
-  print P "RATIONALE: $group\n",join "\n",@{$Charter{$newsgroup}};
+foreach my $group (@newsgroups) {
+	print P "RATIONALE: $group\n",join "\n",@{$Charter{$group}};
 }
 
-print P <<'EOMEND';
+print P <<"EOMEND";
 HOW TO VOTE
 
-Send E-MAIL to: vote@aus.news-admin.org
+Send E-MAIL to: $VoteAddress
 Just Replying should work if you are not reading this on a mailing list.
 
 Your mail message should contain only one of the following statements:
       I vote YES on aus.example.name
       I vote NO on aus.example.name
 
-You must replace aus.example.name with the name of the newsgroup that you are 
+You must replace aus.example.name with the name of the newsgroup that you are
 voting for. If the poll is for multiple newsgroups you should include one vote
 for each newsgroup, e.g.
 
@@ -125,9 +150,9 @@ acknowledgement by E-mail - if you do not receive one within 24 hours, try
 again. It's your responsibility to make sure your vote is registered
 correctly.
 
-Only one vote per person, no more than one vote per E-mail address.  Votes
-from invalid emails may be rejected.  Addresses of all voters will be 
-published in the final voting results list.
+Only one vote per person, no more than one vote per E-mail address.
+Votes from invalid emails may be rejected.  E-mail addresses of all
+voters will be published in the final voting results list.
 
 
 [ Note: CFVs and control messages will be signed with the ausadmin key.
@@ -138,16 +163,22 @@ EOMEND
 
 close(P);
 
-for my $group (@newsgroup) {
-  open(CHARTER, ">$BaseDir/$group/charter") or die "Unable to write charter";
-  print CHARTER join "\n",@{$Charter{$newsgroup}};
+for my $group (@newsgroups) {
+	open(CHARTER, ">$BaseDir/$group/charter") or die "Unable to write charter";
+	print CHARTER join "\n",@{$Charter{$group}};
+	close(CHARTER);
 }
 
+# All done
+
+exit(0);
 
 
 # This sub grabs the required info from the RFD piped into the script.
 
 sub ReadCharter {
+     my @groups;
+
      while ( <> ) {
 	  chomp;
 	  if ( $_ =~ /^Newsgroup line:/i ) {
@@ -156,8 +187,8 @@ GROUP:	       while (<>) {
 		    last GROUP if (/^rationale:.*/i);
 
 		    if (/^([^\s]+)\s+(.*)/i) {
-			 push @newsgroup,$1;
-			 $newsgroup=$1;
+			 push @groups,$1;
+			 my $newsgroup=$1;
 			 $NGLine{$newsgroup}=$2;
 		    } else {
 			 last GROUP;
@@ -208,6 +239,8 @@ PROP:	       while (<>) {
      $distribution = join ',',
 	  grep /^\s*([-\w.]+)\s*$/,
 	       split '\s*\,\s*',$distribution;
+
+     return @groups;
 }
 
 =pod
@@ -223,11 +256,11 @@ sub preprocess {
 						       print STDERR "Unable to open $path: $!";
 						       return 1;
 						  }
-			  
+
 			  while ( <TEMPLATE> ) {
 			       chomp;
 			       if ( $_ =~ /.*!CHARTER!/ ) {
-				    for ( $i=0; $i<=$CNoL; $i++ ) {	
+				    for ( $i=0; $i<=$CNoL; $i++ ) {
 					 print $fh "$Charter[$i]\n";
 				    }
 			       }
@@ -245,7 +278,7 @@ sub preprocess {
 				    print $fh "$_\n";
 			       }
 			  }
-	
+
 	close(TEMPLATE);
 	return 0;
    }
