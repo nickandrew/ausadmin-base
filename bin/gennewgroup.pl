@@ -88,8 +88,8 @@ sub donewsgroup {
 	  my $post =<<"EOT";
 From: $from
 Subject: Cmsg newgroup $name
-Newsgroup: aus.net.news,$name
-Control: Newgroup $name
+Newsgroups: aus.net.news,$name
+Control: newgroup $name
       
 $name is an unmoderated newsgroup which passed its vote for creation as reported
 in aus.net.news
