@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-#	genresult.pl vote
+#	@(#) genresult.pl vote
 #
 # $Source$
 # $Revision$
@@ -97,7 +97,7 @@ $ngline = read1line("vote/$vote/ngline");
 $charter = readfile("vote/$vote/charter");
 
 # General config files
-$footer =  readfile("vote/conf/results.footer");
+$footer =  readfile("config/results.footer");
 
 ($numer, $denomer, $minyes) = split(/\s+/, $voterule);
 
