@@ -1,7 +1,8 @@
 #!/bin/sh
 #	@(#) $Id$
 #	@(#) new-rfd: Accept a proposal and setup directory/control files
-#	Usage: new-rfd proposal-name source-file
+#	Usage: new-rfd proposal-name
+#	Proposal contents come from stdin (argh)
 #
 # The source-file must be in the format outlined in root/Faq/RFD-template.txt
 #
@@ -12,26 +13,20 @@
 # $Revision$
 # $Date$
 
-if [ $# -lt 2 ]
+if [ $# -ne 1 ]
 then
-	echo Usage: $0 proposal-name source-file >&2
+	echo Usage: $0 proposal-name '< input.txt' >&2
 	exit 1
 fi
 
 # Get command line arguments
 Proposal="$1"
-Info="$2"
 
 # Commonly used variables
 BaseDir=./vote
 
 if [ ! -d $BaseDir ] ; then
 	echo "new-rfd: No directory $BaseDir - cd?" >&2
-	exit 4
-fi
-
-if [ ! -f "$Info" ] ; then
-	echo "new-rfd: $Info does not exist." >&2
 	exit 4
 fi
 
@@ -45,13 +40,13 @@ fn=RFD/$ts.rfd
 
 mkdir -p RFD
 
-echo "Copying $Info into $fn ..."
+echo "Copying proposal into $fn ..."
 
-tr -d '\r' < $Info > $fn
+tr -d '\r' > $fn
 s=$?
 
 if [ $s != 0 ] ; then
-	echo "Unable to tr $Info -- code $s - fatal"
+	echo "Unable to tr proposal -- code $s - fatal"
 	exit 6
 fi
 
@@ -72,4 +67,3 @@ fi
 echo "Good. Now do action $Proposal"
 
 exit 0
-
