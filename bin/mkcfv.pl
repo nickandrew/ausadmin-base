@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 #	@(#) mkcfv.pl: Create CFV message for a list of newsgroups
+#	Usage: cd ~ausadmin ; bin/mkcfv.pl newsgroup-name ...
 #
 # $Source$
 # $Revision$
@@ -43,6 +44,8 @@ foreach my $newsgroup (@newsgroups) {
 		$g->{$newsgroup}->{moderator} = read_file("$BaseDir/$newsgroup/moderator");
 	};
 
+	$g->{$newsgroup}->{voterule} = read_file("$BaseDir/$newsgroup/voterule");
+
 	my $ConfigFile ="$BaseDir/$newsgroup/endtime.cfg";
 
 	my $end_time = read_file($ConfigFile);
@@ -84,7 +87,7 @@ foreach my $newsgroup (@newsgroups) {
 		$ng = "Moderated newsgroup";
 	}
 
-	print P "\t\t\t\t$ng $newsgroup\n";
+	print P "\t\t\t$ng $newsgroup\n";
 }
 
 print P "\n";

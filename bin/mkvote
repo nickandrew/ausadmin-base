@@ -57,7 +57,9 @@ cp ~/config/voterule $Newsgroup/voterule
 ~/bin/setup-vote $Newsgroup
 
 # This will be obsoleted by vote_start.cfg soon
-echo `date +%s` > $Newsgroup/starttime.cfg
+cp $Newsgroup/vote_start.cfg $Newsgroup/starttime.cfg
+
+# echo `date +%s` > $Newsgroup/starttime.cfg
 
 # Run the Perl script mkcfv to make the CFV and PGP-sign it then post it away!
 mkcfv.pl $Newsgroup > $Newsgroup/posted.cfv 2>$HomeDir/tmp/pgp.$$
