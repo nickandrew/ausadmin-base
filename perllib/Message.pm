@@ -129,28 +129,31 @@ sub headers {
 
 # lowercase names of headers which we will use to extract info ...
 
-my $interesting_headers = {
-	'from' => [0, 5, 'name and email of sender'],
-	'message-id' => [0, 5, 'message id'],
-	'x-fastmail-ip' => [0, 5, 'ip address of sender'],
-	'x-freemailid' => [0, 5, 'userid of sender'],
-	'x-funmail-uid' => [0, 5, 'userid of sender'],
-	'x-mail-from-ip' => [0, 5, 'ip address of sender'],
-	'x-mailer' => [0, 5, 'mail program of sender'],
-	'x-mdremoteip' => [0, 5, 'inside firewall source ip'],
-	'x-originating-ip' => [0, 5, 'ip address of sender'],
-	'x-sender-ip' => [0, 5, 'ip address of sender'],
+$Message::interesting_headers = {
+	'from' => [0, 5, 'name and email of sender', '(.*)', ['junk']],
+	'message-id' => [0, 5, 'message id', '(.*)', ['junk']],
+	'x-fastmail-ip' => [0, 5, 'ip address of sender', '(.*)', ['ip']],
+	'x-freemailid' => [0, 5, 'userid of sender', '(.*)', ['uid']],
+	'x-funmail-uid' => [0, 5, 'userid of sender', '(.*)', ['uid']],
+	'x-mail-from-ip' => [0, 5, 'ip address of sender', '\[(.*)\]', ['ip']],
+	'x-mailer' => [0, 5, 'mail program of sender', '(.*)', ['mailer']],
+	'x-mdremoteip' => [0, 5, 'inside firewall source ip', '(.*)', ['ip']],
+	'x-originating-ip' => [0, 5, 'ip address of sender', '\[(.*)\]', ['ip']],
+	'x-sender-ip' => [0, 5, 'ip address of sender', '(.*)', ['ip']],
 	'x-sender' => [0, 5, 'email address of sender'],
-	'x-senders-ip' => [0, 5, 'ip address of sender'],
+	'x-senders-ip' => [0, 5, 'ip address of sender', '(.*)', ['ip']],
 	'x-sent-from' => [0, 5, 'email address of sender'],
-	'x-version' => [0, 5, 'freemail software version'],
-	'x-webmail-userid' => [0, 5, 'userid of sender'],
+	'x-version' => [0, 5, 'freemail software version', '(.*)', ['fm_vers']],
+	'x-webmail-userid' => [0, 5, 'userid of sender', '(.*)', ['uid']],
 };
 
 # List of IPs which are known to have multiple users (e.g. caches)
 
 my $proxy_ips = [
 	['165.228.130.11', 'lon-cache1-1.cache.telstra.net'],
+	['203.108.0.57', 'netcachesyd1.ozemail.com.au'],
+	['203.164.3.179', 'cfw4-2.rdc1.nsw.excitehome.net.au'],
+	['198.142.200.243', 'cache06.syd.optusnet.com.au'],
 ];
 
 my $freemail_regexes = [
@@ -255,6 +258,120 @@ sub check_received {
 
 	if (!$match) {
 		print "No match: $header\n";
+	}
+}
+
+=pod
+
+$info_hr = Message::parse_header($string, $how_lr, $data_hr) ...
+
+Extract useful information from this string, using $how_lr (it's a
+reference to a list, which is defined in $Message::interesting_headers).
+
+The $string is the value of the header, sans its name.
+
+Update the supplied hashref argument, and return 1 if all this worked,
+or 0 if the value didn't match the regex.
+
+=cut
+
+sub parse_header {
+	my $string = shift;
+	my $how_lr = shift;
+	my $data_hr = shift;
+
+	my $regex = $how_lr->[3];
+	my $hash_map = $how_lr->[4];
+
+	return undef if (!defined $regex);
+	return undef if (!defined $hash_map);
+
+	if ($string =~ /$regex/) {
+		# Ok, we got something. Now grab the contents and stick in hashref
+		my @refs = ($1,$2,$3,$4,$5,$6,$7,$8,$9);
+		foreach (@$hash_map) {
+			if ($_) {
+				push(@{$data_hr->{$_}}, shift @refs);
+			} else {
+				# This substring match was not required
+				shift @refs;
+			}
+		}
+
+		return 1;
+	}
+
+	# Oops, nothing matched
+	return 0;
+}
+
+
+=pod
+
+header_info() ...
+
+Check every interesting header and extract the data contained in it.
+Organise all data by name and return a reference to a hash: the key
+is the identifier for the data's meaning, and the value is a reference
+to a list of extracted strings for that identifier.
+
+=cut
+
+sub header_info {
+	my $self = shift;
+
+	my @header_l = $self->headers();
+	my $int_hr = $Message::interesting_headers;
+	my $data_hr = { };
+
+	foreach (@header_l) {
+		if (/^([^:]+): (.*)/) {
+			my $hdr_name = lc($1);
+#			print "Checking: $hdr_name\n";
+			if (!exists $int_hr->{$hdr_name}) {
+				# Not interesting
+				next;
+			}
+
+			# Hmm. How do we get the data out? A regex!
+			Message::parse_header($2, $int_hr->{$hdr_name}, $data_hr);
+		} else {
+			print "Invalid header: $_\n";
+		}
+	}
+
+	return $data_hr;
+}
+
+=pod
+
+ $data_hr->{'interesting-datatype'} = [ 'value', 'value', ... ]
+ print_interesting($data_hr) ...
+
+Output the contents of this interesting data to STDOUT.
+
+=cut
+
+sub print_interesting {
+	my $data_hr = shift;
+
+	if (ref $data_hr) {
+		print " WOW ...\n";
+		foreach my $r (sort (keys %$data_hr)) {
+			printf "  %s: ", $r;
+			if (ref $data_hr->{$r}) {
+				# Value is a list
+				foreach (@{$data_hr->{$r}}) {
+					printf "%s | ", $_;
+				}
+				print "\n";
+			} elsif (!defined $data_hr->{$r}) {
+				print "?\n";
+			} else {
+				print $data_hr->{$r}, "\n";
+			}
+		}
+		print "\n";
 	}
 }
 
