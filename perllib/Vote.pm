@@ -288,7 +288,7 @@ sub calc_state {
 
 		my $posting_date = Ausadmin::read1line("$ng_dir/result_posted.cfg");
 
-		if (DateFunc::days_between($posting_date, Ausadmin::today()) < $result_discuss_days + 1) {
+		if (DateFunc::days_between($posting_date, Ausadmin::today()) < $result_discuss_days) {
 			return "complete/result-wait";
 		}
 
