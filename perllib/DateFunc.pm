@@ -51,7 +51,7 @@ sub nextmonth {
 # No issues here
 sub prevday {
 	my($indate) = @_;
-	my($iy,$im,$id) = split(/-/, $indate);
+	my($iy,$im,$id) = split(/-/, substr($indate, 0, 10));
 	$id--;
 	if ($id <= 0) {
 		$im--;
@@ -73,7 +73,7 @@ sub prevday {
 #	=> new day of month becomes last day of previous month
 sub addmonth {
 	my($indate,$n) = @_;
-	my($iy,$im,$id) = split(/-/, $indate);
+	my($iy,$im,$id) = split(/-/, substr($indate, 0, 10));
 #	print "addmonth($iy-$im-$id, $n) ...\n";
 	$im += $n;
 	while ($im > 12) {
@@ -101,7 +101,7 @@ sub addmonth {
 # Now also handles n<0 (to subtract days from a date)
 sub addday {
 	my($indate,$n) = @_;
-	my($iy,$im,$id) = split(/-/, $indate);
+	my($iy,$im,$id) = split(/-/, substr($indate, 0, 10));
 	$id += $n;
 	while ($id > lastdayin($im, $iy)) {
 		$id -= lastdayin($im, $iy);
@@ -150,7 +150,7 @@ sub days_between {
 sub find_fy {
 	my $date = shift;
 
-	my($yyyy,$mm,$dd) = split(/-/, $date);
+	my($yyyy,$mm,$dd) = split(/-/, substr($date, 0, 10));
 
 	if ($mm < 7) {
 		# 1998-01 => 1998
