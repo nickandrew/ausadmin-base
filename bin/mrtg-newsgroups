@@ -1,16 +1,37 @@
 #!/usr/bin/perl
 #	@(#) mrtg-newsgroups: Create a mrtg file for newsgroup traffic
 #
-#  Usage: mrtg-newsgroups nglist_file
+#  Usage: mrtg-newsgroups nglist_file [config_file [arrival_file]]
 
 use Net::NNTP;
+use XML::Simple qw();
+use Fcntl qw(:flock);
+
+my $newsserver = $ENV{NNTPSERVER} || 'news';
 
 my $nglist_file = shift @ARGV;
-my $newsserver = $ENV{NNTPSERVER} || 'news';
+my $config_file = shift @ARGV || "mtrg-newsgroups-config.xml";
+my $arrival_file = shift @ARGV || "news-arrival.log";
+my $now = time();
 
 if (!open(F, "<$nglist_file")) {
 	die "Unable to open $nglist_file: $!";
 }
+
+flock(F, LOCK_EX);
+
+if (!open(ARRIVAL, ">>$arrival_file")) {
+	$arrival_file = undef;
+}
+
+my $config;
+
+if (-f $config_file) {
+	$config = XML::Simple::XMLin($config_file);
+} else {
+	$config = { newsgroup => { } };
+}
+
 
 my @groups;
 
@@ -31,6 +52,7 @@ if (!defined $s) {
 
 my $group_ok = 0;
 my $group_err = 0;
+my $ng_hr = $config->{newsgroup};
 
 foreach my $group (@groups) {
 	my($art_n, $art_low, $art_high, $name) = $s->group($group);
@@ -49,10 +71,34 @@ foreach my $group (@groups) {
 	print "\n";
 	print "\n";
 
+	# Now log the number of new articles (since last time)
+	if ($ng_hr->{$group}->{art_high} > 0) {
+		my $old_high = $ng_hr->{$group}->{art_high};
+		if ($art_high > $old_high) {
+			if ($arrival_file) {
+				my $diff = $art_high - $old_high;
+				print ARRIVAL "$now $group $diff\n";
+			}
+		}
+	}
+
+	# And remember it for next time
+	$ng_hr->{$group}->{art_high} = $art_high;
+
 	$group_ok++;
 }
 
 $s->quit();
+
+# Close the arrival file
+if ($arrival_file) {
+	close(ARRIVAL);
+}
+
+# Now rewrite our config file
+open(CONFIG, ">$config_file");
+print CONFIG XML::Simple::XMLout($config);
+close(CONFIG);
 
 my $rc = ($group_err < 5) ? 0 : 8;
 
