@@ -19,7 +19,7 @@ $LOCK_UN = 8;
 $HomeDir = "/virt/web/ausadmin";
 $BaseDir = "$HomeDir/vote";
 
-BIG:while ( <STDIN> ) {
+BIG:while ( <> ) {
 	($EmailAddress, $Newsgroup, $Vote, $CTime, $fn) = split;
 
 	# Section 1 (see above)
@@ -43,8 +43,8 @@ BIG:while ( <STDIN> ) {
 			($EA, $NG, $V, $CT, $FN) = split;
 			if ( $EmailAddress eq $EA ) {
 				FailVote( "already voted on $Newsgroup" );
+				next BIG;
 			}
-			next BIG;
 		}
 		close( TALLYFILE );
 	}
