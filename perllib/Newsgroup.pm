@@ -204,7 +204,10 @@ sub set_attr {
 		$exists = 1;
 		if (!-f "$datadir/$self->{name}/RCS/$attr_name,v") {
 			# check it in for the first time
-			system("ci -l $path < /dev/null");
+			my $rc = system("ci -l $path < /dev/null");
+			if ($rc) {
+				print "Initial checkin rc $rc\n";
+			}
 		}
 	} else {
 		$exists = 0;
@@ -221,10 +224,16 @@ sub set_attr {
 
 	if ($exists) {
 		# Check in an update, with that message
-		system("ci", "-l", "-m$reason", $path);
+		my $rc = system("ci", "-l", "-m$reason", $path);
+		if ($rc) {
+			print "checkin existing rc $rc\n";
+		}
 	} else {
 		# Check in initial version, use -t-string
-		system("ci", "-l", "-t-$reason", $path);
+		my $rc = system("ci", "-l", "-t-$reason", $path);
+		if ($rc) {
+			print "checkin new rc $rc\n";
+		}
 	}
 
 	# Now write an audit log that we did it ... TODO
