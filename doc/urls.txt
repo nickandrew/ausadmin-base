@@ -1,0 +1,8 @@
+URLs to preserve into the far future:
+
+/Charters/aus.group.name
+	(Charter for some of the newsgroups)
+	-> Redirect to /groupinfo.php/aus.group.name
+
+/cgi-bin/voteinfo?newsgroup=aus.group.name
+	(Was used on postings of old group results)
