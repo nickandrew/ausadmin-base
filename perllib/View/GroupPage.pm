@@ -135,6 +135,10 @@ $charter
      The top of the green area counts the number
      of articles posted in the last 24 hours, whereas the blue line counts
      the number of articles posted in the last 2 hours, times 12.</p>
+     <h4>Weekly activity graph</h4>
+     <center>
+      <img src="/article_rate_png.cgi?newsgroup=$ng&type=week" alt="Weekly article posting rates for $ng">
+     </center>
 
 
 EOF
