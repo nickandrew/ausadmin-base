@@ -80,6 +80,9 @@ foreach my $vote (@votes) {
 			print "$vote ... cancelled, but no cancel email\n";
 			next;
 		}
+
+		# Otherwise it is cancelled properly, nothing to do
+		next;
 	}
 
 	if (!-f "$d/endtime.cfg") {

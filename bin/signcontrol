@@ -6,6 +6,16 @@
 #  -- skip minor pgp signature headers like "charset:" after "version:" header
 #     and until the empty line that starts the base64 signature block
 
+=head1 NAME
+
+signcontrol - PGP-sign the headers of a control message
+
+=head1 SYNOPSIS
+
+signcontrol < vote/$newsgroup/control.msg > vote/$newsgroup/control.signed
+
+=cut
+
 # CONFIGURATION
 
 # pgp variables.
