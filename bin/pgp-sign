@@ -13,6 +13,8 @@ pgp-sign - PGP-sign the body of a message
 
 cat message | pgp-sign | post.pl
 
+pgp-sign filename
+
 =head1 DESCRIPTION
 
 This program filters a message. The header part is passed unchanged
@@ -31,10 +33,10 @@ if (-f "/usr/bin/pgps") {
 }
 
 select(STDOUT); $| = 1;
-open(STDERR, ">/dev/null");
+# open(STDERR, ">/dev/null");
 
 if (!open(P, "|$cmd")) {
-	# Fallback to cat if needed
+	# Fallback to cat if pgp does not exist
 	open(P, "|cat");
 }
 
