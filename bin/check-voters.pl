@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-#	@(#) check-voters.pl newsgroup-name voters-file < message-file | /bin/bash
+#	@(#) check-voters.pl newsgroup-name voters-file < message-file
 #
 # $Source$
 # $Revision$
@@ -37,7 +37,7 @@ if (!open(V, "<$tally_path")) {
 
 my @recipients;
 my $now = time();
-my $check_cutoff_ts = $now - 86400 * 150;
+my $check_cutoff_ts = $now - 86400 * 180;
 
 while (<V>) {
 	chomp;
