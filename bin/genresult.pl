@@ -91,15 +91,16 @@ if (time() < $ts_end) {
 	die "genresult.pl: Vote $votename not finished yet.\n";
 }
 
-my %voters;
-my %yes;
-my %no;
-my %abstain;
-my %forge;
-my %multi;
-my %total;
-my %invalid = ('YES' => 0, 'NO' => 0, 'ABSTAIN' => 0);
-my $vote_info = { };
+# Setup defaults for the counting
+
+my $vote_info = {
+	valid_tally => { 'YES' => 0, 'NO' => 0, 'ABSTAIN' => 0 },
+	invalid_tally => { 'YES' => 0, 'NO' => 0, 'ABSTAIN' => 0 },
+	valid_count => 0,
+	multi_count => 0,
+	total => 0,
+	voters => [ ],
+};
 
 my $tally_lr = $vote->get_tally();
 
@@ -195,7 +196,7 @@ if ($abstain == 1) {
 
 if ($vote_info->{invalid_count} == 0) {
 	$invalids = "no invalid votes";
-} elsif ($forge{$ng} == 1) {
+} elsif ($vote_info->{invalid_count} == 1) {
 	$invalids = "1 invalid vote";
 } else {
 	$invalids = "$vote_info->{invalid_count} invalid votes";
@@ -242,9 +243,9 @@ sub pass_msg() {
 
 	# Formatted line
 	if ($pass) {
-		$line = "The vote $ng has passed its vote by $yes YES $yvotes to $no NO $nvotes. There were $abstain $abstentions and $invalids detected.";
+		$line = "The vote $ng has passed by $yes YES $yvotes to $no NO $nvotes. There were $abstain $abstentions and $invalids detected.";
 	} else {
-		$line = "The vote $ng has failed its vote by $yes YES $yvotes to $no NO $nvotes. There were $abstain $abstentions and $invalids detected.";
+		$line = "The vote $ng has failed by $yes YES $yvotes to $no NO $nvotes. There were $abstain $abstentions and $invalids detected.";
 	}
 
 	push(@body, format_para($line));
