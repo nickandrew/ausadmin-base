@@ -1,0 +1,11 @@
+General priorities for ausadmin todo ... i.e.
+
+1 - Post control messages for successful proposals
+
+2 - Count votes for proposals
+
+3 - Post CFV for accepted proposals
+
+4 - Post RFD for accepted proposals
+
+5 - Consider new proposals and other correspondence
