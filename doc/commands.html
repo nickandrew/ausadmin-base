@@ -1,0 +1,65 @@
+<html>
+<head>
+<title>Ausadmin commands</title>
+</head>
+<body>
+
+<p>
+This is a quick list of the main commands to use with ausadmin:
+
+<ol>
+<li><tt>new-rfd newsgroup-name rfd-file</tt>
+<p>
+Creates a <i>vote/newsgroup</i> directory for the newsgroup,
+parses the RFD file and writes each component into a separate file in that
+directory.
+
+<li><tt>mkvote newsgroup-name</tt>
+<p>
+Sets up the vote using the current defaults for <i>voterule</i> and
+<i>voteperiod</i> and writes the vote control files into the newsgroup's
+directory.
+<p>
+Then it creates the CFV message, signs it and posts it to the distribution
+list from the RFD.
+
+<li><tt>gennewgroup.pl</tt>
+<li><tt>genresult.pl newsgroup-name</tt>
+<p>Counts the votes for the group and generates a result message.
+</ol>
+
+<h1>Other useful commands</h1>
+<ul>
+<li>parse-rfd.pl - break an RFD into its components. Dies if there's a
+problem or something missing. I'm going to extend it so it can write
+its stuff to somewhere other than vote/ and then people can use it
+to check their RFD submissions.
+
+<li>setup-vote - Create just the control files for a vote, not the CFV
+<li>mkcfv.pl - Create just the signed CFV, do not post it. Requires that
+setup-vote has been run first.
+</ul>
+
+<p>
+I'm also going to modify sign-aus-post.pl so that it operates non-interactively,
+so one can make a standard article, e.g.
+
+<pre>
+	cat <<EOF >art.$$
+	Subject: A test post
+	From: ausadmin@aus.news-admin.org
+	Newsgroups: aus.test
+
+	This is a test post
+	EOF
+
+	sign-aus-post.pl < art.$$ | post.pl
+</pre>
+
+And obviously, only the body of the article will be signed. This will
+remove complexity from anything which needs to post PGP-signed text.
+
+</body>
+</html>
+
+

@@ -3,12 +3,175 @@
 <title>Ausadmin system users guide</title>
 </head>
 <body>
-<h1>Make a vote</h1>
-
-mkvote aus.example rfd/aus.exampleq.rfd
+Click
+<a href="commands.html">here</a> for a rundown of the ausadmin commands.
 <p>
-<h1>Create a new newsgroup</h1>
+<h1>Overview of the process</h1>
+This is the process which ausadmin follows, from start to finish. The
+components of the process are:
 
-gennewgroup.pl aus.cars.offroad
+<ol>
+<li>Receive email from users and reply with prompt, accurate advice
+<li>Decide whether suggested newsgroup names are acceptable
+<li>Receive RFD from proponent, store online and post RFD
+<li>Update newsgroup info from proponent
+<li>Create Call-For-Votes (CFV) and post
+<li>Check vote tally for forgeries, remove all forgeries
+<li>Create final result message and post
+<li>Issue newgroup messages for groups which passed their vote
+</ol>
+
+<h1>Receive email from users</h1>
+<p>
+Users have been told to send email to ausadmin@aus.news-admin.org.
+This address is forwarded according to the instructions in
+~ausadmin/.qmail-ausadmin.
+
+<p>
+When you reply to a message, set your From address to
+<ausadmin@aus.news-admin.org> so that any replies will
+go to that address.
+
+<h1>Decide whether suggested newsgroup names are appropriate</h1>
+
+<p>
+The basic rules to use here are:
+<ol>
+<li>Is the newsgroup name valid?
+<p>
+Valid groups contain only the letters a-z, the numbers 0-9 and the dash -
+between each component of the newsgroup name. The length of each component
+should be 14 characters or less (although this is no longer mandatory, it
+is preferred).
+
+<li>Is there already an aus.* newsgroup which discusses substantially
+the same topic?
+
+<li>Does the group's immediate parent exist, or does a sibling exist?
+<p>
+Ausadmin will only create groups where a parent group already
+exists or other groups already exist which have the same (missing)
+parent group.
+<p>
+(This rule doesn't apply for 2nd-level groups, e.g. aus.history).
+For example, somebody suggests aus.sport.tennis.umpires. Does the
+group aus.sport.tennis exist? Alternately, do other subgroups (e.g.
+aus.sport.tennis.coaches) exist?
+
+<li>Does the topic of the parent of the proposed newsgroup include the
+topic suggested?
+<p>
+The topics discussed by newsgroups are supposed to become more specific
+at lower levels, so if a parent group already exists, its topic should
+be more general than the topic of the proposed new group.
+
+<li>If the newsgroup is a 2nd-level group, is the topic of sufficient
+generality or wide interest?
+<p>
+2nd-level newsgroups (aus.something) should be about quite general,
+fundamental topics. Good examples of this are science, history,
+sport, politics.
+
+<li>Is the topic too specific?
+<p>
+As a newsgroup hierarchy deepens, topics should become more specific,
+but not radically so. For example, aus.sport.cricket.shane-warne is
+probably too specific. To approve that name would imply that every
+cricketer, past and present, deserves their own newsgroup.
+
+</ol>
+
+<p>
+If a proposal passes all these tests, it is probably ready to go to
+the RFD stage.
+
+<h1>Receive RFD from proponent, store online and post RFD</h1>
+
+<p>
+The RFD is a text document with certain required sections. These are:
+
+<ul>
+<li>proposer - the name and email address of the person driving this activity
+<li>distribution - the list of related newsgroups
+<li>charter - the proposed rules for the group
+<li>rationale - the justification for creating the group
+<li>ngline - the 1-line description for peoples' newsgroups file
+<li>modinfo (opt) - contact name and address for the moderator, if any
+</ul>
+
+<p>
+When the RFD is received by E-mail, store it using this command:
+<pre>
+		new-rfd newsgroup-name rfd-file
+</pre>
+
+<p>
+<i>new-rfd</i> will parse the RFD into its component sections (and
+die with an error message if anything important is missing) and store
+them in the newly-created vote/newsgroup directory. At this point
+the RFD will be listed on the aus.news-admin.org website as being
+"in discussion".
+
+<p>
+Examine the files in the vote/newsgroup directory to be sure that
+the RFD has been parsed correctly.
+
+<p>
+Do the following to post the RFD:
+<p>
+<ol>
+<li>Edit the vote/newsgroup/rfd file and set Subject, From and Newsgroups
+headers:
+<pre>
+Subject: RFD (Request For Discussion): newsgroup-name
+From: ausadmin@aus.news-admin.org
+Newsgroups: the comma-separated list of groups in the distribution
+</pre>
+<li>Post the RFD with <tt>bin/post.pl < vote/newsgroup/rfd</tt>
+</ol>
+
+
+<h1>Update newsgroup info from proponent</h1>
+
+<p>
+The 21 day discussion period may evoke some changes required to the
+original proposal. Accept any changes from the proponent, update the
+RFD (and re-parse it using <tt>bin/parse-rfd.pl</tt>). If large changes
+occurred it might be worthwhile to re-post the RFD.
+
+<h1>Create Call-For-Votes (CFV) and post</h1>
+
+<p>
+If you want to add your own note to the CFV, put it in
+<i>vote/newsgroup/cfv-notes.txt</i> before doing the following
+step.
+
+<p>
+This script sets up the vote, creates and PGP-signs and posts the CFV:
+<pre>
+	mkvote newsgroup-name
+</pre>
+
+<p>
+Check the CFV to ensure that you posted the right thing (if not, oops,
+too late!)
+<p>
+Now there's nothing to do but sit back and wait until the vote finishes.
+
+<h1>Check vote tally for forgeries, remove all forgeries</h1>
+<p>
+I need to get an update from DF on how he detects forgeries.
+
+<h1>Create final result message and post</h1>
+<p>
+I haven't got this far yet.
+
+<h1>Issue newgroup messages for groups which passed their vote</h1>
+<p>
+I haven't got this far yet. It's probably like the old instructions:
+<pre>
+gennewgroup.pl newsgroup-name
+</pre>
+
 </body>
 </html>
