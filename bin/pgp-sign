@@ -1,0 +1,47 @@
+#!/usr/bin/perl
+#	@(#) pgp-sign
+#
+# $Source$
+# $Revision$
+# $Date$
+
+=head1 NAME
+
+pgp-sign - PGP-sign the body of a message
+
+=head1 SYNOPSIS
+
+cat message | pgp-sign | post.pl
+
+=head1 DESCRIPTION
+
+This program filters a message. The header part is passed unchanged
+to stdout and the body part is filtered through the "pgp" program.
+
+=cut
+
+my $header = 1;
+my $cmd = "pgp -s -f";
+
+select(STDOUT); $| = 1;
+open(STDERR, ">/dev/null");
+
+if (!open(P, "|$cmd")) {
+	# Fallback to cat if needed
+	open(P, "|cat");
+}
+
+while (<STDIN>) {
+	if ($header) {
+		print STDOUT $_;
+		if ($_ eq "\n") {
+			$header = 0;
+		}
+		next;
+	}
+
+	print P $_;
+}
+
+my $rc = close(P);
+exit ($rc ? 0 : 8);
