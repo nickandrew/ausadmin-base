@@ -87,7 +87,7 @@ if (!-d "vote/$vote") {
 }
 
 # Get vote end date and vote pass/fail rule
-$ts_start = read1line("vote/$vote/starttime.cfg");
+$ts_start = read1line("vote/$vote/vote_start.cfg");
 $ts_end = read1line("vote/$vote/endtime.cfg");
 $voterule = read1line("vote/$vote/voterule");
 

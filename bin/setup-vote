@@ -23,7 +23,7 @@ directory. These control files are:
 
 	vote_start.cfg (contains the timestamp of the vote start time)
 	endtime.cfg (contains the timestamp of the vote cutoff time)
-	posted.cfv ?
+	voterule (the parameters against which this ballot will be judged)
 
 This program creates endtime.cfg for the chosen newsgroups
 if it does not already exist.
@@ -55,6 +55,20 @@ my @newsgroups = @ARGV;
 
 foreach my $newsgroup (@newsgroups) {
 	print "\nNewsgroup $newsgroup ...\n";
+
+	my $vote_rule = "$BaseDir/$newsgroup/voterule";
+	if (!-f $vote_rule) {
+		if (!-f "config/voterule") {
+			die "setup-vote: config/voterule does not exist!";
+		}
+
+		open(F, "<config/voterule");
+		my $vr = <F>;
+		close(F);
+		open(G, ">$BaseDir/$newsgroup/voterule");
+		print G $vr;
+		close(G);
+	}
 
 	my $ConfigFile ="$BaseDir/$newsgroup/endtime.cfg";
 	my $start_file ="$BaseDir/$newsgroup/vote_start.cfg";

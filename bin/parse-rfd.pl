@@ -190,8 +190,8 @@ sub ReadRFD {
 		}
 
 		if ($state eq 'distribution') {
-			if (/^([a-z0-9.-]+)$/) {
-				push(@{$g{distribution}}, $_);
+			if (/^\s+([a-z0-9.-]+)$/) {
+				push(@{$g{distribution}}, $1);
 			}
 			next;
 		}
