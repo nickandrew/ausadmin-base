@@ -348,7 +348,7 @@ sub makegroup {
   open (CREATE,">>vote/$vote/group.creation.date") 
     or die "Can't set creation date";
 
-  print CREATE,"$start\n";
+  print CREATE "$start\n";
 
   close CREATE;
 }
