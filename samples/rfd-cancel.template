@@ -1,0 +1,10 @@
+Newsgroups: !DISTRIBUTION!
+From: <ausadmin@aus.news-admin.org>
+Subject: The RFD for !NEWSGROUP! has been cancelled
+
+The Request For Discussion (RFD) for !NEWSGROUP! has been cancelled.
+
+!CANCELREASON!
+
+Nick Andrew
+<ausadmin@aus.news-admin.org>
