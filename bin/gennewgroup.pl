@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-#	gennewgroup.pl vote
+#	@(#) gennewgroup.pl vote
 #
 # $Source$
 # $Revision$

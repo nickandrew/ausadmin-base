@@ -9,13 +9,13 @@
 # Proccesses incoming mail for ausadmin adding
 # X-PTS-Account: ausadmin
 # X-PTS-Status: open
-# X-PTS-Handled: dformosa
+# X-PTS-Assigned: nick
 
 use strict;
 
 my $ttsid = 'zz-pts@staff.zeta.org.au';
-my $admin = 'dformosa@zeta.org.au';
-my $from  = 'ausadmin@zeta.org.au';
+my $admin = 'nick-ausadmin@tull.net';
+my $from  = 'ausadmin@aus.news-admin.org';
 
 open (MAIL,'|/usr/sbin/sendmail $ttsid') or 
   die "Can't fork sendmail $! please report this to $admin";
@@ -32,7 +32,7 @@ while (<>) {
 
 print "X-PTS-Account: ausadmin\n";
 print "X-PTS-Status: open\n";
-print "X-PTS-Handled: dformosa\n";
+print "X-PTS-Assigned: nick\n";
 
 print "\n";
 
