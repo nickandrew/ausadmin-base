@@ -6,10 +6,15 @@
 #
 # Usage: check-server.pl < filename.xml
 
+use Getopt::Std qw(getopts);
 use XML::Simple qw();
 use Date::Format qw(time2str);
 use Data::Dumper qw(Dumper);
 use Fcntl qw(:flock);
+
+use vars qw($opt_d);
+
+getopts('d');
 
 my $xml = join('', <STDIN>);
 
@@ -83,7 +88,8 @@ sub process_server_report {
 	# Now check it hierarchy by hierarchy
 
 	my $result = $db->{server}->{$news_server} = {
-		errors => 0,
+		bogus => 0,
+		missing => 0,
 		total_groups => 0,
 		ok => 0,
 	};
@@ -108,9 +114,8 @@ sub check_existing_groups {
 	my($hier, $sh_ref, $hr, $result) = @_;
 
 	if (!ref $sh_ref->{group}) {
-		$result->{errors} ++;
 		$result->{notice}->{$hier} = { msg => "No groups in hierarchy" };
-		print " No groups in hierarchy $hier\n";
+		print " No groups in hierarchy $hier\n" if ($opt_d);
 		return;
 	}
 
@@ -136,8 +141,8 @@ sub check_existing_groups {
 		# $result->{hier}->{$hier}->{total_groups} ++;
 		$result->{total_groups} ++;
 		if (!exists $ghr->{$group}) {
-			print "  Group $group needs to be created\n";
-			$result->{errors} ++;
+			print "  Group $group needs to be created\n" if ($opt_d);
+			$result->{missing} ++;
 			$result->{notice}->{$group} = { msg => sprintf("Group should be created: %s", $hr->{$group}->{description}) };
 		} else {
 			$result->{ok} ++;
@@ -167,8 +172,8 @@ sub check_bogus_groups {
 		# It is a single group
 		my $group = $ghr->{name};
 		if (!exists $hr->{$group}) {
-			print "  Group $group is bogus\n";
-			$result->{errors} ++;
+			print "  Group $group is bogus\n" if ($opt_d);
+			$result->{bogus} ++;
 			$result->{notice}->{$group} = { msg => "Group should be deleted" };
 		}
 
@@ -177,13 +182,13 @@ sub check_bogus_groups {
 
 	foreach my $group (sort (keys %$ghr)) {
 		if ($group !~ /^$hier_regex/) {
-			print " Group $group is not part of $hier\n";
+			print " Group $group is not part of $hier\n" if ($opt_d);
 			next;
 		}
 
 		if (!exists $hr->{$group}) {
-			print "  Group $group is bogus\n";
-			$result->{errors} ++;
+			print "  Group $group is bogus\n" if ($opt_d);
+			$result->{bogus} ++;
 			$result->{notice}->{$group} = { msg => "Group should be deleted" };
 		}
 	}
@@ -205,7 +210,7 @@ sub read_hierarchy {
 		return undef;
 	}
 
-	print "Reading $hier\n";
+	print "Reading $hier\n" if ($opt_d);
 
 	open(F, "<$dirname/grouplist") || ( print "No grouplist for $hier\n", return undef ) ;
 
