@@ -43,56 +43,6 @@ my $organization = "aus.* newsgroups administration, see http://aus.news-admin.o
 
 my $vote = shift;
 
-sub read1line {
-	my($path) = @_;
-	my($line);
-	if (!open(F, $path)) {
-		die "Can't open $path: $!";
-	}
-	chop($line = <F>);
-	close(F);
-	return $line;
-}
-
-sub readfile {
-	my($path) = @_;
-	my($line);
-	if (!open(F, $path)) {
-		die "Can't open $path: $!";
-	}
-	while (<F>) {
-		$line .= $_;
-	}
-	close(F);
-	return $line;
-}
-
-# Join all lines into one and split them into a paragraph.
-
-sub format_para {
-	my($line) = @_;
-	my($first, $rest);
-	my($last_space);
-	my(@result);
-
-	# Format as a paragraph, max 72 chars
-	$line =~ tr/\n/ /;
-	while (length($line) > 72) {
-		$last_space = rindex($line, ' ', 72);
-		if ($last_space > 0) {
-			$first = substr($line, 0, $last_space);
-			push(@result, $first);
-			$rest = substr($line, $last_space + 1);
-			$line = $rest;
-		}
-	}
-	if ($line ne "") {
-		push(@result, $line);
-	}
-
-	return @result;
-}
-
 if ($vote eq '') {
 	print STDERR "genresult.pl: No vote specified\n";
 	exit(2);
@@ -104,7 +54,7 @@ if (!-d "vote/$vote") {
 }
 
 if (-f "vote/$vote/vote_cancel.cfg") {
-	die "Vote $vote was cancelled";
+	die "genresult.pl: Vote $vote was cancelled\n";
 }
 
 # Get vote end date and vote pass/fail rule
@@ -118,7 +68,7 @@ my $ngline = read1line("vote/$vote/ngline");
 my $charter = readfile("vote/$vote/charter");
 
 # General config files
-my $footer =  readfile("config/results.footer");
+my $footer = readfile("config/results.footer");
 
 my($numer, $denomer, $minyes) = split(/\s+/, $voterule);
 
@@ -126,19 +76,19 @@ my $vote_start;
 my $vote_end;
 
 {
-     my($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = gmtime($ts_start) 
-	  or die "Can't get start date.";
+	my($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = gmtime($ts_start)
+		or die "Can't get start date.";
 
-     $year += 1900; $mon++;
-     $vote_start = sprintf "%d-%02d-%02d %02d:%02d:%02d UTC", $year, $mon, $mday, $hour, $min, $sec;
-     
+	$year += 1900; $mon++;
+	$vote_start = sprintf "%d-%02d-%02d %02d:%02d:%02d UTC", $year, $mon, $mday, $hour, $min, $sec;
+
 }
 
 {
-     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = gmtime($ts_end);
-     $year += 1900; $mon++;
-     $vote_end = sprintf "%d-%02d-%02d %02d:%02d:%02d UTC", $year, $mon, $mday, $hour, $min, $sec;
-     
+	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = gmtime($ts_end);
+	$year += 1900; $mon++;
+	$vote_end = sprintf "%d-%02d-%02d %02d:%02d:%02d UTC", $year, $mon, $mday, $hour, $min, $sec;
+
 }
 
 # barf if control files don't exist or other error
@@ -215,71 +165,75 @@ close(T);
 
 my($yvotes, $nvotes, $abstentions, $forgeries);
 
-# Output results
-foreach my $ng (sort (keys %newsgroups)) {
-
-	my $status;
-	my $subjstat;
-
-	if (($yes{$ng} >= ($yes{$ng} + $no{$ng}) * $numer / $denomer) && ($yes{$ng} - $no{$ng} >= $minyes)) {
-		$status = "pass";
-		$subjstat = "passes";
-	} else {
-		$status = "fail";
-		$subjstat = "fails";
-	}
-
-	if ($yes{$ng} == 1) {
-		$yvotes = "vote";
-	} else {
-		$yvotes = "votes";
-	}
-
-	if ($no{$ng} == 1) {
-		$nvotes = "vote";
-	} else {
-		$nvotes = "votes";
-	}
-
-	if ($abstain{$ng} == 1) {
-		$abstentions = "abstention";
-	} else {
-		$abstentions = "abstentions";
-	}
-
-	if ($forge{$ng} == 0) {
-		$forgeries = "no forgeries";
-	} elsif ($forge{$ng} == 1) {
-		$forgeries = "1 forgery";
-	} else {
-		$forgeries = "$forge{$ng} forgeries";
-	}
-
-
-	# This stuff goes into the header
-
-	print "Newsgroups: aus.general,aus.net.news\n";
-	print "From: $postaddress\n";
-	print "Organization: $organization\n";
-	print "X-PGPKey: at http://aus.news-admin.org/ausadmin.asc\n";
-	print "Followup-To: aus.net.news\n";
-	if (not $recount) {
-		print "Subject: RESULT: $ng $subjstat vote $yes{$ng}:$no{$ng}\n"; 
-	} else {
-		print "Subject: RECOUNT: $ng $subjstat vote $yes{$ng}:$no{$ng}\n"; 
-	}
-	print "\n";
-
-	# Pass or fail?
-	if ($status eq "pass") {
-		pass_msg($ng);
-	} else {
-		fail_msg($ng);
-	}
-
-	# This sucks. It's inside a loop.
-	exit(0);
+my @ng_list = keys %newsgroups;
+if ($#ng_list > 0) {
+	die "genresult.pl: Unable to generate a result for XXXXX because there are multiple newsgroups in the tally.dat file\n";
 }
+
+# Output results
+my $ng = $ng_list[0];
+
+my $status;
+my $subjstat;
+
+if (($yes{$ng} >= ($yes{$ng} + $no{$ng}) * $numer / $denomer) && ($yes{$ng} - $no{$ng} >= $minyes)) {
+	$status = "pass";
+	$subjstat = "passes";
+} else {
+	$status = "fail";
+	$subjstat = "fails";
+}
+
+if ($yes{$ng} == 1) {
+	$yvotes = "vote";
+} else {
+	$yvotes = "votes";
+}
+
+if ($no{$ng} == 1) {
+	$nvotes = "vote";
+} else {
+	$nvotes = "votes";
+}
+
+if ($abstain{$ng} == 1) {
+	$abstentions = "abstention";
+} else {
+	$abstentions = "abstentions";
+}
+
+if ($forge{$ng} == 0) {
+	$forgeries = "no forgeries";
+} elsif ($forge{$ng} == 1) {
+	$forgeries = "1 forgery";
+} else {
+	$forgeries = "$forge{$ng} forgeries";
+}
+
+
+# This stuff goes into the header
+
+print "Newsgroups: aus.general,aus.net.news\n";
+print "From: $postaddress\n";
+print "Organization: $organization\n";
+print "X-PGPKey: at http://aus.news-admin.org/ausadmin.asc\n";
+print "Followup-To: aus.net.news\n";
+if (not $recount) {
+	print "Subject: RESULT: $ng $subjstat vote $yes{$ng}:$no{$ng}\n";
+} else {
+	print "Subject: RECOUNT: $ng $subjstat vote $yes{$ng}:$no{$ng}\n";
+}
+print "\n";
+
+# Pass or fail?
+if ($status eq "pass") {
+	pass_msg($ng);
+} else {
+	fail_msg($ng);
+}
+
+# This sucks. It's inside a loop.
+exit(0);
 
 sub pass_msg() {
 	my $ng = shift;
@@ -326,13 +280,6 @@ sub pass_msg() {
 	foreach my $l (@body) {
 		print "$l\n";
 	}
-
-	my $now = time();
-	makegroup($ng, $now + 5 * 86400);
-
-	setposts($ng, "post.real", $now + 5 * 86400, 5 * 86400, 3);
-	setposts($ng, "post.fake.phil", $now + 10 * 86400, 5 * 86400, 3);
-	setposts($ng, "post.fake.robert", $now + 15 * 86400, 5 * 86400, 3);
 }
 
 sub fail_msg() {
@@ -365,7 +312,7 @@ sub fail_msg() {
 
 sub setposts {
 	my ($groupname,$filename,$firstpostdate,$interval,$count)=@_;
-  
+
 	local *POST;
 
 	return if $debug;
@@ -373,24 +320,74 @@ sub setposts {
 	if (not open (POST,">>vote/$vote/$filename")) {
 		die "Unable to mark group $vote as passed: $filename\n";
 	}
-    
+
 	print POST "$groupname\t$firstpostdate\t$interval\t$count\n";
 	close POST;
 }
 
 sub makegroup {
-  my $ng = shift;
-  my $start = shift;
+	my $ng = shift;
+	my $start = shift;
 
-  local *CREATE;
+	local *CREATE;
 
-  my $fn = "vote/$vote/group.creation.date";
-  open (CREATE,">>$fn") 
-    or die "Can't open $fn: $!";
+	my $fn = "vote/$vote/group.creation.date";
+	open (CREATE,">>$fn")
+		or die "Can't open $fn: $!";
 
-  print CREATE "$start\n";
+	print CREATE "$start\n";
 
-  close CREATE;
+	close CREATE;
 }
 
+
+sub read1line {
+	my($path) = @_;
+	my($line);
+	if (!open(F, $path)) {
+		die "Can't open $path: $!";
+	}
+	chop($line = <F>);
+	close(F);
+	return $line;
+}
+
+sub readfile {
+	my($path) = @_;
+	my($line);
+	if (!open(F, $path)) {
+		die "Can't open $path: $!";
+	}
+	while (<F>) {
+		$line .= $_;
+	}
+	close(F);
+	return $line;
+}
+
+# Join all lines into one and split them into a paragraph.
+
+sub format_para {
+	my($line) = @_;
+	my($first, $rest);
+	my($last_space);
+	my(@result);
+
+	# Format as a paragraph, max 72 chars
+	$line =~ tr/\n/ /;
+	while (length($line) > 72) {
+		$last_space = rindex($line, ' ', 72);
+		if ($last_space > 0) {
+			$first = substr($line, 0, $last_space);
+			push(@result, $first);
+			$rest = substr($line, $last_space + 1);
+			$line = $rest;
+		}
+	}
+	if ($line ne "") {
+		push(@result, $line);
+	}
+
+	return @result;
+}
 
