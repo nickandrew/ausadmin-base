@@ -1,0 +1,24 @@
+#!/bin/sh
+#	Create and post a newsgroups list to aus.net.news
+#	Create and post a signed checkgroups
+
+bin/gengrouplist.pl > tmp/grouplist.$$ 2> tmp/pgp.$$
+s=$?
+if [ $s -ne 0 ] ; then
+	echo "gengrouplist.pl returned status $s - fatal"
+	exit 2
+fi
+
+bin/gencheckgroups.pl > tmp/checkgroups.$$ 2> tmp/pgp.$$
+s=$?
+if [ $s -ne 0 ] ; then
+	echo "gencheckgroups.pl returned status $s - fatal"
+	exit 3
+fi
+
+inews -h < tmp/grouplist.$$
+s=$?
+if [ $s -ne 0 ] ; then
+	echo "inews returned status $s"
+fi
+
