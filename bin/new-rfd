@@ -49,6 +49,12 @@ if [ $s != 0 ] ; then
 	exit 6
 fi
 
+if [ -d $BaseDir/$Newsgroup ] ; then
+	echo "A directory $BaseDir/$Newsgroup already exists - use redo-vote.pl first"
+	echo "or remove that directory before proceeding."
+	exit 7
+fi
+
 bin/parse-rfd.pl < $fn
 s=$?
 
