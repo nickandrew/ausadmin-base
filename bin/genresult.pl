@@ -31,6 +31,7 @@ B<-r> notes this result as a recount.
 =cut
 
 use Getopt::Std;
+use POSIX qw(:time_h);
 use lib 'bin';
 use Ausadmin;
 use Vote;
@@ -75,23 +76,6 @@ my $footer = Ausadmin::readfile("config/results.footer");
 
 my($numer, $denomer, $minyes) = split(/\s+/, $voterule);
 
-my $vote_start;
-my $vote_end;
-
-{
-	my($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = gmtime($ts_start);
-
-	$year += 1900; $mon++;
-	$vote_start = sprintf "%d-%02d-%02d %02d:%02d:%02d UTC", $year, $mon, $mday, $hour, $min, $sec;
-
-}
-
-{
-	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = gmtime($ts_end);
-	$year += 1900; $mon++;
-	$vote_end = sprintf "%d-%02d-%02d %02d:%02d:%02d UTC", $year, $mon, $mday, $hour, $min, $sec;
-
-}
 
 # barf if control files don't exist or other error
 if (not ($ts_end && $minyes && $ts_start)) {
@@ -305,8 +289,14 @@ sub pass_msg() {
 	push(@body, format_para("Votes marked as invalid or multi-votes were not counted in the result."));
 	push(@body, "");
 
-	push(@body, "The voting period started at: $vote_start");
-	push(@body, "The voting period ended at:   $vote_end\n");
+	my(@timel,$vts);
+	@timel=localtime($ts_start);
+	$vts = strftime("%Y-%m-%d %H:%M:%S %z", @timel);
+	push(@body, "The voting period started at: $vts");
+	@timel=localtime($ts_end);
+	$vts = strftime("%Y-%m-%d %H:%M:%S %z", @timel);
+	push(@body, "The voting period ended at:   $vts\n");
+
 
 	push(@body, "\nVOTES RECEIVED:");
 	foreach my $voter (sort @{$voters{$ng}}) {
