@@ -17,7 +17,7 @@ collater.pl - Record (or reject) incoming votes
 
 =head1 SYNOPSIS
 
-This program is called by B<bin/incoming> and should never be run
+This program is called by B<incoming> and should never be run
 directly.
 
 =head1 DESCRIPTION
@@ -58,7 +58,7 @@ while ( <STDIN> ) {
 	eval {
 		# Use die to get our error message out ASAP
 		# Because it's a string we have to end it with \n else perl
-		# will add "at bin/collater.pl line nn" automatically (urk)
+		# will add "at collater.pl line nn" automatically (urk)
 
 		die "Invalid newsgroup $Newsgroup\n" if (!-d $ng_dir);
 		die "A vote for $Newsgroup has not (yet) started\n" if (!-f "$ng_dir/vote_start.cfg");

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #	@(#) mkcfv.pl: Create a CFV message for a proposal
-#	Usage: cd ~ausadmin ; bin/mkcfv.pl newsgroup-name
+#	Usage: cd ~ausadmin ; mkcfv.pl newsgroup-name
 #
 # $Source$
 # $Revision$
@@ -16,8 +16,8 @@ mkcfv.pl - Create a CFV message for a list of newsgroups (really only one atm)
 =head1 SYNOPSIS
 
  cd ~ausadmin ; mkcfv.pl newsgroup > tmp/cfv-unsigned.$newsgroup
- bin/pgp-sign < tmp/cfv-unsigned.$newsgroup > vote/$newsgroup/cfv.signed
- bin/post.pl < vote/$newsgroup/cfv.signed
+ pgp-sign < tmp/cfv-unsigned.$newsgroup > vote/$newsgroup/cfv.signed
+ post.pl < vote/$newsgroup/cfv.signed
 
 =head1 DESCRIPTION
 

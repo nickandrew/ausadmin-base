@@ -284,7 +284,7 @@ sub sign_control {
 
 	my $fh_r = new IO::File;
 	my $fh_w = new IO::File;
-	my $pid = open2($fh_r, $fh_w, "bin/signcontrol");
+	my $pid = open2($fh_r, $fh_w, "signcontrol");
 
 	# Output the unsigned text to the write file handle
 

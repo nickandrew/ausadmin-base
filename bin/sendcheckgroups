@@ -11,7 +11,7 @@ umask 022
 gen-ausgroups.pl
 s=$?
 if [ $s -ne 0 ] ; then
-	echo "bin/gen-ausgroups.pl returned status $s - fatal"
+	echo "gen-ausgroups.pl returned status $s - fatal"
 	exit 2
 fi
 
@@ -19,7 +19,7 @@ fi
 gen-grouplist.pl
 s=$?
 if [ $s -ne 0 ] ; then
-	echo "bin/gen-grouplist.pl returned status $s - fatal"
+	echo "gen-grouplist.pl returned status $s - fatal"
 	exit 2
 fi
 
@@ -27,7 +27,7 @@ fi
 gen-checkgroups.pl
 s=$?
 if [ $s -ne 0 ] ; then
-	echo "bin/gen-checkgroups.pl returned status $s - fatal"
+	echo "gen-checkgroups.pl returned status $s - fatal"
 	exit 3
 fi
 

@@ -358,7 +358,7 @@ sub calc_state {
 	if (-f "$ng_dir/rfd_posted.cfg") {
 		# Really need to check here for the time delay since the
 		# RFD was posted. At least 21 days need to pass before
-		# it can be turned into a vote. bin/action does this
+		# it can be turned into a vote. action does this
 		# checking right now.
 		return "rfd/posted";
 	}
@@ -657,7 +657,7 @@ sub create_rfd {
 	my $vote_name = $self->{name} || die "This vote has no name!";
 
 	# FIXME ... move all this executed code into the method!
-	my $rc = system("bin/make-rfd.pl $vote_name > $vote_dir/rfd-temp.$$");
+	my $rc = system("make-rfd.pl $vote_name > $vote_dir/rfd-temp.$$");
 
 	if ($rc) {
 		$self->audit("RFD creation failed, code $rc");
@@ -679,7 +679,7 @@ sub post_rfd {
 	my $vote_name = $self->{name} || die "This vote has no name!";
 
 	# FIXME ... move all this executed code into the method!
-	my $rc = system("bin/post.pl < $vote_dir/rfd");
+	my $rc = system("post.pl < $vote_dir/rfd");
 
 	if ($rc) {
 		$self->audit("RFD posting failed, code $rc");

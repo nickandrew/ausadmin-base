@@ -78,7 +78,7 @@ sub write {
 		'X-PGPKey' => '',
 		'Organization' => '',
 		'Path' => 'aus.news-admin.org|ausadmin',
-	#	Note: Message-ID is added automatically by bin/signcontrol
+	#	Note: Message-ID is added automatically by signcontrol
 	#	'Message-ID' => "$^T$$ausadmin\@aus.news-admin.org",
 		'Date' => "$weekday, $mday $monthname $year $hour:$min:$sec",
 	);

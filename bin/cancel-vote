@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #	@(#) cancel-vote: prevent further voting, and report on the action
-#	Usage: cd ~ausadmin ; bin/cancel-vote newsgroup
+#	Usage: cd ~ausadmin ; cancel-vote newsgroup
 #
 # $Source$
 # $Revision$

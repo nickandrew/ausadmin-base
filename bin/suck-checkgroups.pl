@@ -81,7 +81,7 @@ while ($art <= $high_art) {
 
 			# Process it
 			print "\tProcessing $fn\n";
-			my $rc = system("bin/parse-checkgroups.pl data/checkgroups.ctl < $fn");
+			my $rc = system("parse-checkgroups.pl data/checkgroups.ctl < $fn");
 			if ($rc == 0) {
 				unlink($fn);
 			} else {

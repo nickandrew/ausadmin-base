@@ -21,7 +21,7 @@ for i in vote/* ; do
 	if [ ! -f $i/result ] ; then
 		echo "$b initial result has not been computed yet"
 	else
-		bin/genresult.pl $b > tmp/result.$b
+		genresult.pl $b > tmp/result.$b
 	fi
 done
 

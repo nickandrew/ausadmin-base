@@ -60,12 +60,12 @@ sub sendmessage {
   #  my $filename=shift;
   die "Newgroup message file $filename not made" if not -e $filename;
   if ($debug) {
-    print "bin/post.pl < $filename";
+    print "post.pl < $filename";
   } else {
     if ($filename =~ /fake/) {
-      system "bin/post.pl < $filename";
+      system "post.pl < $filename";
     } else {
-      system "bin/signcontrol < $filename | bin/post.pl";
+      system "signcontrol < $filename | post.pl";
     }  
   }
   
