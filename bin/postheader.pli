@@ -1,0 +1,29 @@
+#!/usr/bin/perl
+#	postheader.pli - Output headers suitable for posting an article
+
+%print_header'defaults = (
+	'Newsgroups' => 'aus.general,aus.net.news',
+	'From' => 'aus group admin <ausadmin@aus.news-admin.org>',
+	'Organization' => 'aus.* newsgroups administration, see http://aus.news-admin.org/',
+	'X-PGPKey' => 'at http://aus.news-admin.org/ausadmin.asc',
+	'Followup-To' => 'aus.net.news'
+);
+
+sub print_header {
+	my($hashref) = @_;
+	%headers = %$hashref;
+
+	foreach $header (keys %print_header'defaults) {
+		if (!defined($headers{$header})) {
+			$headers{$header} = $print_header'defaults{$header};
+		}
+	}
+
+	foreach $header (keys %headers) {
+		print "$header: $headers{$header}\n";
+	}
+
+	print "\n";
+}
+
+1;

@@ -1,0 +1,54 @@
+#!/usr/bin/perl
+#	format.pli - format a line
+
+sub read1line {
+	my($path) = @_;
+	my($line);
+	if (!open(F, $path)) {
+		return "";
+	}
+	chop($line = <F>);
+	close(F);
+	return $line;
+}
+
+sub readfile {
+	my($path) = @_;
+	my($line);
+	if (!open(F, $path)) {
+		return "";
+	}
+	while (<F>) {
+		$line .= $_;
+	}
+	close(F);
+	return $line;
+}
+
+# Join all lines into one and split them into a paragraph.
+
+sub format_para {
+	my($line) = @_;
+	my($rest);
+	my($last_space);
+	my(@result);
+
+	# Format as a paragraph, max 72 chars
+	$line =~ tr/\n/ /;
+	while (length($line) > 72) {
+		$last_space = rindex($line, ' ', 72);
+		if ($last_space > 0) {
+			$first = substr($line, 0, $last_space);
+			push(@result, $first);
+			$rest = substr($line, $last_space + 1);
+			$line = $rest;
+		}
+	}
+	if ($line ne "") {
+		push(@result, $line);
+	}
+
+	return @result;
+}
+
+1;
