@@ -45,7 +45,7 @@ while (<STDIN>) {
 
 		if (!defined $old_ngline || $old_ngline ne $ngline) {
 			print "Updating $name ngline $ngline\n";
-			$n->set_attr("ngline", $ngline . "\n", 'Imported from checkgroups file');
+			$n->set_attr("ngline", $ngline, 'Imported from checkgroups file');
 		}
 	} else {
 		print "Invalid line (ignored): $_\n";
