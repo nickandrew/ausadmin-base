@@ -729,5 +729,193 @@ sub post_rfd {
 	$self->set_state("rfd/posted");
 }
 
+sub revise_rfd {
+	my($self) = shift;
+
+	my $state = $self->calc_state();
+
+	my $ok_states = {
+		'new/norfd' => 1,
+		'rfd/unsigned' => 1,
+		'rfd/unposted' => 1,
+		'rfd/posted' => 1,
+	};
+
+	if (! $ok_states->{$state}) {
+		die "Cannot revise RFD with vote $self->{name} in state $state\n";
+	}
+
+	my $dir = $self->ng_dir();
+
+	unlink("$dir/rfd_posted.cfg", "$dir/rfd", "$dir/rfd.unsigned");
+	$self->audit("Reverted vote state to revise RFD");
+	$self->make_rfd();
+}
+
+# ---------------------------------------------------------------------------
+# Create the text of an RFD
+# ---------------------------------------------------------------------------
+
+sub gen_rfd_string {
+	my($self) = @_;
+
+	my $ng_dir = $self->ng_dir();
+
+	if (!-d $ng_dir) {
+		die "No $ng_dir directory for $self->{name}";
+	}
+
+	foreach my $i (qw/change rationale proposer distribution/) {
+		if (!-f "$ng_dir/$i") {
+			die "No $ng_dir/$i";
+		}
+	}
+
+	my $change = Ausadmin::read_keyed_file("$ng_dir/change");
+
+	my $rationale = Ausadmin::readfile("$ng_dir/rationale");
+	my $proposer = Ausadmin::read1line("$ng_dir/proposer");
+	my $distribution = Ausadmin::readfile("$ng_dir/distribution");
+	my $rfd_notes = Ausadmin::readfile("$ng_dir/rfd-notes.txt");
+
+	my $data = { };
+	my $newsgroup = $change->{'newsgroup'};
+
+	$data->{ngline} = Ausadmin::read1line("$ng_dir/ngline:$newsgroup");
+	$data->{charter} = Ausadmin::readfile("$ng_dir/charter:$newsgroup");
+	$data->{modinfo} = Ausadmin::readfile("$ng_dir/modinfo:$newsgroup");
+
+	# Now read the template
+	my $procedure = Ausadmin::readfile("config/rfd-procedure.txt");
+
+	# Now put it all together
+	my @lines;
+
+	push(@lines, "REQUEST FOR DISCUSSION");
+
+	# Now key on which kind of change it is
+	my $change_descr;
+	my $change_type = $change->{'type'};
+
+	if ($change_type eq 'newgroup') {
+		if ($change->{'mod_status'} eq 'm') {
+			push(@lines, "Creation of Moderated newsgroup $newsgroup");
+			$change_descr = "the creation of a new Australian moderated newsgroup $newsgroup";
+		} else {
+			push(@lines, "Creation of Unmoderated newsgroup $newsgroup");
+			$change_descr = "the creation of a new Australian unmoderated newsgroup $newsgroup";
+		}
+	} elsif ($change_type eq 'rmgroup') {
+		push(@lines, "Remove newsgroup $newsgroup");
+		$change_descr = "the removal of the existing newsgroup $newsgroup";
+	} elsif ($change_type eq 'moderate') {
+		push(@lines, "Change $newsgroup to moderated");
+		$change_descr = "the change of $newsgroup to moderated";
+	} elsif ($change_type eq 'unmoderate') {
+		push(@lines, "Change $newsgroup to unmoderated");
+		$change_descr = "the change of $newsgroup to unmoderated";
+	} elsif ($change_type eq 'charter') {
+		push(@lines, "Change charter of $newsgroup");
+		$change_descr = "changing the charter of $newsgroup";
+	} else {
+		die "Unknown change type $change_type";
+	}
+
+
+	@lines = Ausadmin::centred_text(@lines);	# yuk
+	push(@lines, "\n");
+
+	my $x = <<EOF;
+This is a formal Request For Discussion (RFD) for
+$change_descr.
+This is not a Call For Votes (CFV); you cannot vote at this time.
+EOF
+
+	# Now format the paragraph
+	my @fmt = Ausadmin::format_para($x);
+	push(@lines, join("\n", @fmt), "\n\n");
+
+	if ($change_type =~ /^(newgroup|moderate)$/) {
+		push(@lines, "Newsgroup line:\n");
+		push(@lines, $data->{ngline} . "\n");
+		push(@lines, "\n");
+	}
+
+	if ($rfd_notes) {
+		push(@lines, "RFD NOTES:\n\n", $rfd_notes);
+		push(@lines, "\nEND RFD NOTES.\n\n");
+	}
+
+	push(@lines, "RATIONALE:\n\n", $rationale);
+	push(@lines, "\nEND RATIONALE.\n\n");
+
+	# Now we loop through, emitting all the per-newsgroup information we have
+	if (exists $data->{charter}) {
+		if ($change->{'charter'} =~ /html/i) {
+			# Use lynx to reformat HTML charters
+			push(@lines, "CHARTER: $newsgroup\n\n");
+			my $cmd = "cat vote/$newsgroup/charter:$newsgroup | lynx -dump -stdin -force_html";
+			my $charter_text = `$cmd`;
+			push(@lines, $charter_text);
+			push(@lines, "\nEND CHARTER.\n\n");
+		} else {
+			# Other types (or unspecified) assumed plain text
+			push(@lines, "CHARTER: $newsgroup\n\n", $data->{charter});
+			push(@lines, "\nEND CHARTER.\n\n");
+		}
+	}
+
+# Do the same thing for mod_status (probably not required)
+#	if (exists $data->{modinfo}) {
+#		push(@lines, "MODERATOR INFO: $newsgroup\n\n", $modinfo);
+#		push(@lines, "\nEND MODERATOR INFO.\n\n");
+#		push(@lines, "SUBMISSION EMAIL: $change->{'submission_email'}\n");
+#		push(@lines, "REQUEST EMAIL: $change->{'request_email'}\n");
+#		push(@lines, "\n");
+#	}
+
+	push(@lines, "PROPOSER: $proposer\n\n");
+
+	push(@lines, "PROCEDURE:\n\n", $procedure, "\n");
+
+	push(@lines, "DISTRIBUTION:\n\n", $distribution);
+
+	# Print first, the message header ...
+
+	my %header = (
+		Subject => "Request For Discussion (RFD): $newsgroup",
+		Newsgroups => join(',', split("\n", $distribution))
+	);
+
+	my $s = Ausadmin::make_header(\%header);
+
+	foreach (@lines) {
+		$s .= $_;
+	}
+
+	return $s;
+}
+
+# ---------------------------------------------------------------------------
+# Make and save an RFD
+# ---------------------------------------------------------------------------
+
+sub make_rfd {
+	my $self = shift;
+
+	my $state = $self->calc_state();
+
+	die "State must be new/norfd not $state\n" if ($state ne 'new/norfd');
+
+	my $s = $self->gen_rfd_string();
+
+	my $ng_dir = $self->ng_dir();
+
+	open(RFD, ">$ng_dir/rfd.unsigned") || die "Unable to write to rfd.unsigned: $!";
+	print RFD $s;
+	close(RFD);
+
+	$self->audit("Created unsigned RFD");
+}
 
 1;
