@@ -66,6 +66,6 @@ if [ $s != 0 ] ; then
 fi
 
 echo new-rfd Done at `date`
-echo "You now have to edit $BaseDir/$Newsgroup/rfd (perhaps), sign it, post it, create rfd_posted.cfg"
+echo "$BaseDir/$Newsgroup/rfd should now be ready to post, do 'action $Newsgroup'"
 
 exit 0
