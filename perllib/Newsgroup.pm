@@ -317,7 +317,10 @@ sub list_newsgroups {
 	my $args = { @_ };
 
 	$args->{hier} ||= $Newsgroup::DEFAULT_HIERARCHY;
-	my $datadir = "$args->{hier}.data";
+	my $datadir = $args->{datadir};
+	if (!$datadir) {
+		$datadir = "$ENV{AUSADMIN_HOME}/data/$args->{hier}.data";
+	}
 
 	if (! $datadir) {
 		confess "No datadir";
