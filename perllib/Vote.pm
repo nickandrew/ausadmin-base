@@ -214,8 +214,16 @@ sub state {
 		return "complete/pass";
 	}
 
-	if (-f "$ng_dir/result") {
+	if (-f "$ng_dir/result_posted.cfg") {
 		return "complete/result";
+	}
+
+	if (-f "$ng_dir/result") {
+		return "complete/resultnotposted";
+	}
+
+	if (-f "$ng_dir/result.unsigned") {
+		return "complete/resultnotsigned";
 	}
 
 	if (-f "$ng_dir/endtime.cfg") {
@@ -257,5 +265,25 @@ sub state {
 
 	return "unknown";
 }
+
+# Append to an audit trail of something we did
+
+sub audit {
+	my $self = shift;
+	my $message = shift;
+
+	my $ng_dir = $self->ng_dir();
+
+	my($sec,$min,$hour,$mday,$mon,$year) = localtime(time());
+	$mon++; $year += 1900;
+	my $ts = sprintf "%d-%02d-%02d %02d:%02d:%02d", $year,$mon,$mday,$hour,$min,$sec;
+
+	my $fh = new IO::File("$ng_dir/audit.log", O_WRONLY|O_APPEND|O_CREAT, 0644);
+	die "Unable to create $ng_dir/audit.log" if (!defined $fh);
+
+	$fh->print($ts, ' ', $message, "\n");
+	$fh->close();
+}
+
 
 1;

@@ -23,16 +23,30 @@ TODO
 =cut
 
 use Time::Local;
+use lib 'bin';
+use Vote;
+
 $| = 1;
 
 my $BaseDir = "./vote";
+
+my $state_actions = {
+	'complete/resultnotposted' => \&post_result,
+	'complete/resultnotsigned' => \&sign_result,
+	'vote/checking' => \&gen_result,
+	'vote/cfvnotposted' => \&post_cfv,
+	'vote/cfvnotsigned' => \&sign_cfv,
+	'vote/nocfv' => \&gen_cfv,
+	'vote/notsetup' => \&setup_vote,
+	'vote/novoterule' => \&gen_voterule,
+};
 
 die "No vote subdirectory (must cd to ~ausadmin)" if (!-d $BaseDir);
 
 my $newsgroup = shift @ARGV;
 
-# desired state: voting
-my $ng_dir = "$BaseDir/$newsgroup";
+my $v = new Vote(name => $newsgroup);
+my $ng_dir = $v->ng_dir();
 
 die "No $ng_dir" if (!-d $ng_dir);
 die "No CFV directory" if (!-d "CFV");
@@ -50,9 +64,113 @@ if ($s) {
 	die "Some RFD files missing, setup the directory with new-rfd first!";
 }
 
-# Ready to make the CFV ?
-if (!-f "$ng_dir/voterule") {
-	print "Create voterule ? ";
+# Compute the current vote state
+my $state = $v->state();
+
+
+# if (!-f "$ng_dir/voterule") {
+# 	gen_voterule();
+# }
+# 
+# if (-f "$ng_dir/voterule" && !-f "$ng_dir/endtime.cfg") {
+# 	setup_vote();
+# }
+# 
+# if (-f "$ng_dir/voterule" && -f "$ng_dir/endtime.cfg" && !-f "$ng_dir/cfv") {
+# 	gen_cfv();
+# }
+# 
+# if (-f "$ng_dir/cfv" && !-f "$ng_dir/posted.cfv") {
+# 	sign_cfv();
+# }
+# 
+# if (-f "$ng_dir/posted.cfv" && -f "$ng_dir/endtime.cfg" && !-f "$ng_dir/posted.cfg") {
+# 	post_cfv();
+# }
+
+#if ($state eq 'vote/checking') {
+#	gen_result();
+#}
+
+# if ($state eq 'complete/resultnotsigned') {
+# 	sign_result();
+# }
+
+# Loop through until we are unable to process anything more
+
+while (exists $state_actions->{$state}) {
+	my $code_ref = $state_actions->{$state};
+
+	print "state = $state\n";
+
+	my $rc;
+	eval {
+		$rc = &$code_ref();
+	};
+
+	if ($@) {
+		print "Unable to process state=$state: $@\n";
+		last;
+	}
+
+	last if ($rc);
+
+	my $new_state = $v->state();
+	last if ($new_state eq $state);
+	$state = $new_state;
+}
+
+if (!exists $state_actions->{$state}) {
+	die "Not prepared to handle state $state\n";
+}
+
+exit(0);
+
+sub gen_result {
+	# Generate a result message
+	print "(state=$state) Generate result.unsigned ? ";
+	my $answer = <STDIN>;
+	chomp($answer);
+	if ($answer !~ /^\s*y/i) {
+		die "Ok, try again later.\n";
+	}
+
+	my $rc = system("genresult.pl $newsgroup > $ng_dir/result.unsigned");
+	$v->audit("generated result (code $rc)");
+	if ($rc) {
+		die "genresult.pl failed code $rc...!";
+	}
+
+	print "\nOkay.\n";
+
+	return 0;
+}
+
+sub sign_result {
+	# Generate a result message
+	print "(state=$state) Sign result.unsigned ? ";
+	my $answer = <STDIN>;
+	chomp($answer);
+	if ($answer !~ /^\s*y/i) {
+		die "Ok, try again later.\n";
+	}
+
+	my $rc = system("pgp-sign < $ng_dir/result.unsigned > $ng_dir/result");
+	$v->audit("PGP-signed result (code $rc)");
+	if ($rc) {
+		die "pgp-sign failed code $rc...!";
+	}
+
+	print "\nOkay.\n";
+
+	return 0;
+}
+
+sub gen_voterule {
+	if (-f "$ng_dir/voterule") {
+		die "Augh. gen_voterule prerequisites not met!";
+	}
+	print "(state=$state) Create voterule ? ";
 	my $answer = <STDIN>;
 	chomp($answer);
 	if ($answer !~ /^\s*y/i) {
@@ -71,11 +189,18 @@ if (!-f "$ng_dir/voterule") {
 	print G $vr;
 	close(G);
 
+	$v->audit("created voterule");
 	print "\nOkay.\n";
+
+	return 0;
 }
 
-if (-f "$ng_dir/voterule" && !-f "$ng_dir/endtime.cfg") {
-	print "Start to accept votes now ? ";
+sub setup_vote {
+	if (!-f "$ng_dir/voterule" || -f "$ng_dir/endtime.cfg") {
+		die "Augh. setup_vote prerequisites not met!";
+	}
+
+	print "(state=$state) Start to accept votes now ? ";
 	my $answer = <STDIN>;
 	chomp($answer);
 	if ($answer !~ /^\s*y/i) {
@@ -83,16 +208,22 @@ if (-f "$ng_dir/voterule" && !-f "$ng_dir/endtime.cfg") {
 	}
 
 	my $rc = system("setup-vote $newsgroup");
+	$v->audit("setup vote (code $rc)");
 	if ($rc) {
 		die "setup-vote failed code $rc...!";
 	}
 
 	print "\nOkay.\n";
+
+	return 0;
 }
 
+sub gen_cfv {
+	if (!-f "$ng_dir/voterule" || !-f "$ng_dir/endtime.cfg" || -f "$ng_dir/cfv") {
+		die "Augh. gen_cfv prerequisites not met!";
+	}
 
-if (-f "$ng_dir/voterule" && -f "$ng_dir/endtime.cfg" && !-f "$ng_dir/cfv") {
-	print "Create CFV ? ";
+	print "(state=$state) Create CFV ? ";
 	my $answer = <STDIN>;
 	chomp($answer);
 	if ($answer !~ /^\s*y/i) {
@@ -100,16 +231,23 @@ if (-f "$ng_dir/voterule" && -f "$ng_dir/endtime.cfg" && !-f "$ng_dir/cfv") {
 	}
 
 	my $rc = system("mkcfv.pl $newsgroup > $ng_dir/cfv");
+	$v->audit("created CFV (code $rc)");
 	if ($rc) {
 		unlink("$ng_dir/cfv");
 		die "mkcfv.pl failed code $rc...!";
 	}
 
 	print "\nOkay.\n";
+
+	return 0;
 }
 
-if (-f "$ng_dir/cfv" && !-f "$ng_dir/posted.cfv") {
-	print "PGP-sign CFV ? ";
+sub sign_cfv {
+	if (!-f "$ng_dir/cfv" || -f "$ng_dir/posted.cfv") {
+		die "Augh. sign_cfv prerequisites not met!";
+	}
+
+	print "(state=$state) PGP-sign CFV ? ";
 	my $answer = <STDIN>;
 	chomp($answer);
 	if ($answer !~ /^\s*y/i) {
@@ -117,6 +255,7 @@ if (-f "$ng_dir/cfv" && !-f "$ng_dir/posted.cfv") {
 	}
 
 	my $rc = system("pgp-sign < $ng_dir/cfv > $ng_dir/posted.cfv");
+	$v->audit("signed CFV (code $rc)");
 	if ($rc) {
 		die "pgp-sign failed code $rc...!";
 	}
@@ -124,10 +263,16 @@ if (-f "$ng_dir/cfv" && !-f "$ng_dir/posted.cfv") {
 	unlink("CFV/$newsgroup");
 	symlink("$ng_dir/posted.cfv", "CFV/$newsgroup");
 	print "\nOkay.\n";
+
+	return 0;
 }
 
-if (-f "$ng_dir/posted.cfv" && -f "$ng_dir/endtime.cfg" && !-f "$ng_dir/posted.cfg") {
-	print "Post the signed CFV ? ";
+sub post_cfv {
+	if (!-f "$ng_dir/posted.cfv" || !-f "$ng_dir/endtime.cfg" || -f "$ng_dir/posted.cfg") {
+		die "Augh. post_cfv prerequisites not met!";
+	}
+
+	print "(state=$state) Post the signed CFV ? ";
 	my $answer = <STDIN>;
 	chomp($answer);
 	if ($answer !~ /^\s*y/i) {
@@ -142,11 +287,42 @@ if (-f "$ng_dir/posted.cfv" && -f "$ng_dir/endtime.cfg" && !-f "$ng_dir/posted.c
 	close(F);
 
 	my $rc = system("post.pl < $ng_dir/posted.cfv");
+	$v->audit("posted CFV (code $rc)");
 	if ($rc) {
 		die "post failed code $rc...!";
 	}
 
 	print "\nOkay.\n";
+
+	return 0;
 }
 
-exit(0);
+sub post_result {
+	if (!-f "$ng_dir/result") {
+		die "Augh. post_result prerequisites not met!";
+	}
+
+	print "(state=$state) Post the result ? ";
+	my $answer = <STDIN>;
+	chomp($answer);
+	if ($answer !~ /^\s*y/i) {
+		die "Ok, try again later.\n";
+	}
+
+	my($sec,$min,$hour,$mday,$mon,$year) = localtime(time());
+	$mon++; $year += 1900;
+	my $yyyymmdd = sprintf "%d-%02d-%02d", $year,$mon,$mday;
+	open(F, ">$ng_dir/result_posted.cfg");
+	print F $yyyymmdd, "\n";
+	close(F);
+
+	my $rc = system("post.pl < $ng_dir/result");
+	$v->audit("posted result (code $rc)");
+	if ($rc) {
+		die "post failed code $rc...!";
+	}
+
+	print "\nOkay.\n";
+
+	return 0;
+}
