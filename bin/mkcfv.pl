@@ -199,7 +199,7 @@ push(@lines, "HOW TO VOTE:\n\n", $procedure, "\n");
 # Print first, the message header ...
 
 my %header = (
-	From => 'Vote-taker <vote@aus.news-admin.org>',
+	From => 'Ausadmin <ausadmin@aus.news-admin.org>',
 	'Followup-To' => 'aus.net.news',
 	Subject => "Call For Votes (CFV): $newsgroup",
 	Newsgroups => join(',', split("\n", $distribution))
