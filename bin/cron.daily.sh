@@ -14,3 +14,12 @@ else
 	echo "Unable to create replacement Mrtg/newsgroups.cfg file, code $s"
 fi
 
+
+# Attempt to download new checkgroups from news.admin.hierarchies and update our
+# data structures
+logrun suck-checkgroups.pl
+
+# Cleanup the logrun directory occasionally
+find ~/Logrun/ok -type f -mtime +30 -exec rm {} \;
+find ~/Logrun/bad -type f -mtime +90 -exec rm {} \;
+find ~/Logrun -type f -mtime +120 -exec rm {} \;
