@@ -22,7 +22,7 @@ parse-rfd.pl [-d] newsgroup-name < rfd-file
 Parse the RFD file and write the following files in the
 vote/$newsgroup subdirectory:
 
-charter distribution ngline proposer rationale
+change charter distribution ngline proposer rationale
 
 and optionally: modinfo
 
@@ -56,6 +56,15 @@ die "No proposer" if (!defined $g->{proposer});
 die "No distribution" if (!@{$g->{distribution}});
 
 
+if (!defined $g->{change}) {
+	# Default change is to create a new unmoderated group
+	$g->{change} = {
+		'type' => 'newgroup',
+		'newsgroup' => $newsgroups[0],		# KLUDGE
+		'mod_status' => 'y'
+	};
+}
+
 # Do basic sanity checks on all newsgroups in our RFD
 
 foreach my $newsgroup (@newsgroups) {
@@ -78,19 +87,25 @@ foreach my $newsgroup (@newsgroups) {
 
 	mkdir("$BaseDir/$newsgroup", 0755);
 
-	open(O, ">$BaseDir/$newsgroup/proposer") or die "Unable to write proposer";
+	open(O, ">$BaseDir/$newsgroup/change") or die "Unable to open change for write: $!";
+	foreach my $k (sort (keys %{$g->{change}})) {
+		print O $k, ": ", $g->{change}->{$k}, "\n";
+	}
+	close(O);
+
+	open(O, ">$BaseDir/$newsgroup/proposer") or die "Unable to open proposer for write: $!";
 	print O $g->{proposer}, "\n";
 	close(O);
 
-	open(O, ">$BaseDir/$newsgroup/distribution") or die "Unable to write distribution";
+	open(O, ">$BaseDir/$newsgroup/distribution") or die "Unable to open distribution for write: $!";
 	print O join("\n",@{$g->{distribution}}), "\n";
 	close(O);
 
-	open(CHARTER, ">$BaseDir/$newsgroup/charter") or die "Unable to write charter";
+	open(CHARTER, ">$BaseDir/$newsgroup/charter") or die "Unable to open charter for write: $!";
 	print CHARTER $r->{charter};
 	close(CHARTER);
 
-	open(RATIONALE, ">$BaseDir/$newsgroup/rationale") or die "Unable to write rationale";
+	open(RATIONALE, ">$BaseDir/$newsgroup/rationale") or die "Unable to open rationale for write: $!";
 	print RATIONALE $r->{rationale};
 	close(RATIONALE);
 
@@ -99,7 +114,7 @@ foreach my $newsgroup (@newsgroups) {
 	close NGLINE or die "Unable to close ngline: $!";
 
 	if (exists $r->{modinfo}) {
-		open(MODINFO, ">$BaseDir/$newsgroup/modinfo") or die "Unable to write modinfo";
+		open(MODINFO, ">$BaseDir/$newsgroup/modinfo") or die "Unable to open modinfo for write: $!";
 		print MODINFO $r->{modinfo};
 		close(MODINFO);
 	}
@@ -134,6 +149,42 @@ sub ReadRFD {
 
 		if (/^Newsgroup(s?) line(s?):/i ) {
 			$state = 'ngline';
+			next;
+		}
+
+		# The change line defines what change is to be made if
+		# this RFD then CFV passes.
+
+		if (/^CHANGE:\s+(.+)/) {
+			my @words = split(/\s+/, $1);
+			my $c = { 'type' => $words[0] };
+			if ($words[0] eq 'newgroup') {
+				$c->{newsgroup} = $words[1];
+				$c->{mod_status} = $words[2];
+				$c->{submission_email} = $words[3];
+				$c->{request_email} = $words[4];
+				$g{change} = $c;
+				next;
+			}
+			if ($words[0] eq 'rmgroup') {
+				$c->{newsgroup} = $words[1];
+				die "rmgroup change type not handled yet";
+				next;
+			}
+			if ($words[0] eq 'moderate') {
+				$c->{newsgroup} = $words[1];
+				$c->{mod_status} = 'm';
+				$c->{submission_email} = $words[2];
+				$c->{request_email} = $words[3];
+				$g{change} = $c;
+				next;
+			}
+			if ($words[0] eq 'unmoderate') {
+				die "unmoderate change type not handled yet";
+				next;
+			}
+
+			die "Unknown change type: $words[0]";
 			next;
 		}
 
