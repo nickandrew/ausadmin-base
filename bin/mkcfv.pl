@@ -40,6 +40,7 @@ print <<"EOHEADERS";
 Subject: CFV: $newsgroup[0]
 From: $VoteAddress
 Newsgroups: $distribution
+Followup-to: poster
 
 EOHEADERS
 
@@ -163,10 +164,15 @@ DIST:	       while (<>) {
 		    $distribution .= "$_," if not /^\s*$/;
 	       }
 	  }
-
-	  if ( $_ =~ /^Propo(?:nets?|sers?):.*/i ) {
-	       s/^Propo(?:nets?|sers?):\s*(.*)/$1/i;
-	       $Proposer=$_;
+#                      Propo   nent
+	  if ( $_ =~ /^Propo(?:nen?ts?|sers?):/i ) {
+	       m/^Propo(?:nen?ts?|sers?):\s*(.*)/i;
+	       $Proposer .= "$1," if not /^\s*$/;
+PROP:	       while (<>) {
+		    chomp;
+		    last PROP if (/^/i);
+		    $Proposer .= "$_," if not /^\s*$/;
+	       }
 	  }
 
 	  
