@@ -99,10 +99,10 @@ sub out {
 sub list_active {
 	my($hier, $regex) = @_;
 
-	open(F, "<$hier.data/checkgroups") || return;
+	open(F, "<$hier.data/grouplist") || return;
 
 	while (<F>) {
-		m/(\S+)\s+(.*)/;
+		m/(\S+)\s*(.*)/;
 		my($group, $description) = ($1, $2);
 
 		if ($regex) {
@@ -124,7 +124,7 @@ sub list_active {
 sub list_newsgroups {
 	my($hier, $regex) = @_;
 
-	open(F, "<$hier.data/checkgroups") || return;
+	open(F, "<$hier.data/grouplist") || return;
 
 	while (<F>) {
 		m/(\S+)\s+(.*)/;
