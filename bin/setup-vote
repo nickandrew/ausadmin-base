@@ -45,6 +45,8 @@ use Time::Local;
 use lib 'bin';
 use Vote;
 
+die "This script is deprecated";
+
 my $BaseDir = "./vote";
 
 my $VotePeriod;

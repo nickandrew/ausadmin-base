@@ -24,9 +24,9 @@ TODO
 
 use Time::Local;
 use lib 'bin';
-use Ausadmin;
-use DateFunc;
-use Vote;
+use Ausadmin qw();
+use DateFunc qw();
+use Vote qw();
 
 $| = 1;
 
@@ -378,7 +378,7 @@ sub check_rfd {
 
 	if ($answer =~ /v/i) {
 		print "Setting up vote now ...\n";
-		system("setup-vote $newsgroup");
+		$v->setup_vote();
 	}
 }
 

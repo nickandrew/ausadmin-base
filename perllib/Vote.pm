@@ -30,15 +30,36 @@ Vote - a Vote of some kind
 
  $vote->audit($string);			# Append $string to the audit.log for this vote
 
+=head1 METHOD - setup_vote()
+
+A vote is started if certain control files exist in the vote/$newsgroup
+directory. These control files are:
+
+	vote_start.cfg (contains the timestamp of the vote start time)
+	endtime.cfg (contains the timestamp of the vote cutoff time)
+	voterule (the parameters against which this ballot will be judged)
+
+This function creates endtime.cfg for the chosen newsgroups
+if it does not already exist.
+The duration of the vote is taken from the first file found:
+
+	vote/$newsgroup/voteperiod (duration in days)
+	config/voteperiod
+
+The automated vote taker can accept a vote as soon as endtime.cfg
+exists (it must contain a timestamp later than the current time).
+
 =cut
 
 package Vote;
 
 use Carp qw(confess);
 use IO::File qw(O_RDONLY O_WRONLY O_APPEND O_CREAT O_EXCL);
-use Newsgroup ();
-use Ausadmin ();
-use DateFunc ();
+use Time::Local qw(timegm);
+
+use Newsgroup qw();
+use Ausadmin qw();
+use DateFunc qw();
 use Post qw();
 
 use vars qw($result_discuss_days);
@@ -394,7 +415,7 @@ sub audit {
 	my $fh = new IO::File("$ng_dir/audit.log", O_WRONLY|O_APPEND|O_CREAT, 0644);
 	die "Unable to create $ng_dir/audit.log" if (!defined $fh);
 
-	my $line = $ts . ' proposal/$self->{name} ' . $message . "\n";
+	my $line = $ts . " proposal/$self->{name} " . $message . "\n";
 	$fh->print($line);
 	$fh->close();
 
@@ -594,31 +615,6 @@ sub get_message_paths {
 	return $tally_ref;
 }
 
-=head1 METHOD - setup_vote()
-
-A vote is started if certain control files exist in the vote/newsgroup
-directory. These control files are:
-
-	vote_start.cfg (contains the timestamp of the vote start time)
-	endtime.cfg (contains the timestamp of the vote cutoff time)
-	voterule (the parameters against which this ballot will be judged)
-
-This program creates endtime.cfg for the chosen newsgroups
-if it does not already exist.
-The duration of the vote is taken from the first file found:
-
-	vote/$newsgroup/voteperiod (duration in days)
-	config/voteperiod
-
-The automated vote taker can accept a vote as soon as endtime.cfg
-exists (it must contain a timestamp later than the current time).
-
-After this program has been run, use mkcfv.pl to create the
-pgp-signed Call-For-Votes (CFV) message and post it, so everybody
-knows they can vote.
-
-=cut
-
 # setup_vote() ... Create the necessary control files for a vote to be run
 
 sub setup_vote {
@@ -626,14 +622,11 @@ sub setup_vote {
 
 	my $vote_dir = $self->ng_dir();
 
-	$self->write_voterule("config/voterule");
-
 	my $endtime_cfg = "$vote_dir/endtime.cfg";
 	my $start_file = "$vote_dir/vote_start.cfg";
 
 	if (-f $endtime_cfg) {
 		die "$endtime_cfg already exists";
-		next;
 	}
 
 	my $vp_file = "$vote_dir/voteperiod";
@@ -650,6 +643,8 @@ sub setup_vote {
 	} else {
 		die "No $vp_file";
 	}
+
+	$self->write_voterule("config/voterule");
 
 	# Find the finish date for votes according to the VD (vote duration)
 	my $vote_seconds = $vote_period * 86400;
