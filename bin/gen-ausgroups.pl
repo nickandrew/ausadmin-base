@@ -9,13 +9,13 @@ use lib 'bin';
 use Ausadmin;
 use GroupList;
 
-my $grouplist_file = "data/ausgroups";
+my $grouplist_file = "data/checkgroups";
 
 die "No data subdirectory" if (!-d './data');
 
 my $gl = new GroupList();
 
-$gl->write("ausgroups.$$", $grouplist_file);
+$gl->write("checkgroups.$$", $grouplist_file);
 
 # Check it in
 system("ci -l -t- $grouplist_file < /dev/null");

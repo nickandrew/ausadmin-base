@@ -3,7 +3,7 @@
 #
 # $Id$
 #
-# Usage:	gen-initial-newsgroups.pl data/ausgroups
+# Usage:	gen-initial-newsgroups.pl data/checkgroups
 
 use lib 'bin';
 
@@ -32,5 +32,5 @@ close(F);
 exit(0);
 
 sub usage {
-	die "Usage: gen-initial-newsgroups.pl data/ausgroups\n";
+	die "Usage: gen-initial-newsgroups.pl data/checkgroups\n";
 }

@@ -31,19 +31,19 @@ foreach my $name (sort @newsgroup_list) {
 	$s .= sprintf "%s\t%s", $name, $string;
 }
 
-my $grouplist = "$datadir/grouplist";
-my $signcmd = $opt_d ? '/bin/cat' : 'signcontrol';
-my $checkgroups_file = $opt_d ? "$datadir/checkgroups" : "$datadir/checkgroups.signed";
+my $grouplist = "$datadir/checkgroups";
+my $signcmd = 'signcontrol';
+my $checkgroups_file = "$datadir/checkgroups.signed";
 
 open(GL, ">$grouplist") || die "Unable to open $grouplist for write: $!";
 print GL $s;
 close(GL);
 
-my $gl = new Checkgroups(signcmd => $signcmd, grouplist_file => $grouplist);
-$gl->write("checkgroups.$$", $checkgroups_file);
+if ($opt_d) {
+	my $gl = new Checkgroups(signcmd => $signcmd, grouplist_file => $grouplist);
+	$gl->write("checkgroups.$$", $checkgroups_file);
 
-# Check it in
-if (! $opt_d) {
+	# Check it in
 	system("ci -l -t- $checkgroups_file < /dev/null");
 }
 

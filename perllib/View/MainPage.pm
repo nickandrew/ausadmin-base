@@ -163,9 +163,9 @@ sub newsgroupList {
 	my @contents;
 
 	# Return an array of newsgroup names
-	my @grouplist = Newsgroup::list_newsgroups(datadir => "$ENV{AUSADMIN_DATA}");
+	my @newsgrouplist = Newsgroup::list_newsgroups(datadir => "$ENV{AUSADMIN_DATA}");
 
-	if (!@grouplist) {
+	if (!@newsgrouplist) {
 		return undef;
 	}
 
@@ -174,7 +174,7 @@ sub newsgroupList {
 <b>Newsgroups:</b><br>
 EOF
 
-	foreach my $g (@grouplist) {
+	foreach my $g (@newsgrouplist) {
 		my $s = "&nbsp;&nbsp;<a href=\"groupinfo.cgi/$g/\">$g</a><br>\n";
 		push(@contents, $s);
 	}

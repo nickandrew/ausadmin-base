@@ -33,7 +33,7 @@ sub new {
 	$self->{'datadir'} ||= $GroupListMessage::DEFAULT_GROUPLISTMESSAGE_DIR;
 
 	$self->{'signcmd'} ||= 'pgp-sign';
-	$self->{'grouplist_file'} ||= 'data/ausgroups';
+	$self->{'grouplist_file'} ||= 'data/checkgroups';
 	$self->{'head_text'} ||= Ausadmin::readfile('config/grouplist.header');
 	$self->{'foot_text'} ||= Ausadmin::readfile('config/grouplist.footer');
 

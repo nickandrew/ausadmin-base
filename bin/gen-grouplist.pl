@@ -15,7 +15,7 @@ use vars qw($opt_d);
 getopts('d');
 
 
-my $grouplist = "data/ausgroups";
+my $grouplist = "data/checkgroups";
 my $signcmd = $opt_d ? '/bin/cat' : 'pgp-sign';
 my $grouplist_file = $opt_d ? 'data/grouplist' : 'data/grouplist.signed';
 
@@ -24,7 +24,9 @@ my $gl = new GroupListMessage(signcmd => $signcmd, grouplist_file => $grouplist)
 
 $gl->write("grouplist.$$", $grouplist_file);
 
-# Check it in
-system("ci -l -t- $grouplist_file < /dev/null");
+if ($opt_d) {
+	# Check it in
+	system("ci -l -t- $grouplist_file < /dev/null");
+}
 
 exit(0);

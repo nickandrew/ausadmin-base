@@ -5,7 +5,7 @@
 #	$Source$
 #	$Date$
 #
-#  Usage: tree-height.pl ausgroups
+#  Usage: tree-height.pl checkgroups
 
 my $file = shift @ARGV || die "Usage: tree-height.pl filename";
 

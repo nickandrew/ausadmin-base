@@ -7,7 +7,7 @@
 
 umask 022
 
-# Recreate ausgroups first
+# Recreate checkgroups first
 gen-ausgroups.pl
 s=$?
 if [ $s -ne 0 ] ; then

@@ -6,7 +6,7 @@
 cd $AUSADMIN_HOME
 
 # Make a new mrtg.cfg file for all aus groups
-make-mrtg-newsgroups.pl data/ausgroups $AUSADMIN_HOME/config/mrtg.head $AUSADMIN_HOME/Mrtg/news-latest.mrtg > $AUSADMIN_HOME/tmp/$$.cfg
+make-mrtg-newsgroups.pl data/checkgroups $AUSADMIN_HOME/config/mrtg.head $AUSADMIN_HOME/Mrtg/news-latest.mrtg > $AUSADMIN_HOME/tmp/$$.cfg
 s=$?
 
 if [ $s -eq 0 ] ; then
@@ -16,7 +16,7 @@ else
 	echo "Unable to create replacement Mrtg/newsgroups.cfg file, code $s"
 fi
 
-bin/make-mrtg-newsgroups-arrival.pl data/ausgroups $AUSADMIN_HOME/config/mrtg-arrival.head $AUSADMIN_HOME/Mrtg/arrival/news-latest.mrtg > Mrtg/arrival/newsgroups.cfg
+bin/make-mrtg-newsgroups-arrival.pl data/checkgroups $AUSADMIN_HOME/config/mrtg-arrival.head $AUSADMIN_HOME/Mrtg/arrival/news-latest.mrtg > Mrtg/arrival/newsgroups.cfg
 
 # Attempt to download new checkgroups from news.admin.hierarchies and update our
 # data structures

@@ -1,7 +1,6 @@
 #!/usr/bin/perl
 #	@(#) grouplist.pl - Suck down the server's active file (basically)
-#
-# grouplist.pl
+#	$Header$
 
 use Net::NNTP;
 

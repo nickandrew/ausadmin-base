@@ -119,7 +119,7 @@ $charter
 EOF
 
 	  local *GLIST;
-	  open GLIST,">>data/ausgroups" or die "Can't open ausgroups.";
+	  open GLIST,">>data/checkgroups" or die "Can't open checkgroups.";
 	  print GLIST $ngline,"\n";
 	  close GLIST;
 

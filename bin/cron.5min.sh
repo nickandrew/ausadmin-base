@@ -4,7 +4,7 @@
 export NNTPSERVER='news'
 
 ts=`date '+%Y%m%d%H%M%S'`
-mrtg-newsgroups ~/data/ausgroups ~/data/mrtg-newsgroups-config.xml ~/tmp/mrtg-newsgroups-arrival.log > ~/tmp/news-$ts.mrtg 2> tmp/missing-groups
+mrtg-newsgroups ~/data/checkgroups ~/data/mrtg-newsgroups-config.xml ~/tmp/mrtg-newsgroups-arrival.log > ~/tmp/news-$ts.mrtg 2> tmp/missing-groups
 s=$?
 
 if [ $s -eq 0 ] ; then

@@ -10,8 +10,8 @@
 
 use GD;
 
-my $inputfile="ausgroups";
-my $outputfile="ausgroups.html";
+my $inputfile="checkgroups";
+my $outputfile="checkgroups.html";
 my $pngfile="grouptree.png";
 
 if (!open(INFILE, "<$inputfile")) {

@@ -153,10 +153,10 @@ sub do_control {
 			$ng->set_attr('ngline', $ngline, 'perform-changes.pl set newsgroup line');
 			$v->audit("Set ngline in data/Newsgroup/$newsgroup/ngline");
 
-			# Recreate the ausgroups file
+			# Recreate the checkgroups file
 			my $gl = new GroupList();
-			$gl->write("./data/ausgroups.$$", "./data/ausgroups");
-			$v->audit("Recreated data/ausgroups for the new group");
+			$gl->write("./data/checkgroups.$$", "./data/checkgroups");
+			$v->audit("Recreated data/checkgroups for the new group");
 
 			# Update the checkgroups message
 			print "About to update checkgroups message\n";
