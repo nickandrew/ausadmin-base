@@ -284,12 +284,14 @@ sub pass_msg() {
 
 # 60 sec * 60 min * 24 hours * 5 days = 432000
 
+	&makegroup($ng,$ts_end + 432000);
+
 	&setposts($ng,"post.real",$ts_end + 432000,432000,3);
 	&setposts($ng,"post.fake.phil",$ts_end + 864000,432000,3);
 	&setposts($ng,"post.fake.robert",$ts_end + 1296000,432000,3);
 }
 
-sub fail_msg() {
+sub fail_msg {
 }
 
 sub setposts {
@@ -309,4 +311,19 @@ sub setposts {
   close POST;
   
 }
+
+sub makegroup {
+  my $ng=shift;
+  my $start=shift;
+
+  local *CREATE;
+
+  open (CREATE,">>vote/$vote/group.creation.date") 
+    or die "Can't set creation date";
+
+  print CREATE,"$start\n";
+
+  close CREATE;
+}
+
 
