@@ -12,6 +12,7 @@ my $cfg = {
 	email_to => 'ausadmin@aus.news-admin.org',
 	hier_url => 'http://aus.news-admin.org/monitor.txt',
 	now => time(),
+	vers => '$Revision$',
 };
 
 my @hiers = ('aus.*', 'bne.*', 'canb.*');
