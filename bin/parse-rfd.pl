@@ -15,7 +15,7 @@ parse-rfd.pl - Read an RFD file and split into its components
 
 =head1 SYNOPSIS
 
-parse-rfd.pl [-d] newsgroup-name rfd-filename
+parse-rfd.pl [-d] newsgroup-name < rfd-file
 
 =head1 DESCRIPTION
 
@@ -121,7 +121,7 @@ sub ReadRFD {
 	my $state;
 	my $groupname;
 
-	while ( <> ) {
+	while ( <STDIN> ) {
 		chomp;
 
 		if ($opts{'d'} && $old_state ne $state) {
