@@ -33,8 +33,9 @@ checked the first time they vote.
 =cut
 
 use lib 'bin';
-use Vote;
-use Newsgroup;
+use Vote qw();
+use VoterState qw();
+use Newsgroup qw();
 
 my $newsgroup = shift @ARGV || die "No newsgroup name supplied";
 my $voters_file = shift @ARGV || die "No voters file supplied";
@@ -43,22 +44,7 @@ die "Invalid newsgroup name <$newsgroup>" if (!Newsgroup::validate($newsgroup));
 
 my $no_check_id = '-OLD-';
 
-my %voter_state;
-
-open(VF, "<$voters_file") or die "Unable to open $voters_file: $!";
-while (<VF>) {
-	chomp;
-	my($email,$timestamp,$state) = split;
-
-	# This is protection against me supplying the wrong filename.
-	die "Invalid state: $state (for $email)" if ($state ne 'OK' && $state ne 'FAIL');
-
-	$voter_state{$email} = {
-		timestamp => $timestamp,
-		state => $state,
-	};
-}
-close(VF);
+my $vstate = new VoterState();
 
 my $vote = new Vote(name =>$newsgroup);
 my $ng_dir = $vote->ng_dir();
@@ -88,9 +74,9 @@ while (<V>) {
 	next if ($status eq 'FORGE' || $status eq 'INVALID');
 
 	# Now check if we checked them before
-	if (exists $voter_state{$email}) {
-		my $vs = $voter_state{$email};
-
+	my $vs = $vstate->checkEmail($email);
+	my $check_id;
+	if (defined $vs) {
 		if ($vs->{timestamp} !~ /^\d+$/) {
 			print STDERR "Invalid timestamp $vs->{timestamp} for $email (ignoring)\n";
 			next;
@@ -105,39 +91,16 @@ while (<V>) {
 			}
 		}
 
+		$check_id = $vs->{check_id};
 	}
 
-	print STDERR "Checking $email\n";
+	print STDERR "Checking $email ($check_id)\n";
 
-	my $check_id;
 
-	if (exists $voter_state{$email}) {
-		$check_id = $voter_state{$email}->{check_id};
-	}
 
 	# If none supplied in file, generate a random one
 	if ($check_id eq '' || $check_id eq $no_check_id) {
-		my $random;
-		$check_id = '00000000';
-
-		if (open(R, "</dev/urandom")) {
-			my $buffer;
-			my $bytes_left = 4;
-			while ($bytes_left > 0) {
-				my $b;
-				my $n = sysread(R, $b, $bytes_left);
-				if ($n < 0) {
-					die "Read error on /dev/urandom: $!";
-				}
-				if ($n > 0) {
-					$bytes_left -= $n;
-					$buffer .= $b;
-				}
-			}
-
-			$check_id = unpack("H8", $buffer);
-			close(R);
-		}
+		$check_id = VoteState::randomCheckID();
 	}
 
 	# Otherwise, need to check them
@@ -146,34 +109,20 @@ while (<V>) {
 	# And mark they've been checked
 	# KLUDGE ... this is dodgy ... what do we do when they fail a check?
 	# If they fail a check, remove them from the voter_state file... ?
-	$voter_state{$email}->{timestamp} = $now;
-	$voter_state{$email}->{state} = 'OK';
-	$voter_state{$email}->{check_id} = $check_id;
+	$vs->{timestamp} = $now;
+	$vs->{state} = 'OK';
+	$vs->{check_id} = $check_id;
+	$vstate->{updated} = 1;
 }
 
 close(V);
 
-# Now update the voter_state file safely
-open(VF, ">$voters_file.$$") or die "Unable to open $voters_file.$$ for write: $!";
-foreach my $email (sort (keys %voter_state)) {
-	my $vs = $voter_state{$email};
-
-	if (!defined $vs->{check_id}) {
-		$vs->{check_id} = $no_check_id;
-	}
-
-	print VF "$email $vs->{timestamp} $vs->{state} $vs->{check_id}\n";
-}
-
-if (!close(VF)) {
-	die "Unable to write $voters_file.$$: $!";
-}
+# Save the updated voters file
+$vstate->save();
 
 # Now rename to update and keep history
-rename("$voters_file.-2", "$voters_file.-3");
-rename("$voters_file.-1", "$voters_file.-2");
-rename("$voters_file",    "$voters_file.-1");
 rename("$voters_file.$$", "$voters_file");
+system("ci -l '-mUpdated by check-voters.pl' $voters_file");
 
 # Now read the header and body of the message
 
