@@ -60,6 +60,14 @@ sub new {
 	return $self;
 }
 
+# Return the name of this vote
+
+sub getName {
+	my $self = shift;
+
+	return $self->{name};
+}
+
 # Return a list of all votes in the directory
 
 sub list_votes {
