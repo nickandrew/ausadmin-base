@@ -5,32 +5,48 @@
 # $Revision$
 # $Date$
 
+=head1 NAME
+
+genresult.pl - Create the results file for a vote
+
+=head1 SYNOPSIS
+
+genresult.pl [-d] [-r] $newsgroup > tmp/result.$newsgroup
+pgp-sign < tmp/result.$newsgroup > vote/$newsgroup/result
+
+=head1 DESCRIPTION
+
+This program creates the result file for a vote. Generally the name of the
+vote is the same as the name of the corresponding newsgroup.
+
+The previous revision of this program also signed the output. This no
+longer happens, so the result file must be signed later by using
+B<pgp-sign>.
+
+B<-d> puts the program into debug mode.
+
+B<-r> notes this result as a recount.
+
+=cut
+
 use Getopt::Std;
-use vars '$opt_d';
 
-getopts("d");
+my %opts;
+getopts('dr', \%opts);
 
-my $debug=$opt_d;
+my $debug=$opts{'d'};
+my $recount = $opts{'r'};
 
-$postaddress = "aus group admin <ausadmin\@aus.news-admin.org>";
+my $postaddress = "aus group admin <ausadmin\@aus.news-admin.org>";
+my $organization = "aus.* newsgroups administration, see http://aus.news-admin.org/";
 
-$vote = shift;
-$recount = shift;
-
-$now = time;
-if (-f "/usr/bin/pgps") {
-	$pgpcmd = "pgps -fat";
-} else {
-	$pgpcmd = "pgp -fast";
-}
-
-select(STDOUT); $| = 1;
+my $vote = shift;
 
 sub read1line {
 	my($path) = @_;
 	my($line);
 	if (!open(F, $path)) {
-		die "Can't open $path";
+		die "Can't open $path: $!";
 	}
 	chop($line = <F>);
 	close(F);
@@ -41,7 +57,7 @@ sub readfile {
 	my($path) = @_;
 	my($line);
 	if (!open(F, $path)) {
-		die "Can't open $path";
+		die "Can't open $path: $!";
 	}
 	while (<F>) {
 		$line .= $_;
@@ -54,7 +70,7 @@ sub readfile {
 
 sub format_para {
 	my($line) = @_;
-	my($rest);
+	my($first, $rest);
 	my($last_space);
 	my(@result);
 
@@ -76,7 +92,7 @@ sub format_para {
 	return @result;
 }
 
-if ($vote eq "") {
+if ($vote eq '') {
 	print STDERR "genresult.pl: No vote specified\n";
 	exit(2);
 }
@@ -87,32 +103,36 @@ if (!-d "vote/$vote") {
 }
 
 # Get vote end date and vote pass/fail rule
-$ts_start = read1line("vote/$vote/vote_start.cfg");
-$ts_end = read1line("vote/$vote/endtime.cfg");
-$voterule = read1line("vote/$vote/voterule");
+my $ts_start = read1line("vote/$vote/vote_start.cfg");
+my $ts_end = read1line("vote/$vote/endtime.cfg");
+my $voterule = read1line("vote/$vote/voterule");
 
 # These are the files written at CFV time
-$ngline = read1line("vote/$vote/ngline");
-#$rationale = readfile("vote/$vote/rationale");
-$charter = readfile("vote/$vote/charter");
+my $ngline = read1line("vote/$vote/ngline");
+# $rationale = readfile("vote/$vote/rationale");
+my $charter = readfile("vote/$vote/charter");
 
 # General config files
-$footer =  readfile("config/results.footer");
+my $footer =  readfile("config/results.footer");
 
-($numer, $denomer, $minyes) = split(/\s+/, $voterule);
+my($numer, $denomer, $minyes) = split(/\s+/, $voterule);
+
+my $vote_start;
+my $vote_end;
 
 {
-     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = gmtime($ts_start) 
+     my($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = gmtime($ts_start) 
 	  or die "Can't get start date.";
 
      $year += 1900; $mon++;
-     $vote_start = sprintf "%d-%02d-%02d %02d:%02d:%02d", $year, $mon, $mday, $hour, $min, $sec;
+     $vote_start = sprintf "%d-%02d-%02d %02d:%02d:%02d UTC", $year, $mon, $mday, $hour, $min, $sec;
      
 }
+
 {
      my ($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = gmtime($ts_end);
      $year += 1900; $mon++;
-     $vote_end = sprintf "%d-%02d-%02d %02d:%02d:%02d", $year, $mon, $mday, $hour, $min, $sec;
+     $vote_end = sprintf "%d-%02d-%02d %02d:%02d:%02d UTC", $year, $mon, $mday, $hour, $min, $sec;
      
 }
 
@@ -126,15 +146,20 @@ if (not ($ts_end && $minyes && $ts_start)) {
 }
 
 # Ensure vote is actually finished
-if ($now < $ts_end) {
-	print STDERR "genresult.pl: Vote $vote not finished yet.\n";
-	exit(5);
+if (time() < $ts_end) {
+	die "genresult.pl: Vote $vote not finished yet.\n";
 }
+
+my %voters;
+my %yes;
+my %no;
+my %abstain;
+my %forge;
+my %newsgroups;
 
 # Open the tally file and munch it
 if (!open(T, "<vote/$vote/tally.dat")) {
-	print STDERR "genresult.pl: Vote $vote has no tally file.\n";
-	exit(6);
+	die "genresult.pl: Vote $vote has no tally file.\n";
 }
 
 while (<T>) {
@@ -153,6 +178,7 @@ while (<T>) {
 		$yes{$ng} = 0;
 		$no{$ng} = 0;
 		$abstain{$ng} = 0;
+		$forge{$ng} = 0;
 	}
 
 	if ($v eq "YES") {
@@ -182,8 +208,13 @@ while (<T>) {
 
 close(T);
 
+my($yvotes, $nvotes, $abstentions, $forgeries);
+
 # Output results
-foreach $ng (sort (keys %newsgroups)) {
+foreach my $ng (sort (keys %newsgroups)) {
+
+	my $status;
+	my $subjstat;
 
 	if (($yes{$ng} >= ($yes{$ng} + $no{$ng}) * $numer / $denomer) && ($yes{$ng} - $no{$ng} >= $minyes)) {
 		$status = "pass";
@@ -211,10 +242,12 @@ foreach $ng (sort (keys %newsgroups)) {
 		$abstentions = "abstentions";
 	}
 
-	if ($forge{$ng} == 1) {
-	  $forgeries = "forged email";
+	if ($forge{$ng} == 0) {
+		$forgeries = "no forgeries";
+	} elsif ($forge{$ng} == 1) {
+		$forgeries = "1 forgery";
 	} else {
-	  $forgeries = "forgeries";
+		$forgeries = "$forge{$ng} forgeries";
 	}
 
 
@@ -222,7 +255,7 @@ foreach $ng (sort (keys %newsgroups)) {
 
 	print "Newsgroups: aus.general,aus.net.news\n";
 	print "From: $postaddress\n";
-	print "Organization: aus.* newsgroups administration, see http://aus.news-admin.org/\n";
+	print "Organization: $organization\n";
 	print "X-PGPKey: at http://aus.news-admin.org/ausadmin.asc\n";
 	print "Followup-To: aus.net.news\n";
 	if (not $recount) {
@@ -234,16 +267,22 @@ foreach $ng (sort (keys %newsgroups)) {
 
 	# Pass or fail?
 	if ($status eq "pass") {
-		pass_msg();
+		pass_msg($ng);
 	} else {
-		fail_msg();
+		fail_msg($ng);
 	}
+
+	# This sucks. It's inside a loop.
 	exit(0);
 }
 
 sub pass_msg() {
+	my $ng = shift;
+
+	my @body;
+
 	# Formatted line
-	$line = "The newsgroup $ng has passed its vote by $yes{$ng} YES $yvotes to $no{$ng} NO $nvotes. There were $abstain{$ng} $abstentions and $forge{$ng} $forgeries detected.";
+	my $line = "The newsgroup $ng has passed its vote by $yes{$ng} YES $yvotes to $no{$ng} NO $nvotes. There were $abstain{$ng} $abstentions and $forgeries detected.";
 	push(@body, format_para($line));
 	push(@body, "");
 
@@ -254,18 +293,18 @@ sub pass_msg() {
 
 	push(@body, "");
 
-	push(@body, format_para("Votes marked with an asterisk where detected as forgeries and where not counted in the vote."));
+	push(@body, format_para("Votes marked with an asterisk were detected as forgeries and were not counted in the vote."));
 	push(@body, "");
 
 	push(@body, "Newsgroups line:\n$ngline\n");
 
-	push(@body, "The voting period started at: $vote_start UTC");
-	push(@body, "The voting period ended at:   $vote_end UTC\n");
+	push(@body, "The voting period started at: $vote_start");
+	push(@body, "The voting period ended at:   $vote_end\n");
 
-	if ($rationale ne "") {
-		push(@body, "RATIONALE:");
-		push(@body, $rationale);
-	}
+#	if (defined($rationale) && $rationale ne "") {
+#		push(@body, "RATIONALE:");
+#		push(@body, $rationale);
+#	}
 
 	if ($charter ne "") {
 		push(@body, "\nCHARTER from CFV:");
@@ -273,22 +312,15 @@ sub pass_msg() {
 	}
 
 	push(@body, "\nVOTERS:");
-	foreach $voter (sort @{$voters{$ng}}) {
+	foreach my $voter (sort @{$voters{$ng}}) {
 		push(@body, "  $voter");;
 	}
 	push(@body, "");
 	push(@body, $footer);
 
-	if (!open(P, "|$pgpcmd")) {
-		print STDERR "Unable to open pipe to pgp!\n";
-		exit(7);
+	foreach my $l (@body) {
+		print "$l\n";
 	}
-
-	foreach $l (@body) {
-		print P "$l\n";
-	}
-
-	close(P);
 
 	makegroup($ng,$ts_end + 5 * 86400);
 
@@ -298,9 +330,12 @@ sub pass_msg() {
 }
 
 sub fail_msg() {
+	my $ng = shift;
+
+	my @body;
 
 	# Formatted line
-	$line = "The newsgroup $ng has Failed its vote by $yes{$ng} YES $yvotes to $no{$ng} NO $nvotes. There were $abstain{$ng} $abstentions and $forge{$ng} $forgeries detected.";
+	my $line = "The newsgroup $ng has Failed its vote by $yes{$ng} YES $yvotes to $no{$ng} NO $nvotes. There were $abstain{$ng} $abstentions and $forgeries detected.";
 	push(@body, format_para($line));
 	push(@body, "");
 
@@ -308,23 +343,15 @@ sub fail_msg() {
 	push(@body, "");
 
 	push(@body, "\nVOTERS:");
-	foreach $voter (sort @{$voters{$ng}}) {
+	foreach my $voter (sort @{$voters{$ng}}) {
 		push(@body, "  $voter");;
 	}
 	push(@body, "");
 	push(@body, $footer);
 
-	if (!open(P, "|$pgpcmd")) {
-		print STDERR "Unable to open pipe to pgp!\n";
-		exit(7);
+	foreach my $l (@body) {
+		print "$l\n";
 	}
-
-	foreach $l (@body) {
-		print P "$l\n";
-	}
-
-	close(P);
-
 }
 
 sub setposts {
@@ -335,8 +362,7 @@ sub setposts {
 	return if $debug;
 
 	if (not open (POST,">>vote/$vote/$filename")) {
-		print STDERR "Unable to mark group as passed\n";
-		exit(8);
+		die "Unable to mark group $vote as passed: $filename\n";
 	}
     
 	print POST "$groupname\t$firstpostdate\t$interval\t$count\n";
@@ -344,13 +370,14 @@ sub setposts {
 }
 
 sub makegroup {
-  my $ng=shift;
-  my $start=shift;
+  my $ng = shift;
+  my $start = shift;
 
   local *CREATE;
 
-  open (CREATE,">>vote/$vote/group.creation.date") 
-    or die "Can't set creation date";
+  my $fn = "vote/$vote/group.creation.date";
+  open (CREATE,">>$fn") 
+    or die "Can't open $fn: $!";
 
   print CREATE "$start\n";
 
