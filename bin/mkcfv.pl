@@ -37,7 +37,7 @@ $| = 1;
 print <<"EOHEADERS";
 Subject: CFV: $Newsgroup[0]
 From: ausadmin\@aus.news-admin.org
-Newsgroup: $distribution
+Newsgroups: $distribution
 
 EOHEADERS
 
@@ -68,7 +68,7 @@ $Proposer.
 EOMIDBODY
 
 for my $group (@Newsgroup) {
-  print P "RATIONALE: $group\n",join '\n',@{$Charter{$newsgroup}};
+  print P "RATIONALE: $group\n",join "\n",@{$Charter{$newsgroup}};
 }
 
 print P <<'EOMEND';
@@ -93,7 +93,7 @@ You may also ABSTAIN in place of YES/NO - this will not affect the outcome.
 Anything else may be rejected by the automatic vote counting program.  
 ausadmin will respond to your received ballots with a personal
 acknowledgement by E-mail - if you do not receive one within 24 hours, try
-again. It\'s your responsibility to make sure your vote is registered
+again. It's your responsibility to make sure your vote is registered
 correctly.
 
 Only one vote per person, no more than one vote per E-mail address.
@@ -108,43 +108,66 @@ close(P);
 # This sub grabs the required info from the RFD piped into the script.
 
 sub ReadCharter {
-  $CNoL = 0;
-  while ( <STDIN> ) {
-    chomp;
-    if ( $_ =~ /^Newsgroup:.*/i ) {
-      $_ = <STDIN>;
-      s/^([^\s]+)\s+(.*)/$1/i;
-      push @Newsgroup,$1;
-      $newsgroup=$1;
-      $NGLine{$newsgroup}=$_;
-    }
+     $CNoL = 0;
+     while ( <> ) {
+	  chomp;
+	  if ( $_ =~ /^Newsgroup line:/i ) {
+GROUP:	       while (<>) {
+		    chomp;
+		    last GROUP if (/^rationale:.*/i);
 
-    if ( $_ =~ /^Moderated:.*/i ) {
-      s/^Moderator:\s*(.*)/$1/i;
-      $Moderated{$newsgroup}=1;
-      while (<STDIN>) {
-	last if (/^End moderator info/i);
-      push @{$Moderator{$newsgroup}},$_;
-      }
+		    if (/^([^\s]+)\s+(.*)/i) {
+			 push @Newsgroup,$1;
+			 $newsgroup=$1;
+			 $NGLine{$newsgroup}=$_;
+		    } else {
+			 last GROUP;
+		    }
+		    
+	       }
+	       
+	  }
+	  
+	  if ( $_ =~ /^Moderated:.*/i ) {
+	       s/^Moderator:\s*(.*)/$1/i;
+	       $Moderated{$newsgroup}=1;
+	       while (<>) {
+		    last if (/^End moderator info/i);
+		    push @{$Moderator{$newsgroup}},$_;
+	       }
+	       
+	  }
 
-    }
-    if ( $_ =~ /^Proposer:.*/i ) {
-      s/^Proposer:\s*(.*)/$1/i;
-      $Proposer=$_;
-    }
 
-    if ( $_ =~ /^rationale:.*/i ) {
-      while ( <STDIN> ) {
-	last if (/^END CHARTER/i);		 
-	chomp;
-	push @{$Charter{$newsgroup}},$_;
-      }
-    }
+	  if ($_ =~ /DISTRIBUTION:/i) {
+DIST:	       while (<>) {
+		    chomp;
+		    last DIST if (/^Proponet:.*/i);
+		    $distribution .= $_ if not /^\s*$/;
+	       }
+	  }
 
-    if ($_ =~ /DISTRIBUTION:/i) {
-      $distribution=<STDIN>;
-    }
-  }
+	  if ( $_ =~ /^Proponet:.*/i ) {
+	       s/^Proposer:\s*(.*)/$1/i;
+	       $Proposer=$_;
+	  }
+
+	  
+	  if (/^rationale:.*/i ) {
+	       while ( <> ) {
+		    last if (/^END CHARTER/i);		 
+		    chomp;
+		    push @{$Charter{$newsgroup}},$_;
+	       }
+	  }
+	  
+
+     }
+
+     $distribution = join ',',
+	  grep /^\s*([\w.]+)\s*$/,
+	       split '\s*\,\s*',$distribution;
+	   
 }
 
 =pod
@@ -156,35 +179,35 @@ sub ReadCharter {
 sub preprocess {
 	my($fh, $path) = @_;
 
-	if (!open(TEMPLATE, $path)) {
-		print STDERR "Unable to open $path: $!";
-		return 1;
-	}
-
-	while( <TEMPLATE> ) {
-		chomp;
-		if ( $_ =~ /.*!CHARTER!/ ) {
-			for ( $i=0; $i<=$CNoL; $i++ ) {	
-				print $fh "$Charter[$i]\n";
-			}
-		}
-		elsif ( $_ =~ /.*![^!]+!/ ) {
-			s/!GROUPNAME!/$Newsgroup/g;
-			s/!GROUPLINE!/$NGLine/g;
-			s/!PROPOSER!/$Proposer/g;
-			s/!VOTEADDRESS!/$VoteAddress/g;
-			s/!MODERATED!/$Moderated/g;
-			s/!DATE!/$EndDate/g;
-			s/!EXPIRES!/$ExpireDate/g;
-			print $fh "$_\n";
-		}
-		else {
-			print $fh "$_\n";
-		}
-	}
-
+		     if (!open(TEMPLATE, $path)) {
+						       print STDERR "Unable to open $path: $!";
+						       return 1;
+						  }
+			  
+			  while ( <TEMPLATE> ) {
+			       chomp;
+			       if ( $_ =~ /.*!CHARTER!/ ) {
+				    for ( $i=0; $i<=$CNoL; $i++ ) {	
+					 print $fh "$Charter[$i]\n";
+				    }
+			       }
+			       elsif ( $_ =~ /.*![^!]+!/ ) {
+				    s/!GROUPNAME!/$Newsgroup/g;
+				    s/!GROUPLINE!/$NGLine/g;
+				    s/!PROPOSER!/$Proposer/g;
+				    s/!VOTEADDRESS!/$VoteAddress/g;
+				    s/!MODERATED!/$Moderated/g;
+				    s/!DATE!/$EndDate/g;
+				    s/!EXPIRES!/$ExpireDate/g;
+				    print $fh "$_\n";
+			       }
+			       else {
+				    print $fh "$_\n";
+			       }
+			  }
+	
 	close(TEMPLATE);
 	return 0;
-}
+   }
 
 =cut
