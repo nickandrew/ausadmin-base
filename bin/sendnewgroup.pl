@@ -5,6 +5,7 @@
 use strict;
 require "bin/misc.pli";
 
+my $debug='d';
 my $schedule=shift;
 my $filename=shift;
 my $now=time;
@@ -15,6 +16,8 @@ open POST,">/tmp/schedule.$$.$^T" or die "Unable to create schedule.";
 while (<SCHED>) {
      my ($group,$firstpostdate,$interval,$count)=split /\t/;
 
+     die "firstnotset $schedule" unless $firstpostdate;
+
      if ($now>$firstpostdate) {
 	  &sendmessage($group);
 	  
@@ -23,28 +26,46 @@ while (<SCHED>) {
 	       
 	       $firstpostdate += $interval;
 	       &sendmessage($filename);
-
-	       print POST "$group\t$firstpostdate\t$interval\t$count\n";
+	       if ($debug) {
+		 print "$group\t$firstpostdate\t$interval\t$count\n";
+	       } else {
+		 print POST "$group\t$firstpostdate\t$interval\t$count\n";
+	       }
+	       
 	  }
 	  
      } else {
-	  print POST $_;
+       if ($debug) {
+	 print $_;
+       } else {
+	 print POST $_;
+       }
+	  
      }     
 }
 
 close POST;
 
+if ($debug) {
+  print "mv /tmp/schedule.$$.$^T $schedule";
+} else {
+  system "mv /tmp/schedule.$$.$^T $schedule";
+}
 
-system "mv /tmp/schedule.$$.$^T $schedule";
 
 sub sendmessage {
-#  my $filename=shift;
+  #  my $filename=shift;
   die "Newgroup message file $filename not made" if not -e $filename;
-  if ($filename =~ /fake/) {
-       system "cat $filename|rnews";
+  if ($debug) {
+    print "cat $filename|rnews";
   } else {
-       system "cat $filename|signcontrol|rnews";
+    if ($filename =~ /fake/) {
+      system "cat $filename|rnews";
+    } else {
+      system "cat $filename|signcontrol|rnews";
+    }  
   }
+  
 }
 
 __END__
@@ -69,4 +90,4 @@ nextdate is the date when the next new group will be issued in seconds since
 epock
 
 interval is the time between issueings in seconds.
-
+=cut
