@@ -58,30 +58,46 @@ sub checkmessage ( $ ) {
 }
 
 sub makemessage ( $$ ) {
-  my $file=shift;
-  my $name=shift;
-  
-  # This will be changed to code that works out whether or not I wish to newgroup
-  # or rmgroup.
-  my $newgroup=1;
-  my $moderated=0;
-  
-  #Get the from line for the forging/setting for the from and approved lines
-  #should most likely be read from a file, just sticking it here while I decide
-  #where it should go.
-  my $from = {
-	      "post.real" => "Aus news admin <ausadmin\@aus.news-admin.org>",
-	      "post.fake.phil" => "Phil Herring <revdoc\@uow.edu.au>",
-	      "post.fake.robert" => "kre\@munnari.OZ.AU (Robert Elz)",
-	     } -> {$file};
-  my $post;
+     my $file=shift;
+     my $name=shift;
+     
+# This will be changed to code that works out whether or not I wish to newgroup
+# or rmgroup.
+     my $newgroup=1;
+     my $moderated=0;
+     
+#Get the from line for the forging/setting for the from and approved lines
+#should most likely be read from a file, just sticking it here while I decide
+#where it should go.
 
-  if ($newgroup) {
-    if (not $moderated) {
-      
-      my $ngline = read1line("vote/$vote/ngline");
-      my $charter = readfile("vote/$vote/charter");
-      $post =<<"EOT";
+     my $from = {
+		 "post.real" => "Aus news admin <ausadmin\@aus.news-admin.org>",
+		 "post.fake.phil" => "Phil Herring <revdoc\@cs.uow.edu.au>",
+		 "post.fake.robert" => "kre\@munnari.OZ.AU (Robert Elz)",
+		} -> {$file};
+     my $post;
+     
+     if ($newgroup) {
+	  &donewsgroup($moderated);
+     } else {
+# Do stuff for rmgroup
+     }
+     
+     if ($name =~ /forged/) {
+	  $post .= "\nThis control message has been forged as \"$from\" for the benefit of those\nsites still honouring his posts.  If you are one of those sites please see \<URL:http://aus.news-admin.org/\>.";
+     }
+     
+     print $post;
+     
+}
+
+sub donewsgroup {
+     
+     if (not $moderated) {
+	  
+	  my $ngline = read1line("vote/$vote/ngline");
+	  my $charter = readfile("vote/$vote/charter");
+	  $post =<<"EOT";
 From: $from
 Subject: Cmsg newgroup $name
 Newsgroup: aus.news,$name
@@ -96,17 +112,9 @@ $ngline
 This charter culled from the vote result announcement.
 $charter
 EOT
-
-    } else {
+	  
+     } else {
 # Do stuff for moderated group  
-  }} else {
-# Do stuff for rmgroup
-  }
-
-  if ($name =~ /forged/) {
-    $post .= "\nThis control message has been forged as \"$from\" for the benefit of those\nsites still honouring his posts.  If you are one of those sites please see \<URL:http://aus.news-admin.org/\>.";
-  }
-  
-  print $post;
-
+     }
+     
 }
