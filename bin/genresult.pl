@@ -123,8 +123,6 @@ foreach my $vline (@$tally_lr) {
 		next;
 	}
 
-	$email =~ s/\@/ at /;
-
 	if (!defined($voters{$ng})) {
 		$voters{$ng} = [];
 		$total{$ng} = 0;
@@ -166,7 +164,7 @@ foreach my $vline (@$tally_lr) {
 		$abstain{$ng}++;
 	}
 
-	push(@{$voters{$ng}}, "$email");
+	push(@{$voters{$ng}}, $email);
 
 }
 
@@ -205,11 +203,11 @@ if ($abstain{$ng} == 1) {
 }
 
 if ($forge{$ng} == 0) {
-	$forgeries = "no forgeries";
+	$forgeries = "no invalid votes";
 } elsif ($forge{$ng} == 1) {
-	$forgeries = "1 forgery";
+	$forgeries = "1 invalid vote";
 } else {
-	$forgeries = "$forge{$ng} forgeries";
+	$forgeries = "$forge{$ng} invalid votes";
 }
 
 
@@ -277,7 +275,7 @@ sub pass_msg() {
 	push(@body, "");
 
 
-	push(@body, format_para("For a group to pass, YES votes must be at least $numer/$denomer of all valid (YES and NO) votes. There must also be at least $minyes more YES votes than NO votes. Abstentions, forgeries and multiple votes do not affect the outcome. Anybody wishing to challenge the apparent multiple votes must do so in aus.net.news."));
+	push(@body, format_para("For a vote to pass, YES votes must be at least $numer/$denomer of all valid (YES and NO) votes. There must also be at least $minyes more YES votes than NO votes. Abstentions, invalid votes and multiple votes do not affect the outcome. Anybody wishing to challenge the scoring must do so in aus.net.news."));
 	push(@body, "");
 
 	if ($pass && !$opt_recount) {
@@ -298,14 +296,22 @@ sub pass_msg() {
 	push(@body, "The voting period ended at:   $vts\n");
 
 
-	push(@body, "\nVOTES RECEIVED:");
-	foreach my $voter (sort @{$voters{$ng}}) {
+	push(@body, "\nVOTES RECEIVED:\n");
+	foreach my $voter (sort by_domain_userid @{$voters{$ng}}) {
+		$voter =~ s/\@/ at /;
 		push(@body, "  $voter");;
 	}
 
 	foreach my $l (@body) {
 		print "$l\n";
 	}
+}
+
+sub by_domain_userid {
+	my($a1,$a2) = split("\@", lc($a));
+	my($b1,$b2) = split("\@", lc($b));
+
+	$a2 cmp $b2 || $a1 cmp $b1;
 }
 
 sub setposts {
@@ -379,6 +385,7 @@ sub analyse_multi {
 	}
 
 	if (!%multi) {
+		print "\n\n";
 		print "No multiple votes were received.\n";
 		return;
 	}
