@@ -1,13 +1,13 @@
 #!/usr/bin/perl
-#	@(#) todo - bring up a list of outstanding actions
+#	@(#) todo.pl - bring up a list of outstanding actions
 
 =head1 NAME
 
-todo - bring up a list of outstanding actions for newsgroups
+todo.pl - bring up a list of outstanding actions for newsgroups
 
 =head1 SYNOPSIS
 
-todo
+todo.pl
 
 =head1 DESCRIPTION
 
@@ -20,6 +20,7 @@ No files are changed or created by this program.
 =cut
 
 use lib 'bin';
+use Ausadmin;
 use Vote;
 use DateFunc;
 
@@ -30,6 +31,7 @@ my %action_states = (
 	'complete/pass' => '',
 	'complete/result' => 'Do something with the result - pass or fail?',
 	'cancelled' => '',
+	'new/norfd' => 'Use action to create the RFD',
 	'rfd/unposted' => 'Use action to post the RFD',
 	'rfd/posted' => 'In discussion, wait until ',
 );
@@ -37,6 +39,8 @@ my %action_states = (
 if (!-d "./vote") {
 	die "No ./vote directory - cd?";
 }
+
+my $today = Ausadmin::today();
 
 opendir(D, "./vote");
 my @votes = grep { ! /^\./ } (readdir(D));
@@ -68,6 +72,9 @@ foreach my $vote (@votes) {
 		chomp($date);
 		close(F);
 		$a .= $date;
+		if ($date le $today) {
+			$a = "Use action to abandon or post the CFV";
+		}
 	}
 
 	if ($a ne '') {

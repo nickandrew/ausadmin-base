@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-#	@(#) make-rfd.pl - Create an RFD from its component pieces
+#	@(#) make-rfd.pl - Create an RFD message for a proposal
 #
 # $Source$
 # $Revision$
@@ -7,7 +7,7 @@
 
 =head1 NAME
 
-make-rfd.pl - Create an RFD from its component pieces
+make-rfd.pl - Create an RFD message for a proposal
 
 =head1 SYNOPSIS
 

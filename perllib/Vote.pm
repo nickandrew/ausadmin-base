@@ -165,6 +165,7 @@ $Vote::expected_files = {
 	'cfv-notes.txt' => 1,
 	'cancel-email.txt' => 1,
 	'cancel-notes.txt' => 1,
+	'change' => 1,
 	'group.creation.date' => 1,
 	'post.real' => 1,
 	'post.fake.phil' => 1,
@@ -281,6 +282,14 @@ sub state {
 
 	if (-f "$ng_dir/rfd") {
 		return "rfd/unposted";
+	}
+
+	if (-f "$ng_dir/rfd.unsigned") {
+		return "rfd/unsigned";
+	}
+
+	if (-f "$ng_dir/change") {
+		return "new/norfd";
 	}
 
 	return "unknown";
@@ -413,5 +422,33 @@ sub calc_result {
 
 	return 'fail';
 }
+
+# abandon() ... Abandons an RFD, by creating a control-file with the
+# abandonment date.
+
+sub abandon {
+	my $self = shift;
+	my $rfd_posted_fn = $self->ng_dir("rfd_posted.cfg");
+	my $cancel_fn = $self->ng_dir("rfd_cancel.cfg");
+	my $name = $self->{name};
+
+	if (!-f $rfd_posted_fn) {
+		die "Augh. Vote::abandon() expected rfd_posted.cfg";
+	}
+
+	if (-f $cancel_fn) {
+		die "Augh. Vote for $name already cancelled";
+	}
+
+	my $today = Ausadmin::today();
+	my $fh = new IO::File($cancel_fn, O_WRONLY|O_APPEND|O_CREAT|O_EXCL, 0644);
+	die "Unable to create $cancel_fn" if (!defined $fh);
+
+	$fh->print($today, "\n");
+	$fh->close();
+
+	$self->audit("Abandoned RFD");
+}
+
 
 1;

@@ -18,6 +18,7 @@ Ausadmin - misc functions class
  $ref = Ausadmin::read_keyed_file($path);
  @lines = Ausadmin::format_para($line)
  @lines = Ausadmin::centred_text(@lines)
+ $yyyymmdd = Ausadmin::today()
 
 =head1 DESCRIPTION
 
@@ -30,7 +31,7 @@ package Ausadmin;
 
 %Ausadmin::ph_defaults = (
 	'Newsgroups' => 'aus.general,aus.net.news',
-	'From' => 'aus group admin <ausadmin@aus.news-admin.org>',
+	'From' => 'ausadmin <ausadmin@aus.news-admin.org>',
 	'Organization' => 'aus.* newsgroups administration, see http://aus.news-admin.org/',
 	'X-PGPKey' => 'at http://aus.news-admin.org/ausadmin.asc',
 	'Followup-To' => 'aus.net.news'
@@ -40,40 +41,40 @@ package Ausadmin;
 sub read1line {
 	my $path = shift;
 	my $line;
-	if (!open(F, $path)) {
+	if (!open(AU_F, $path)) {
 		return "";
 	}
-	chop($line = <F>);
-	close(F);
+	chomp($line = <AU_F>);
+	close(AU_F);
 	return $line;
 }
 
 sub readfile {
 	my $path = shift;
 	my $line;
-	if (!open(F, $path)) {
+	if (!open(AU_F, $path)) {
 		return "";
 	}
-	while (<F>) {
+	while (<AU_F>) {
 		$line .= $_;
 	}
-	close(F);
+	close(AU_F);
 	return $line;
 }
 
 sub read_keyed_file {
 	my $path = shift;
 	my $ref;
-	if (!open(F, $path)) {
+	if (!open(AU_F, $path)) {
 		return undef;
 	}
-	while (<F>) {
+	while (<AU_F>) {
 		chomp;
 		if (/^([^:]+): (.*)/) {
 			$ref->{$1} = $2;
 		}
 	}
-	close(F);
+	close(AU_F);
 	return $ref;
 }
 
@@ -138,6 +139,14 @@ sub print_header {
 	}
 
 	print "\n";
+}
+
+sub today {
+	my($sec,$min,$hour,$mday,$mon,$year) = localtime(time());
+	$mon++; $year += 1900;
+	my $yyyymmdd = sprintf "%d-%02d-%02d", $year,$mon,$mday;
+
+	return $yyyymmdd;
 }
 
 1;

@@ -24,6 +24,7 @@ TODO
 
 use Time::Local;
 use lib 'bin';
+use Ausadmin;
 use DateFunc;
 use Vote;
 
@@ -33,8 +34,10 @@ my $BaseDir = "./vote";
 my $rfd_min_days = 21;
 
 my $state_actions = {
+	'new/norfd' => \&create_rfd,
 	'rfd/posted' => \&check_rfd,
 	'rfd/unposted' => \&post_rfd,
+	'rfd/unsigned' => \&sign_rfd,
 	'complete/resultnotposted' => \&post_result,
 	'complete/resultnotsigned' => \&sign_result,
 	'vote/checking' => \&gen_result,
@@ -58,7 +61,7 @@ die "No CFV directory" if (!-d "CFV");
 
 my $s = 0;
 
-foreach my $f (qw/charter distribution ngline proposer rationale/) {
+foreach my $f (qw/distribution proposer rationale/) {
 	if (!-f "$ng_dir/$f") {
 		print STDERR "No file $ng_dir/$f ...\n";
 		$s = 8;
@@ -81,7 +84,7 @@ while (exists $state_actions->{$state}) {
 
 	my $rc;
 	eval {
-		$rc = &$code_ref();
+		$rc = &$code_ref($v);
 	};
 
 	if ($@) {
@@ -102,14 +105,6 @@ if (!exists $state_actions->{$state}) {
 
 exit(0);
 
-sub today {
-	my($sec,$min,$hour,$mday,$mon,$year) = localtime(time());
-	$mon++; $year += 1900;
-	my $yyyymmdd = sprintf "%d-%02d-%02d", $year,$mon,$mday;
-
-	return $yyyymmdd;
-}
-
 sub gen_result {
 	# Generate a result message
 	print "(state=$state) Generate result.unsigned ? ";
@@ -119,7 +114,7 @@ sub gen_result {
 		die "Ok, try again later.\n";
 	}
 
-	my $rc = system("genresult.pl $newsgroup > $ng_dir/result.unsigned");
+	my $rc = system("bin/genresult.pl $newsgroup > $ng_dir/result.unsigned");
 	$v->audit("generated result (code $rc)");
 	if ($rc) {
 		die "genresult.pl failed code $rc...!";
@@ -139,7 +134,7 @@ sub sign_result {
 		die "Ok, try again later.\n";
 	}
 
-	my $rc = system("pgp-sign < $ng_dir/result.unsigned > $ng_dir/result");
+	my $rc = system("bin/pgp-sign < $ng_dir/result.unsigned > $ng_dir/result");
 	$v->audit("PGP-signed result (code $rc)");
 	if ($rc) {
 		die "pgp-sign failed code $rc...!";
@@ -191,7 +186,7 @@ sub setup_vote {
 		die "Ok, try again later.\n";
 	}
 
-	my $rc = system("setup-vote $newsgroup");
+	my $rc = system("bin/setup-vote $newsgroup");
 	$v->audit("setup vote (code $rc)");
 	if ($rc) {
 		die "setup-vote failed code $rc...!";
@@ -214,7 +209,7 @@ sub gen_cfv {
 		die "Ok, try again later.\n";
 	}
 
-	my $rc = system("mkcfv.pl $newsgroup > $ng_dir/cfv");
+	my $rc = system("bin/mkcfv.pl $newsgroup > $ng_dir/cfv");
 	$v->audit("created CFV (code $rc)");
 	if ($rc) {
 		unlink("$ng_dir/cfv");
@@ -238,7 +233,7 @@ sub sign_cfv {
 		die "Ok, try again later.\n";
 	}
 
-	my $rc = system("pgp-sign < $ng_dir/cfv > $ng_dir/posted.cfv");
+	my $rc = system("bin/pgp-sign < $ng_dir/cfv > $ng_dir/posted.cfv");
 	$v->audit("signed CFV (code $rc)");
 	if ($rc) {
 		die "pgp-sign failed code $rc...!";
@@ -263,8 +258,8 @@ sub post_cfv {
 		die "Ok, try again later.\n";
 	}
 
-	my $rc = system("post.pl < $ng_dir/posted.cfv");
-	$v->audit("posted CFV (code $rc)");
+	my $rc = system("bin/post.pl < $ng_dir/posted.cfv");
+	$v->audit("Posted CFV (code $rc)");
 	if ($rc) {
 		die "post failed code $rc...!";
 	}
@@ -278,7 +273,7 @@ sub post_cfv {
 
 	print "\nOkay.\n";
 
-	return 0;
+	return 16;	# nothing more to do for this group
 }
 
 sub post_result {
@@ -293,7 +288,7 @@ sub post_result {
 		die "Ok, try again later.\n";
 	}
 
-	my $rc = system("post.pl < $ng_dir/result");
+	my $rc = system("bin/post.pl < $ng_dir/result");
 	$v->audit("posted result (code $rc)");
 	if ($rc) {
 		die "post failed code $rc...!";
@@ -311,7 +306,43 @@ sub post_result {
 	return 0;
 }
 
+sub create_rfd {
+	my $v = shift;
+
+	# Get the rfd_posted.cfg (yyyy-mm-dd)
+	if (-e "$ng_dir/rfd") {
+		die "Augh. Did not expect $ng_dir/rfd to exist!";
+	}
+
+	if (-e "$ng_dir/rfd.unsigned") {
+		die "Augh. Did not expect $ng_dir/rfd.unsigned to exist!";
+	}
+
+	# Otherwise, ask
+	print "(state=$state) Create RFD file [y,n] ? ";
+	my $answer = <STDIN>;
+	chomp($answer);
+	if ($answer !~ /^y$/i) {
+		die "Aborting\n";
+	}
+
+	if ($answer =~ /y/i) {
+		print "Ok, creating the RFD now ...\n";
+		my $rc = system("bin/make-rfd.pl $newsgroup > $ng_dir/rfd-temp.$$");
+		if ($rc) {
+			$v->audit("RFD creation failed");
+			die "make-rfd.pl returned code $rc, check $ng_dir/rfd-temp.$$ for its output";
+		}
+		rename("$ng_dir/rfd-temp.$$", "$ng_dir/rfd.unsigned");
+		$v->audit("Unsigned RFD created");
+		print "Done!\n";
+		return 16;
+	}
+}
+
 sub check_rfd {
+	my $v = shift;
+
 	# Get the rfd_posted.cfg (yyyy-mm-dd)
 	if (!-f "$ng_dir/rfd_posted.cfg") {
 		die "Augh. expected rfd_posted.cfg";
@@ -322,14 +353,15 @@ sub check_rfd {
 	chomp($rfd_posted);
 	close(R);
 
-	my $yyyymmdd = today();
+	my $yyyymmdd = Ausadmin::today();
 
 	if (DateFunc::days_between($rfd_posted, $yyyymmdd) < $rfd_min_days) {
-		die "RFD for $newsgroup was posted on $rfd_posted, not old enough for a decision";
+		print "RFD for $newsgroup was posted on $rfd_posted, not old enough for a decision\n";
+		return 16;	# don't go on with this group
 	}
 
 	# Otherwise, ask
-	print "(state=$state) RFD Abandoned or go to Vote [a,v] ? ";
+	print "(state=$state) Abandon RFD or setup Vote [a,v] ? ";
 	my $answer = <STDIN>;
 	chomp($answer);
 	if ($answer !~ /^[av]$/i) {
@@ -337,18 +369,36 @@ sub check_rfd {
 	}
 
 	if ($answer =~ /a/i) {
-		open(F, ">$ng_dir/rfd_cancel.cfg");
-		print F $yyyymmdd, "\n";
-		close(F);
+		$v->abandon();
 
-		print "Okay, I cancelled the RFD.\n";
-		return;
+		print "Okay, I abandoned the RFD.\n";
+		return 16;
 	}
 
 	if ($answer =~ /v/i) {
 		print "Setting up vote now ...\n";
-		system("setup-vote $newsgroup");
+		system("bin/setup-vote $newsgroup");
 	}
+}
+
+sub sign_rfd {
+	# Sign the RFD
+	print "(state=$state) Sign rfd.unsigned ? ";
+	my $answer = <STDIN>;
+	chomp($answer);
+	if ($answer !~ /^\s*y/i) {
+		die "Ok, try again later.\n";
+	}
+
+	my $rc = system("bin/pgp-sign < $ng_dir/rfd.unsigned > $ng_dir/rfd");
+	$v->audit("PGP-signed RFD (code $rc)");
+	if ($rc) {
+		die "pgp-sign failed code $rc...!";
+	}
+
+	print "\nOkay.\n";
+
+	return 0;
 }
 
 sub post_rfd {
@@ -373,7 +423,7 @@ sub post_rfd {
 
 		# Now note which date the RFD was posted
 
-		my $yyyymmdd = today();
+		my $yyyymmdd = Ausadmin::today();
 
 		open(F, ">$ng_dir/rfd_posted.cfg");
 		print F $yyyymmdd, "\n";
