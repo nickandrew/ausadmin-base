@@ -668,6 +668,10 @@ sub setup_vote {
 	print T $start_time, "\n";
 	close(T);
 
+	# Create an empty tally.dat file
+	open(T, ">>$vote_dir/tally.dat");
+	close(T);
+
 	$self->audit("Setup vote to end at $endtime");
 	$self->set_state("vote/nocfv");
 }
