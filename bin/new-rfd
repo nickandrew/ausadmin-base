@@ -1,0 +1,60 @@
+#!/bin/sh
+#	@(#) new-rfd: Setup directories for newsgroup proposals
+#
+# The idea is that the ausadmin-approved RFD message is fed into this
+# program and it will create needed directories and save the RFD.
+#
+# $Source$
+# $Revision$
+# $Date$
+
+if [ $# -lt 2 ]
+then
+	echo Usage: $0 newsgroup-name rfd-file >&2
+	exit 1
+fi
+
+# Get command line arguments
+Newsgroup="$1"
+Info="$2"
+
+# Commonly used variables
+HomeDir=~ausadmin
+BaseDir=$HomeDir/vote
+
+
+# Parse the RFD and create appropriate files:
+#	- newsgroup directory
+#	- $newsgroup/proposer, /distribution, /charter, /rationale, /ngline,
+#	  /modinfo
+
+ts=`date '+%Y%m%d-%H%M%S'`
+fn=~/RFD/$ts.rfd
+
+mkdir -p ~/RFD
+
+echo Parsing $fn ...
+
+tr -d '\r' < $Info > $fn
+s=$?
+
+if [ $s != 0 ] ; then
+	echo "Unable to tr $Info -- code $s - fatal"
+	exit 6
+fi
+
+cd $BaseDir
+
+~/bin/parse-rfd.pl < $fn
+s=$?
+
+if [ $s != 0 ] ; then
+	echo "Unable to parse rfd $fn -- code $s - fatal"
+	exit 6
+fi
+
+cp $fn $Newsgroup/rfd
+
+echo new-rfd Done at `date`
+
+exit 0
