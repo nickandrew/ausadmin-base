@@ -37,33 +37,38 @@ if (!open(V, "<$tally_path")) {
 
 my @recipients;
 my $now = time();
+my $check_cutoff_ts = $now - 86400 * 150;
 
 while (<V>) {
 	chomp;
-	my($email,$group,$vote,$timestamp) = split(/\s/);
+	my($email,$group,$vote,$timestamp,$path,$status) = split(/\s/);
 
 	# vote is yes/no/abstain/forge (mostly uppercase)
 	# only yes and no votes affect the result.
 	next unless ($vote =~ /^(yes|no)$/i);
 
+	# I was going to ignore MULTI, but let's try keeping them in.
+	# next unless ($status =~ /^NEW/i);
+
 	# Now check if we checked them before
 	if (exists $voter_state{$email} && $voter_state{$email} =~ /^\d+$/) {
-		# It's ok if check was less than 90 days ago
-		if ($now - $voter_state{$email} < 86400 * 90) {
+		# It's ok if last check was recent
+		if ($voter_state{$email} < $check_cutoff_ts) {
 			my $diff = int(($now - $voter_state{$email})/86400);
 			print STDERR "Ignoring $email - checked $diff days ago.\n";
 			next;
 		}
 	}
 
+	print STDERR "Checking $email\n";
+
 	# Otherwise, need to check them
 	push(@recipients, [$email, $timestamp]);
 
 	# And mark they've been checked
 	# KLUDGE ... this is dodgy ... what do we do when they fail a check?
-	if (!exists $voter_state{$email}) {
-		$voter_state{$email} = $now;
-	}
+	# If they fail a check, remove them from the voter_state file...
+	$voter_state{$email} = $now;
 }
 
 close(V);
@@ -90,20 +95,27 @@ foreach my $r (@recipients) {
 exit(0);
 
 # -----------------------------------------------------------------------------
+
 sub sendmail {
 	my $recipient = shift;
 	my $msg_ref = shift;
 	my $vote_id = shift;
 
-	print "export MAILHOST=aus.news-admin.org\n";
-	print "export QMAILUSER=vote-return-$vote_id\n";
-	print "/usr/sbin/sendmail $recipient <<'__EOF__'\n";
+	# Setup our return address for bounces
 
-	print "To: $recipient\n";
-	print @$msg_ref;
-	print "__EOF__\n\n";
+	$ENV{MAILHOST} = "aus.news-admin.org";
+	$ENV{QMAILUSER} = "vote-return-$vote_id";
+
+	if (!open(MP, "|/usr/sbin/sendmail $recipient")) {
+		die "Open pipe to sendmail failed";
+	}
+
+	print MP "To: $recipient\n";
+	print MP @$msg_ref;
+
+	close(MP);
 }
 
 sub usage {
-	die "Usage: check-voters.pl newsgroup-name voters-file < message-file | /bin/bash\n";
+	die "Usage: check-voters.pl newsgroup-name voters-file < message-file\n";
 }
