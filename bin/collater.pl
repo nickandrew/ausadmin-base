@@ -52,13 +52,18 @@ while ( <STDIN> ) {
 
 	eval {
 		# Use die to get our error message out ASAP
-		die "Invalid newsgroup $Newsgroup" if (!-d $ng_dir);
-		die "A vote for $Newsgroup has not (yet) started" if (!-f "$ng_dir/vote_start.cfg");
-		die "The vote for $Newsgroup has been cancelled" if (-f "$ng_dir/vote_cancel.cfg");
+		# Because it's a string we have to end it with \n else perl
+		# will add "at bin/collater.pl line nn" automatically (urk)
+
+		die "Invalid newsgroup $Newsgroup\n" if (!-d $ng_dir);
+		die "A vote for $Newsgroup has not (yet) started\n" if (!-f "$ng_dir/vote_start.cfg");
+		die "The vote for $Newsgroup has been cancelled\n" if (-f "$ng_dir/vote_cancel.cfg");
 	};
 
 	if ($@) {
-		FailVote($EmailAddress, $@);
+		my $msg = $@;
+		chomp $msg;
+		FailVote($EmailAddress, $msg);
 		next;
 	}
 

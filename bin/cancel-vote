@@ -163,7 +163,7 @@ if ($opts{p} || $opts{m}) {
 		# Generate an article announcing the cancellation
 
 		# Collect the head
-		my $s = cancel_art_head($newsgroup);
+		my $s = cancel_art_head($newsgroup, $v);
 		$s .= "\n";
 		$s .= cancel_top($newsgroup, $start_time, $end_time, $cancel_time);
 		$s .= "\n";
@@ -184,7 +184,7 @@ if ($opts{p} || $opts{m}) {
 		# Generate an e-mail message announcing the cancellation
 
 		# Collect the head
-		my $s = cancel_msg_head($newsgroup);
+		my $s = cancel_msg_head($newsgroup, $v);
 		$s .= "\n";
 		$s .= cancel_top($newsgroup, $start_time, $end_time, $cancel_time);
 		$s .= "\n";
