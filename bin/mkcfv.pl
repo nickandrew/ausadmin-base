@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+#	@(#) mkcfv.pl: Create CFV message for a list of newsgroups
 #
 # $Source$
 # $Revision$
@@ -9,6 +10,7 @@
 # only one line - the end date (in system time (s))
 
 use Time::Local;
+use IO::Handle;
 
 # Info Needed to run the script
 my $VoteAddress = "vote\@aus.news-admin.org";
@@ -18,19 +20,32 @@ my $default_voteperiod = 21;		# days
 
 my $VotePeriod = $default_voteperiod;
 
-my @newsgroups = ReadCharter();
+my @newsgroups = @ARGV;
 
-die "You fool it didn't work can't create a blank one." unless @newsgroups;
+# Now get proposer and distribution info
+my $proposer = read_line("$BaseDir/$newsgroups[0]/proposer");
+my $distribution = read_file("$BaseDir/$newsgroups[0]/distribution");
+
+die "No proposer" if (!defined $proposer);
+die "No distribution" if (!@$distribution);
+my $g;
 
 foreach my $newsgroup (@newsgroups) {
+	
 
-	die "You fool it didn't work can't create a blank one." unless $newsgroup;
+	$g->{$newsgroup}->{ngline} = read_line("$BaseDir/$newsgroup/ngline");
+	$g->{$newsgroup}->{rationale} = read_file("$BaseDir/$newsgroup/rationale");
+	$g->{$newsgroup}->{charter} = read_file("$BaseDir/$newsgroup/charter");
+	eval {
+		$g->{$newsgroup}->{modinfo} = read_file("$BaseDir/$newsgroup/modinfo");
+		$g->{$newsgroup}->{moderator} = read_file("$BaseDir/$newsgroup/moderator");
+	};
 
 	my $ConfigFile ="$BaseDir/$newsgroup/endtime.cfg";
 
 	if (open(VP, "<$BaseDir/$newsgroup/voteperiod")) {
 		$VotePeriod = <VP>;
-		chop($VotePeriod);
+		chomp($VotePeriod);
 		close(VP);
 	}
 
@@ -59,20 +74,15 @@ foreach my $newsgroup (@newsgroups) {
 select(STDOUT);
 $| = 1;
 
-#preprocess(STDOUT, "$BaseDir/conf/cfvtemplate.header");
 
-die "No distribution" unless $distribution;
-
-my $subject = "CFV: $newsgroups[0]";
-if ($newsgroups[1]) {
-	$subject = "CFV: $newsgroups[0] and others";
-}
+my $subject = "CFV: @newsgroups";
+my $dist = join(',', @$distribution);
 
 print <<"EOHEADERS";
 Subject: $subject
 From: $VoteAddress
-Newsgroups: $distribution
-Followup-to: poster
+Newsgroups: $dist
+Followup-to: none
 
 EOHEADERS
 
@@ -81,55 +91,57 @@ if (!open(P, "|pgp -s -f")) {
 	exit(3);
 }
 
-if ($moderated{$newsgroups[0]}) {
-
-	print P <<"EOTOPBODY";
+print P <<"EOTOPBODY";
                            CALL FOR VOTES
-                 Moderated newsgroup $newsgroups[0]
-
-Newsgroups line(s)
 EOTOPBODY
 
-} else {
+foreach my $newsgroup (@newsgroups) {
+	my $ng = "UnModerated newsgroup";
+	if (defined $g->{$newsgroup}->{moderator}) {
+		$ng = "Moderated newsgroup";
+	}
 
-	print P <<"EOTOPBODY";
-                           CALL FOR VOTES
-                 UnModerated newsgroup $newsgroups[0]
-
-Newsgroups line(s)
-EOTOPBODY
-
-
+	print P "\t\t$ng $newsgroup\n";
 }
 
+print P "\n";
+print P "Newsgroups line(s)\n";
 
-for my $group (@newsgroups) {
-	print P $group," ",$NGLine{$group},"\n";
-	local *NGLINE;
-	open NGLINE,">$BaseDir/$group/ngline" or die "Unable to open ngline $!";
-	print NGLINE $group, "\t", $NGLine{$group}, "\n";
-	close NGLINE or die "Unable to close ngline";
+foreach my $newsgroup (@newsgroups) {
+	my $r = $g->{$newsgroup};
+	print P $r->{ngline}, "\n";
+
 }
 
 print P <<"EOMIDBODY";
+
+PROPOSER: $proposer
 
 Votes must be received by $EndDate
 
 This vote is being conducted by ausadmin. For voting questions contact
 ausadmin\@aus.news-admin.org. For questions about the proposed group contact
-$Proposer.
+$proposer.
 
 EOMIDBODY
 
-foreach my $group (@newsgroups) {
-	print P "RATIONALE: $group\n",join "\n",@{$Charter{$group}};
+foreach my $newsgroup (@newsgroups) {
+	my $r = $g->{$newsgroup};
+
+	P->print("RATIONALE: $newsgroup\n\n");
+	P->print(join("\n",@{$r->{rationale}}));
+	print P "\nEND RATIONALE.\n\n";
+
+	P->print("CHARTER: $newsgroup\n\n");
+	P->print(join("\n",@{$r->{charter}}));
+	print P "\nEND CHARTER.\n\n";
 }
 
 print P <<"EOMEND";
 HOW TO VOTE
 
-Send E-MAIL to: $VoteAddress
-Just Replying should work if you are not reading this on a mailing list.
+To vote, you must send an e-mail message to: $VoteAddress.
+The subject of your e-mail message is not important.
 
 Your mail message should contain only one of the following statements:
       I vote YES on aus.example.name
@@ -143,15 +155,17 @@ I vote YES on aus.example.name
 I vote NO on aus.silly.group
 I vote YES on aus.good.group
 
-You may also ABSTAIN in place of YES/NO - this will not affect the outcome.
 Anything else may be rejected by the automatic vote counting program.
-ausadmin will respond to your received ballots with a personal
-acknowledgement by E-mail - if you do not receive one within 24 hours, try
-again. It's your responsibility to make sure your vote is registered
-correctly.
+
+The ausadmin system will respond to your received ballots with a personal
+acknowledgement by E-mail so you must send from your real e-mail address,
+not a spam-block address. If you do not receive an acknowledgement within
+24 hours, try again. It's your responsibility to make sure your vote is
+registered correctly.
 
 Only one vote per person, no more than one vote per E-mail address.
-Votes from invalid emails may be rejected.  E-mail addresses of all
+Votes from invalid or unreachable email addresses may be rejected.
+Multiple voting attempts will be ignored. E-mail addresses of all
 voters will be published in the final voting results list.
 
 
@@ -163,124 +177,27 @@ EOMEND
 
 close(P);
 
-for my $group (@newsgroups) {
-	open(CHARTER, ">$BaseDir/$group/charter") or die "Unable to write charter";
-	print CHARTER join "\n",@{$Charter{$group}};
-	close(CHARTER);
-}
-
 # All done
 
 exit(0);
 
-
-# This sub grabs the required info from the RFD piped into the script.
-
-sub ReadCharter {
-     my @groups;
-
-     while ( <> ) {
-	  chomp;
-	  if ( $_ =~ /^Newsgroup line:/i ) {
-GROUP:	       while (<>) {
-		    chomp;
-		    last GROUP if (/^rationale:.*/i);
-
-		    if (/^([^\s]+)\s+(.*)/i) {
-			 push @groups,$1;
-			 my $newsgroup=$1;
-			 $NGLine{$newsgroup}=$2;
-		    } else {
-			 last GROUP;
-		    }
-	       }
-	  }
-
-	  if ( $_ =~ /^Moderated:.*/i ) {
-	       s/^Moderator:\s*(.*)/$1/i;
-	       $moderated{$newsgroup}=1;
-	       while (<>) {
-		    last if (/^End moderator info/i);
-		    push @{$moderator{$newsgroup}},$_;
-	       }
-	  }
-
-
-	  if ($_ =~ /^DISTRIBUTION:(.*)/i) {
-	       $distribution=$1;
-DIST:	       while (<>) {
-		    chomp;
-		    last DIST if (/^Propo(?:nen?ts?|sers?):.*/i);
-		    $distribution .= "$_," if not /^\s*$/;
-	       }
-	       $distribution =~ s/,$//;
-	  }
-#                      Propo   nent
-	  if ( $_ =~ /^Propo(?:nen?ts?|sers?):/i ) {
-	       m/^Propo(?:nen?ts?|sers?):\s*(.*)/i;
-	       $Proposer .= "$1," if not /^\s*$/;
-PROP:	       while (<>) {
-		    chomp;
-		    last PROP if (/^/i);
-		    $Proposer .= "$_," if not /^\s*$/;
-	       }
-	  }
-
-
-	  if (/^rationale:.*/i ) {
-	       while ( <> ) {
-		    last if (/^END CHARTER/i);
-		    chomp;
-		    push @{$Charter{$newsgroup}},$_;
-	       }
-	  }
-     }
-
-     $distribution = join ',',
-	  grep /^\s*([-\w.]+)\s*$/,
-	       split '\s*\,\s*',$distribution;
-
-     return @groups;
+sub read_line {
+	my $f = shift;
+	local *X;
+	open(X, "<$f") or die "Unable to open $f: $!";
+	my $v = <X>;
+	chomp($v);
+	close(X);
+	return $v;
 }
 
-=pod
+sub read_file {
+	my $f = shift;
+	local *X;
+	open(X, "<$f") or die "Unable to open $f: $!";
+	my @v = <X>;
+	chomp(@v);
+	close(X);
+	return \@v;
+}
 
-
-
-
-#Just commenting this out.
-sub preprocess {
-	my($fh, $path) = @_;
-
-		     if (!open(TEMPLATE, $path)) {
-						       print STDERR "Unable to open $path: $!";
-						       return 1;
-						  }
-
-			  while ( <TEMPLATE> ) {
-			       chomp;
-			       if ( $_ =~ /.*!CHARTER!/ ) {
-				    for ( $i=0; $i<=$CNoL; $i++ ) {
-					 print $fh "$Charter[$i]\n";
-				    }
-			       }
-			       elsif ( $_ =~ /.*![^!]+!/ ) {
-				    s/!GROUPNAME!/$Newsgroup/g;
-				    s/!GROUPLINE!/$NGLine/g;
-				    s/!PROPOSER!/$Proposer/g;
-				    s/!VOTEADDRESS!/$VoteAddress/g;
-				    s/!MODERATED!/$Moderated/g;
-				    s/!DATE!/$EndDate/g;
-				    s/!EXPIRES!/$ExpireDate/g;
-				    print $fh "$_\n";
-			       }
-			       else {
-				    print $fh "$_\n";
-			       }
-			  }
-
-	close(TEMPLATE);
-	return 0;
-   }
-
-=cut

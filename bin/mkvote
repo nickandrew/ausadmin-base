@@ -49,9 +49,19 @@ echo "14" > $Newsgroup/voteperiod
 echo `date +%s` > $Newsgroup/posted.cfg
 perl -e 'print $^T,"\n"' > $Newsgroup/starttime.cfg
 
-# Run the Perl script mkcvf to make the CFV and PGP-sign it then post it away!
-tr -d '\r' < $HomeDir/tmp/info.$$ | mkcfv.pl > $Newsgroup/posted.cfv 2>$HomeDir/tmp/pgp.$$
-S=$?
+# Save the RFD
+tr -d '\r' < $HomeDir/tmp/info.$$ > $Newsgroup/rfd
+# And create all the config files
+parse-rfd.pl < $Newsgroup/rfd
+s=$?
+if [ $s != 0 ] ; then
+	echo "Unable to parse the RFD -- code $s - fatal"
+	exit 6
+fi
+
+# Run the Perl script mkcfv to make the CFV and PGP-sign it then post it away!
+mkcfv.pl < $Newsgroup/rfd > $Newsgroup/posted.cfv 2>$HomeDir/tmp/pgp.$$
+s=$?
 if [ $s != 0 ] ; then
 	echo "Unable to make Call For Votes -- code $s - fatal"
 	cat $Newsgroup/posted.cfv 2>$HomeDir/tmp/pgp.$$

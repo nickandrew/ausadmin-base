@@ -7,6 +7,8 @@
 
 # Commonly used variables
 
+die "This program is obsolete -- see bin/mkvote -- nick";
+
 $HomeDir="/virt/web/ausadmin";
 $BaseDir="$HomeDir/vote";
 
