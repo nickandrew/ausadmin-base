@@ -61,6 +61,7 @@ sub load {
 		my($email,$timestamp,$state,$check_id) = split;
 
 		$data->{$email} = {
+			email => $email,
 			timestamp => $timestamp,
 			state => $state,
 			check_id => $check_id,
@@ -129,6 +130,7 @@ sub getCheckRef {
 
 	if (!defined $r) {
 		$self->{data}->{$email} = $r = {
+			email => $email,
 			timestamp => time(),
 			state => 'NEW',
 			check_id => randomCheckID(),
