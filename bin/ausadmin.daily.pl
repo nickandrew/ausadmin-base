@@ -28,8 +28,8 @@ sub endtime {
 	       warn ("inews -h $path/$vote/result\n");
 	       
 	  } else {	       
-	       system ("genresult.pl $vote >$path/$vote/result");
-	       system ("inews -h $path/$vote/result");	       
+	       system ("genresult.pl $vote >$path/$vote/result") or die;
+	       system ("inews -h $path/$vote/result") or die;
 	  }
      }
 }
@@ -82,6 +82,30 @@ sub fakepost_robert {
      }
 }
 
+sub creategroup {
+     local *FILE;
+     
+     
+     my $filename=shift;
+     my ($path,$vote,$name)=m{(.*)/([^/]*)/(.*)}g;
+     
+     
+     open FILE,"<$filename" or die "Unable to open $filename due to $!";
+     
+     my $endtime=<FILE>;
+     chomp $endtime;
+     
+     if (time>$endtime) {
+	  if ($debug) {
+	       warn ("gennewgroup.pl $vote\n");
+	       
+	  } else {	       
+	       system ("gennewgroup.pl $vote") or die;
+	  }
+     }
+}
+
+
 #This hash maps files to what action should be done on that file.
 
 my $action = {
@@ -89,6 +113,7 @@ my $action = {
 	      "post.real" => \&realpost,
 	      "post.fake.phil" => \&fakepost_phil,
 	      "post.fake.robert" => \&fakepost_robert,
+	      "group.creation.date" => \&creategroup,
 	     };
      
 #Get all the file names under the vote hyraky
@@ -106,6 +131,7 @@ while (<FIND>) {
      
      warn $@ if ($@ and $@ !~ /Can\'t use string|uninitialized/);
 }
+
 
 close FIND or die "Find died $!";
 
