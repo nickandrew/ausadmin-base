@@ -3,6 +3,7 @@
 # $Date$
 
 use strict;
+require "bin/misc.pli";
 
 # Take in the file name, check it and then if necessary post off a
 # newgroup or rmgroup message.
