@@ -263,7 +263,7 @@ readbody
       $desc =~ s/ \(Moderated\)//i;
       $desc =~ s/\s+$//;
       $desc =~ s/\w$/$&./;
-      $die .= "$0: $_ description too long\n" if $used + length($desc) > 80;
+      $die .= "$0: $_ description too long\n" if $used + length($desc) > 100;
       $fixline .= $desc;
       $fixline .= ' (Moderated)' if $moderated;
       $body =~ s/^(For your newsgroups file:\n)(.+)/$1$fixline/i;
