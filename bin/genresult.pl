@@ -277,7 +277,7 @@ sub pass_msg() {
 	push(@body, "");
 
 
-	push(@body, format_para("For a group to pass, YES votes must be at least $numer/$denomer of all valid (YES and NO) votes. There must also be at least $minyes more YES votes than NO votes. Abstentions, forgeries and multiple votes do not affect the outcome. Anybody wishing to challenge the believed multiple votes must do so in aus.net.news."));
+	push(@body, format_para("For a group to pass, YES votes must be at least $numer/$denomer of all valid (YES and NO) votes. There must also be at least $minyes more YES votes than NO votes. Abstentions, forgeries and multiple votes do not affect the outcome. Anybody wishing to challenge the apparent multiple votes must do so in aus.net.news."));
 	push(@body, "");
 
 	if ($pass) {
