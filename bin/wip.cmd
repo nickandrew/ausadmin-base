@@ -49,7 +49,7 @@ for $key (sort {$b cmp $a} (keys %keys)) {
 		print " Status: $status{$key}";
 	}
 	if ($link{$key} ne "n" && $updated{$key} ne "") {
-		print " Updated: $updated{$key}";
+		print " (updated $updated{$key})";
 	}
 	print "\n";
 	$count++;
