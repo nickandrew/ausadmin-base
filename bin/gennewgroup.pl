@@ -98,10 +98,15 @@ reported in aus.net.news
 	  
 For your newsgroups file:
 $ngline
-	    
+
 This charter culled from the vote result announcement.
 $charter
 EOT
+	  local *GLIST;
+	  open GLIST,">>data/ausgroups" or die "Can't open ausgroups.";
+	  print GLIST $ngline;
+	  close GLIST
+
 	  return $post;
      } else {
 # Do stuff for moderated group  
