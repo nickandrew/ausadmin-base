@@ -49,7 +49,11 @@ while (<V>) {
 	# Now check if we checked them before
 	if (exists $voter_state{$email} && $voter_state{$email} =~ /^\d+$/) {
 		# It's ok if check was less than 90 days ago
-		next if ($now - $voter_state{$email} < 86400 * 90);
+		if ($now - $voter_state{$email} < 86400 * 90) {
+			my $diff = int(($now - $voter_state{$email})/86400);
+			print STDERR "Ignoring $email - checked $diff days ago.\n";
+			next;
+		}
 	}
 
 	# Otherwise, need to check them
