@@ -47,7 +47,20 @@ echo "2 3 10" > $Newsgroup/conf/voterule
 echo "14" > $Newsgroup/conf/voteperiod
 
 # Run the Perl script mkcvf to make the CFV and PGP-sign it then post it away!
-tr -d '\r' < $Info | $BaseDir/bin/mkcfv.pl | pgp -f > $Newsgroup/conf/posted.cfv
+tr -d '\r' < $HomeDir/tmp/info.$$ | mkcfv.pl > $HomeDir/tmp/cfv.$$
+s=$?
+if [ $s != 0 ] ; then
+	echo "Unable to make Call For Votes -- code $s - fatal"
+	exit 7
+fi
+
+pgp -f < $HomeDir/tmp/cfv.$$ > $Newsgroup/conf/posted.cfv 2>$HomeDir/tmp/pgp.$$
+s=$?
+if [ $s != 0 ] ; then
+	echo "pgp signing failed -- code $s - fatal"
+	exit 8
+fi
+
 ln -s $BaseDir/$Newsgroup/conf/posted.cfv $HomeDir/CFV/$Newsgroup
 
 # Post the CFG
