@@ -97,7 +97,7 @@ sub parse {
 			}
 		} else {
 			# Body
-			if (/I vote (\S+) (on|to|for) (\S+)/i) {
+			if (/vote (\S+) (on|to|for) (\S+)/i) {
 				push(@votes, [$1, $3]);
 			}
 		}
@@ -255,7 +255,8 @@ my $received_regex = [
 	# from hostname(something)
 
 	['from (\S+)\((\S+) ([0-9.]+)\) by ([a-zA-Z0-9.-]+) via smap', ['src-name', 'src-name', 'src-ip']],
-	['from (\S+)\((\S+)\), claiming to be "\S+".* by ([a-zA-Z0-9.-]+),', []],
+	['from ([a-zA-Z0-9.-]+)\(([0-9.]+)\), claiming to be "([^"]+)".* by ([a-zA-Z0-9.-]+),', ['src-hostname', 'src-ip', 'src-name', 'dst-hostname']],
+
 	['from (\S+)\((\S+)\) by ([a-zA-Z0-9.-]+) via smap', []],
 
 	['from (\S+)\(([0-9.]+)\) via SMTP by ([a-zA-Z0-9.-]+),', ['src-name', 'src-ip', 'dst-hostname']],
@@ -311,6 +312,10 @@ my $received_regex = [
 
 	['from ([a-zA-Z0-9.-]+) \(unverified\) by ([a-zA-Z0-9.-]+)', ['src-name', 'dst-hostname']],
 	['from ([a-zA-Z0-9.-]+) \(([a-zA-Z0-9.-]+)\) by ([a-zA-Z0-9.-]+)', ['src-name', 'src-hostname', 'dst-hostname']],
+
+	# from ess-p-144-134-68-109.mega.tmns.net.au(144.134.68.109), claiming to be "james" via SMTP by buffy.tpgi.com.au, id smtpdMwvR45;
+
+	['from ([a-zA-Z0-9.-]+)\(([0-9.]+)\), claiming to be "([^"]+)" via SMTP by ([a-zA-Z0-9.-]+)', ['src-hostname', 'src-ip', 'src-name']],
 
 
 	['from localhost \((\S+)@localhost\) by ([a-zA-Z0-9.-]+)', ['src-userid', 'dst-hostname']],
