@@ -132,6 +132,10 @@ sub get_distribution {
 sub get_tally {
 	my $self = shift;
 
+	if (exists $self->{tally_ref}) {
+		return $self->{tally_ref};
+	}
+
 	# returns a ref to an array of unchomped lines
 	my $ref = $self->read_file('tally.dat');
 
@@ -150,7 +154,7 @@ sub get_tally {
 		push(@list, $r);
 	}
 
-	return \@list;
+	return $self->{tally_ref} = \@list;
 }
 
 $Vote::expected_files = {
@@ -450,5 +454,21 @@ sub abandon {
 	$self->audit("Abandoned RFD");
 }
 
+
+sub get_message_paths {
+	my $self = shift;
+
+	my $tally_ref = $self->get_tally();
+
+	foreach my $r (@$tally_ref) {
+		if (!exists $r->{path}) {
+			my($sec,$min,$hour,$mday,$mon,$year) = localtime($r->{ts});
+			$mon++; $year += 1900;
+			$r->{path} = sprintf "messages/%d%02d%02d-%02d%02d%02d", $year, $mon, $mday, $hour, $min, $sec;
+		}
+	}
+
+	return $tally_ref;
+}
 
 1;
