@@ -22,8 +22,9 @@ open (MAIL,'|/usr/sbin/sendmail $ttsid') or
 select MAIL;
 
 while (<>) {
-  print;
   last if /^$/;
+  s/To: .*/To: $ttsid/;
+  print;
 }
 
 print "X-PTS-Account: ausadmin\n";

@@ -150,8 +150,6 @@ while (<T>) {
 		$abstain{$ng} = 0;
 	}
 
-	push(@{$voters{$ng}}, $email);
-
 	if ($v eq "YES") {
 		$yes{$ng}++;
 		$newsgroups{$ng} = 1;
@@ -170,7 +168,11 @@ while (<T>) {
 	if ($v eq "FORGE") {
 		$forge{$ng}++;
 		$newsgroups{$ng} = 1;
-	}
+		push(@{$voters{$ng}}, "$email *");
+
+	      } else {
+		push(@{$voters{$ng}}, "$email");
+	      }
 
 }
 
@@ -247,6 +249,10 @@ sub pass_msg() {
 	push(@body, "");
 
 	push(@body, format_para("A five-day discussion period follows this announcement. If no serious allegations of voting irregularities are raised, the aus.* newsgroups maintainer will issue the newgroup message shortly afterward."));
+
+	push(@body, "");
+
+	push(@body, format_para("Votes marked with an asterisk where detected as forgeries and where not counted in the vote."));
 	push(@body, "");
 
 	push(@body, "Newsgroups line:\n$ngline\n");
