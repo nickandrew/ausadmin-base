@@ -72,8 +72,8 @@ sub makemessage ( $$ ) {
 	  $post .= "\nThis control message has been forged as \"$from\" for the benefit of those\nsites still honouring his posts.  If you are one of those sites please see \<URL:http://aus.news-admin.org/\>.";
      }
 
-     open FILE,">newgroup.$name" or die "Yipe Yipe Yipe unable to open $name because $!\n";
-     print FILE $post;
+#     open FILE,">newgroup.$name" or die "Yipe Yipe Yipe unable to open $name because $!\n";
+     print $post;
      
 }
 
