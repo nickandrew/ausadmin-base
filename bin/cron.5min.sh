@@ -4,7 +4,7 @@
 export NNTPSERVER='news'
 
 ts=`date '+%Y%m%d%H%M%S'`
-mrtg-newsgroups ~/data/ausgroups > ~/tmp/news-$ts.mrtg 2> tmp/missing-groups
+mrtg-newsgroups ~/data/ausgroups ~/data/mrtg-newsgroups-config.xml ~/tmp/mrtg-newsgroups-arrival.log > ~/tmp/news-$ts.mrtg 2> tmp/missing-groups
 s=$?
 
 if [ $s -eq 0 ] ; then
@@ -21,5 +21,8 @@ else
 	echo $NG_FAIL > ~/data/ng-fail-count
 	rm -f ~/tmp/news-$ts.mrtg
 fi
+
+bin/mrtg-newsgroups-arrival.pl > ~/Mrtg/arrival/news-latest.mrtg
+mrtg ~/Mrtg/arrival/newsgroups.cfg
 
 exit 0
