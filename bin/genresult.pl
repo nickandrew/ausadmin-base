@@ -386,7 +386,7 @@ sub analyse_multi {
 
 	if (!%multi) {
 		print "\n\n";
-		print "No multiple votes were received.\n";
+		print "No multiple votes were detected.\n";
 		return;
 	}
 
