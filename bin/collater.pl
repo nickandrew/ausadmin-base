@@ -54,7 +54,7 @@ while ( <STDIN> ) {
 	my($emailaddress, $newsgroup, $Vote, $ts, $fn) = split;
 
 	if ($newsgroup !~ /^[a-z0-9+-]+\.[a-z0-9+-]+(\.[a-z0-9+-]+)*$/) {
-		FailVote($emailaddress, "Invalid newsgroup name (must be of the format aus.whatever, in lower case");
+		FailVote($emailaddress, "Invalid newsgroup name (must be of the format aus.whatever, in lower case)");
 		next;
 	}
 
