@@ -1,0 +1,5 @@
+#!/bin/bash
+
+for i in aus bne canb melb syd wa ; do
+	sendcheckgroups $i
+done
