@@ -1,0 +1,5 @@
+#!/bin/bash
+
+dt=`date '+%Y-%m-%d'`
+
+tar zcf Backup/vote-$dt.tar.gz vote
