@@ -243,7 +243,7 @@ sub pass_msg() {
 	push(@body, format_para($line));
 	push(@body, "");
 
-	push(@body, format_para("For a group to pass, YES votes must be at least $numer/$denomer of all valid (YES and NO) votes. There must also be at least $minyes more YES votes than NO votes. Abstentions do not affect the outcome."));
+	push(@body, format_para("For a group to pass, YES votes must be at least $numer/$denomer of all valid (YES and NO) votes. There must also be at least $minyes more YES votes than NO votes. Abstentions and Forgeries do not affect the outcome."));
 	push(@body, "");
 
 	push(@body, format_para("A five-day discussion period follows this announcement. If no serious allegations of voting irregularities are raised, the aus.* newsgroups maintainer will issue the newgroup message shortly afterward."));
@@ -291,7 +291,34 @@ sub pass_msg() {
 	&setposts($ng,"post.fake.robert",$ts_end + 1296000,432000,3);
 }
 
-sub fail_msg {
+sub fail_msg() {
+
+	# Formatted line
+	$line = "The newsgroup $ng has Failed its vote by $yes{$ng} YES $yvotes to $no{$ng} NO $nvotes. There were $abstain{$ng} $abstentions and $forge{$ng} $forgeries detected.";
+	push(@body, format_para($line));
+	push(@body, "");
+
+	push(@body, format_para("For a group to pass, YES votes must be at least $numer/$denomer of all valid (YES and NO) votes. There must also be at least $minyes more YES votes than NO votes. Abstentions and Forgeries do not affect the outcome."));
+	push(@body, "");
+
+	push(@body, "\nVOTERS:");
+	foreach $voter (sort @{$voters{$ng}}) {
+		push(@body, "  $voter");;
+	}
+	push(@body, "");
+	push(@body, $footer);
+
+	if (!open(P, "|$pgpcmd")) {
+		print STDERR "Unable to open pipe to pgp!\n";
+		exit(7);
+	}
+
+	foreach $l (@body) {
+		print P "$l\n";
+	}
+
+	close(P);
+
 }
 
 sub setposts {
