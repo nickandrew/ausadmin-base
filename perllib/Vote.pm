@@ -681,16 +681,15 @@ sub create_rfd {
 	my $vote_name = $self->{name} || die "This vote has no name!";
 
 	# FIXME ... move all this executed code into the method!
-	my $rc = system("make-rfd.pl $vote_name > $vote_dir/rfd-temp.$$");
+	eval {
+		$self->make_rfd();
+	};
 
-	if ($rc) {
-		$self->audit("RFD creation failed, code $rc");
-		die "RFD creation failed";
+	if ($@) {
+		$self->audit("RFD creation failed: $@");
+		die "RFD creation failed: $@";
 	}
 
-	rename("$vote_dir/rfd-temp.$$", "$vote_dir/rfd.unsigned");
-
-	$self->audit("Created unsigned RFD");
 	$self->set_state("rfd/unsigned");
 }
 
