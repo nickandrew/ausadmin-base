@@ -9,6 +9,24 @@
 # Makes the Call For Votes post from a template and the group charter
 # and outputs to STDOUT (after signing through pgp).
 
+=head1 NAME
+
+mkcfv.pl - Create a CFV message for a list of newsgroups (really only one atm)
+
+=head1 SYNOPSIS
+
+ cd ~ausadmin ; mkcfv.pl newsgroup > tmp/cfv-unsigned.$newsgroup
+ bin/pgp-sign < tmp/cfv-unsigned.$newsgroup > vote/$newsgroup/posted.cfv
+ bin/post.pl < vote/$newsgroup/posted.cfv
+
+=head1 DESCRIPTION
+
+Makes a Call For Votes post from a template and the group control files
+(which must exist, and should have been created at RFD time). The CFV
+is written to standard output, and you have to sign it before posting.
+
+=cut
+
 use Time::Local;
 use IO::Handle;
 
@@ -16,14 +34,10 @@ use IO::Handle;
 my $VoteAddress = 'vote@aus.news-admin.org';
 my $BaseDir = './vote';
 
-my $sign_it = 1;
 
 die 'No vote subdirectory (must cd to ~ausadmin)' if (!-d $BaseDir);
 
-if ($ARGV[0] eq '-u') {
-	$sign_it = 0;
-	shift @ARGV;
-}
+# Multiple newsgroups is a crock. There can only be one cfv message.
 
 my @newsgroups = @ARGV;
 
@@ -64,12 +78,7 @@ foreach my $newsgroup (@newsgroups) {
 	$EndDate = gmtime($end_time - 1);
 }
 
-# Output the PGP-signed (or unsigned, if -u option given) cfv message to
-# stdout.
-
-select(STDOUT);
-$| = 1;
-
+# Output the cfv message to stdout.
 
 my $subject = "Call For Votes (CFV): @newsgroups";
 my $dist = join(',', @$distribution);
@@ -82,16 +91,6 @@ Followup-to: none
 
 EOHEADERS
 
-my $cmd = "pgp -s -f";
-if ($sign_it == 0) {
-	$cmd = "cat";
-}
-
-if (!open(P, "|$cmd")) {
-	print STDERR "Unable to open a pipe to PGP: $!";
-	exit(3);
-}
-
 my @heading = ("CALL FOR VOTES");
 
 foreach my $newsgroup (@newsgroups) {
@@ -103,31 +102,31 @@ foreach my $newsgroup (@newsgroups) {
 	push(@heading, "$ng $newsgroup");
 }
 
-print P centred_text(@heading);
-print P "\n";
-print P "Newsgroups line(s)\n";
+print centred_text(@heading);
+print "\n";
+print "Newsgroups line(s)\n";
 
 foreach my $newsgroup (@newsgroups) {
 	my $r = $g->{$newsgroup};
-	print P $r->{ngline}, "\n";
+	print $r->{ngline}, "\n";
 
 }
 
 foreach my $newsgroup (@newsgroups) {
 	if ($g->{$newsgroup}->{cfv_notes}) {
-		print P "\nNOTE: $newsgroup\n";
-		P->print(join("\n",@{$g->{$newsgroup}->{cfv_notes}}));
-		print P "\n\n";
+		print "\nNOTE: $newsgroup\n";
+		print(join("\n",@{$g->{$newsgroup}->{cfv_notes}}));
+		print "\n\n";
 	}
 }
 
 my($numer, $denomer, $minyes) = split(/\s/, $voterule);
 
-print P <<"EOMIDBODY";
+print <<"EOMIDBODY";
 
 PROPOSER: $proposer
 
-Votes must be received by $EndDate
+Votes must be received by $EndDate.
 
 For this vote to pass, YES votes must be at least $numer/$denomer of all
 valid (YES and NO) votes. There must also be at least $minyes more
@@ -142,16 +141,16 @@ EOMIDBODY
 foreach my $newsgroup (@newsgroups) {
 	my $r = $g->{$newsgroup};
 
-	P->print("RATIONALE: $newsgroup\n\n");
-	P->print(join("\n",@{$r->{rationale}}));
-	print P "\nEND RATIONALE.\n\n";
+	print("RATIONALE: $newsgroup\n\n");
+	print(join("\n",@{$r->{rationale}}));
+	print "\nEND RATIONALE.\n\n";
 
-	P->print("CHARTER: $newsgroup\n\n");
-	P->print(join("\n",@{$r->{charter}}));
-	print P "\nEND CHARTER.\n\n";
+	print("CHARTER: $newsgroup\n\n");
+	print(join("\n",@{$r->{charter}}));
+	print "\nEND CHARTER.\n\n";
 }
 
-print P <<"EOMEND";
+print <<"EOMEND";
 HOW TO VOTE
 
 To vote, you must send an e-mail message to: $VoteAddress.
@@ -188,8 +187,6 @@ voters will be published in the final voting results list.
 
 EOMEND
 
-
-close(P);
 
 # All done
 
