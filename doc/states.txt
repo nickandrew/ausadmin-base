@@ -1,0 +1,23 @@
+state: new
+	substate: rfd-received
+	substate: rfd-signed
+	substate: rfd-posted
+
+state: rfd in progress
+	substate: none
+
+state: ready to vote
+	substate: cfv-made
+	substate: cfv-signed
+	substate: vote-started
+	substate: cfv-posted
+
+state: voting
+
+state: vote finished
+	substate: vote-unchecked
+	substate: vote-checked
+	substate: results-signed
+	substate: results-posted
+	substate: controls-signed
+	substate: controls-posted

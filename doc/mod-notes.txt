@@ -1,0 +1,8 @@
+- a group of moderators
+- fair people, demonstrated history of fair and consistent behaviour
+- technically literate
+
+e.g.
+ - plans for software to be used to moderate
+ - which servers will software run on
+ - how will multiple people respond quickly enough to posts?

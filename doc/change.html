@@ -1,0 +1,48 @@
+<html>
+<head>
+<title>Changes</title>
+</head>
+<body>
+
+<h1>List of change types</h1>
+<p>The possible types of changes are:
+
+<table bgcolor="#ffffff" border="1" cellpadding="3" cellspacing="0">
+<tr bgcolor="#ff9549">
+<th>keyword</th>
+<th>parameters</th>
+<th>comments</th>
+</tr>
+
+<tr>
+<td>newgroup</td>
+<td><i>newsgroup-name</i> <i>moderation-status</i> [<i>submission-email</i> <i>request-email</i>] </td>
+<td>This is for newly-created groups only. The <i>newgroup</i> change exists
+at most once for any newsgroup and is not duplicated for booster newgroups
+or any other reason.
+<i>moderation-status</i> is 'm' for moderated, 'y' for unmoderated (yes, it's confusing).
+</td>
+</tr>
+
+<tr>
+<td>rmgroup</td>
+<td><i>newsgroup-name</i></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<td>moderate</td>
+<td><i>newsgroup-name</i> <i>submission-email</i> <i>request-email</i></td>
+<td>&nbsp;</td>
+</tr>
+
+<tr>
+<td>unmoderate</td>
+<td><i>newsgroup-name</i></td>
+<td>&nbsp;</td>
+</tr>
+
+</table>
+
+</body>
+</html>
