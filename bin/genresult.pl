@@ -68,12 +68,12 @@ sub format_para {
 }
 
 if ($vote eq "") {
-	print "genresult.pl: No vote specified\n";
+	print STDERR "genresult.pl: No vote specified\n";
 	exit(2);
 }
 
 if (!-d "vote/$vote") {
-	print "genresult.pl: No such vote ($vote)\n";
+	print STDERR "genresult.pl: No such vote ($vote)\n";
 	exit(3);
 }
 
@@ -98,28 +98,28 @@ $vote_end = sprintf "%d-%02d-%02d %02d:%02d:%02d", $year, $mon, $mday, $hour, $m
 
 # barf if control files don't exist or other error
 if ($ts_end eq "" || $minyes eq "") {
-	print "genresult.pl: Vote $vote not properly set up\n";
-	print "end_date is $ts_end\n";
-	print "minyes is $minyes\n";
+	print STDERR "genresult.pl: Vote $vote not properly set up\n";
+	print STDERR "end_date is $ts_end\n";
+	print STDERR "minyes is $minyes\n";
 	exit(4);
 }
 
 # Ensure vote is actually finished
 if ($now < $ts_date) {
-	print "genresult.pl: Vote $vote not finished yet.\n";
+	print STDERR "genresult.pl: Vote $vote not finished yet.\n";
 	exit(5);
 }
 
 # Open the tally file and munch it
 if (!open(T, "vote/$vote/tally.dat")) {
-	print "genresult.pl: Vote $vote has no tally file.\n";
+	print STDERR "genresult.pl: Vote $vote has no tally file.\n";
 	exit(6);
 }
 
 while (<T>) {
 	($email,$ng,$v,$ts,$path) = split;
 	if ($v ne "YES" && $v ne "NO" && $v ne "ABSTAIN") {
-		print "Unknown vote: $v (in $vote)\n";
+		print STDERR "Unknown vote: $v (in $vote)\n";
 		$rc |= 16;
 		next;
 	}
@@ -235,7 +235,7 @@ sub pass_msg() {
 	push(@body, $footer);
 
 	if (!open(P, "|$pgpcmd")) {
-		print "Unable to open pipe to pgp!\n";
+		print STDERR "Unable to open pipe to pgp!\n";
 		exit(7);
 	}
 
@@ -262,7 +262,7 @@ sub setposts {
   local *POST;
   
   if (not open (POST,">>vote/$vote/$name")) {
-    print "Unable to mark group as passed\n";
+    print STDERR "Unable to mark group as passed\n";
     exit(8);
   }
     
