@@ -5,6 +5,8 @@
 # $Revision$
 # $Date$
 
+umask 022
+
 bin/gengrouplist.pl > tmp/grouplist.$$
 s=$?
 if [ $s -ne 0 ] ; then
@@ -13,17 +15,27 @@ if [ $s -ne 0 ] ; then
 	exit 2
 fi
 
+pgp-sign < tmp/grouplist.$$ > tmp/signed-grouplist.$$
+s=$?
+if [ $s -ne 0 ] ; then
+	echo "pgp-sign returned status $s - fatal"
+	rm -f tmp/grouplist.$$ tmp/signed-grouplist.$$
+	exit 4
+fi
+
+rm -f tmp/grouplist.$$
+
 bin/gencheckgroups.pl > tmp/checkgroups.$$
 s=$?
 if [ $s -ne 0 ] ; then
 	echo "bin/gencheckgroups.pl returned status $s - fatal"
-	rm -f tmp/checkgroups.$$
+	rm -f tmp/checkgroups.$$ tmp/signed-grouplist.$$
 	exit 3
 fi
 
 # Replace the current version with the latest
 
-mv tmp/grouplist.$$ data/grouplist.msg
+mv tmp/signed-grouplist.$$ data/grouplist.msg
 mv tmp/checkgroups.$$ data/checkgroups.msg
 
 #----------------------------------------------------------------------------
@@ -35,14 +47,14 @@ bin/post.pl < data/grouplist.msg
 s=$?
 if [ $s -ne 0 ] ; then
 	echo "post.pl submission of data/grouplist.msg returned status $s"
-	rc=2
+	rc=8
 fi
 
 bin/post.pl < data/checkgroups.msg
 s=$?
 if [ $s -ne 0 ] ; then
-	echo "post.pl submission of data/grouplist.msg returned status $s"
-	rc=4
+	echo "post.pl submission of data/checkgroups.msg returned status $s"
+	rc=8
 fi
 
 exit $rc
