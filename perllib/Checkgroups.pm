@@ -32,7 +32,7 @@ sub new {
 	$self->{'datadir'} ||= $Checkgroups::DEFAULT_CHECKGROUPS_DIR;
 
 	$self->{'signcmd'} ||= 'signcontrol';
-	$self->{'grouplist_file'} ||= 'data/ausgroups';
+	$self->{'grouplist_file'} ||= 'data/checkgroups';
 	$self->{'head_text'} ||= Ausadmin::readfile('config/checkgroups.header');
 	$self->{'foot_text'} ||= Ausadmin::readfile('config/checkgroups.footer');
 

@@ -1,31 +1,50 @@
 #!/usr/bin/perl
 #	@(#) gen-checkgroups.pl - Creates the "checkgroups.signed" file.
-#	Usage: gen-checkgroups.pl [-d]
+#	$Header$
+#
+#	Usage: gen-checkgroups.pl [-d] [-h hierarchy]
 #	Option -d: debug mode, don't overwrite current ones, don't sign.
 #
-# $Source$
-# $Revision$
-# $Date$
 
 use lib 'bin';
-use Checkgroups;
+use Newsgroup qw();
+use Checkgroups qw();
 use Getopt::Std;
 
-use vars qw($opt_d);
+use vars qw($opt_d $opt_h);
 
-getopts('d');
+getopts('dh:');
 
+my $datadir = $opt_h ? "$opt_h.data" : 'data';
 
-my $grouplist = "data/ausgroups";
+my @newsgroup_list = Newsgroup::list_newsgroups(datadir => $datadir);
+
+if (!@newsgroup_list) {
+	die "No groups in $datadir\n";
+}
+
+my $s = '';
+
+foreach my $name (sort @newsgroup_list) {
+	my $ng = new Newsgroup(name => $name, datadir => $datadir);
+	my $string = $ng->get_attr('ngline');
+	$s .= sprintf "%s\t%s", $name, $string;
+}
+
+my $grouplist = "$datadir/grouplist";
 my $signcmd = $opt_d ? '/bin/cat' : 'signcontrol';
-my $checkgroups_file = $opt_d ? 'checkgroups' : 'data/checkgroups.signed';
+my $checkgroups_file = $opt_d ? "$datadir/checkgroups" : "$datadir/checkgroups.signed";
 
+open(GL, ">$grouplist") || die "Unable to open $grouplist for write: $!";
+print GL $s;
+close(GL);
 
 my $gl = new Checkgroups(signcmd => $signcmd, grouplist_file => $grouplist);
-
 $gl->write("checkgroups.$$", $checkgroups_file);
 
 # Check it in
-system("ci -l -t- $checkgroups_file < /dev/null");
+if (! $opt_d) {
+	system("ci -l -t- $checkgroups_file < /dev/null");
+}
 
 exit(0);

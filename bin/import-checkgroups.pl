@@ -11,11 +11,11 @@ use Newsgroup qw();
 
 my $hier_name = shift @ARGV || die "Usage: import-checkgroups.pl hierarchy-short-name < checkgroups-file\n";
 
-mkdir("$hier_name.data", 0755);
-mkdir("$hier_name.data/Html", 0755);
-mkdir("$hier_name.data/Newsgroups", 0755);
-
 my $datadir = "$hier_name.data";
+
+foreach my $subdir ('', '/Html', '/Newsgroups', '/RCS') {
+	mkdir("$datadir$subdir", 0755);
+}
 
 while (<STDIN>) {
 	chomp;
