@@ -8,11 +8,12 @@ analyse-messages.pl - Analyse vote messages to find patterns
 
 =head1 SYNOPSIS
 
-analyse-messages.pl [-di] filename ...
+ analyse-messages.pl [-di] < tally-pathname
+ analyse-messages.pl [-di] path-list
 
 =head1 DESCRIPTION
 
-This program performs a very slow and thorough analysis of the votes
+This program performs a very slow and thorough analysis of the messages
 received for the specified vote.
 
 =cut
@@ -27,9 +28,23 @@ use vars qw($opt_d $opt_i);
 getopts('di');
 
 my @list;
+my @path_list;
 
+if (@ARGV) {
+	@path_list = @ARGV;
+} else {
+	# Read the tally contents for this vote on stdin
 
-foreach my $path (@ARGV) {
+	while (<STDIN>) {
+		chomp;
+		my($email,$vote,$choice,$ts,$path) = split(/\s+/);
+		if ($path ne '' && -f $path) {
+			push(@path_list, $path);
+		}
+	}
+}
+
+foreach my $path (@path_list) {
 	my $r = { path => $path };
 	my $m = new Message();
 	$m->parse_file($r->{path});
@@ -91,8 +106,24 @@ sub ip_report {
 	foreach my $ip (sort (keys %$ips_hr)) {
 		print "\nIP: $ip\n";
 		my $lr = $ips_hr->{$ip};
+		my $count = 0;
+		my $str = '';
+		my @lines;
 		foreach (@$lr) {
-			printf "\tMessage: %s\n", $_->{path};
+			my $m = $_->{message};
+
+			$count++;
+			$str .= ' ' . $_->{path};
+			push(@lines, sprintf("\tMessage: %s (%s %s)\n", $_->{path}, $m->{votes}->[0]->[0], $m->{votes}->[0]->[1]));
+		}
+
+		if ($count > 1) {
+			printf "\tCount: %d\n", $count;
+			printf "\tPaths:%s\n", $str;
+		}
+
+		foreach (@lines) {
+			print $_;
 		}
 	}
 
