@@ -31,12 +31,12 @@ foreach my $vote (@votes) {
 	my $d = "vote/$vote";
 
 	# Needs rfd if ...?
-	if (0) {
+#	if (0) {
 	my $ok = 1;
-	foreach my $rfd_file (qw/rfd charter distribution ngline proposer rationale/) {
+	foreach my $rfd_file (qw/charter distribution ngline proposer rationale/) {
 		if (!-f "$d/$rfd_file") {
 			$ok = 0;
-			print "$vote ... needs an rfd (new-rfd $vote rfd-file) ... missing $rfd_file\n";
+			print "$vote ... missing $rfd_file\n";
 			next;
 		}
 
@@ -45,7 +45,7 @@ foreach my $vote (@votes) {
 			next;
 		}
 	}
-    }
+#    }
 
 	if (!-f "$d/rfd") {
 		print "$vote ... needs an rfd (new-rfd $vote rfd-file)\n";
