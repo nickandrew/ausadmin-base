@@ -57,7 +57,7 @@ if [ $s != 0 ] ; then
 	exit 6
 fi
 
-bin/make-rfd.pl $Newsgroup | bin/sign.pl > $BaseDir/$Newsgroup/rfd
+bin/make-rfd.pl $Newsgroup | bin/pgp-sign > $BaseDir/$Newsgroup/rfd
 s=$?
 
 if [ $s != 0 ] ; then
