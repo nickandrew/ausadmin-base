@@ -39,13 +39,17 @@ gendirs ()
 
 cd $BaseDir
 
-# set up control files
+# create vote dir. KLUDGE - this should have been done at RFD stage
+gendirs $Newsgroup
 
-gendirs $Newsgroup $Newsgroup/conf $Newsgroup/votes 
 echo "2 3 40" > $Newsgroup/voterule
 echo "14" > $Newsgroup/voteperiod
+
+# KLUDGE - should be done at CFV posting time
 echo `date +%s` > $Newsgroup/posted.cfg
-perl -e 'print $^T,"\n"' > $Newsgroup/starttime.cfg
+
+# What is this?
+echo `date +%s` > $Newsgroup/starttime.cfg
 
 cp $Info $HomeDir/tmp/info.$$
 s=$?
@@ -78,7 +82,6 @@ ln -s $BaseDir/$Newsgroup/posted.cfv $HomeDir/CFV/$Newsgroup
 
 # Post the CFV
 ~/bin/post.pl < $BaseDir/$Newsgroup/posted.cfv
-
 
 echo Done at `date`
 exit 0
