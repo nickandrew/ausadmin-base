@@ -41,6 +41,7 @@ B<cfv-procedure.txt>
 
 =cut
 
+use POSIX qw(:time_h);
 use Time::Local;
 use IO::Handle;
 
@@ -71,19 +72,22 @@ foreach my $i (qw/change rationale proposer distribution/) {
 # KLUDGE ... This assumes only one change per proposal
 my $change = Ausadmin::read_keyed_file("$d/change");
 
-my $ngline = Ausadmin::read1line("$d/ngline");
 my $rationale = Ausadmin::readfile("$d/rationale");
-my $charter = Ausadmin::readfile("$d/charter");
 my $modinfo = Ausadmin::readfile("$d/modinfo");
 my $proposer = Ausadmin::read1line("$d/proposer");
 my $distribution = Ausadmin::readfile("$d/distribution");
+
+# This is per-change
+my $ngline = Ausadmin::read1line("$d/ngline:$newsgroup");
+my $charter = Ausadmin::readfile("$d/charter:$newsgroup");
 
 # Now get voting-specific info
 my $voterule = Ausadmin::read1line("$d/voterule");
 my $cfv_notes = Ausadmin::readfile("$d/cfv-notes.txt");
 my $end_time = Ausadmin::readfile("$d/endtime.cfg");
 # Now make the human-readable one
-my $EndDate = gmtime($end_time - 1);
+my @end_tm = localtime($end_time - 1);
+my $EndDate = strftime("%A %B %d %Y %H:%M:%S %z", @end_tm);
 
 # Now read the template
 my $procedure = Ausadmin::readfile("config/cfv-procedure.txt");
