@@ -83,7 +83,7 @@ while (<C>) {
 	my $found = 0;
 
 	foreach my $line (@lines) {
-		if ($line =~ /$regex/) {
+		if ($line =~ /^$regex/) {
 			$found = 1;
 			last;
 		}
