@@ -19,7 +19,7 @@ while (<SCHED>) {
      die "firstnotset $schedule" unless $firstpostdate;
 
      if ($now>$firstpostdate) {
-	  &sendmessage($group);
+	  &sendmessage($filename);
 	  
 	  $count--;
 	  if ($count) {
