@@ -1,17 +1,14 @@
 #!/usr/bin/perl
+#	@(#) $Header$
 
-use HTTP::Lite;
+use LWP::Simple qw();
 
 my $email = shift @ARGV;
 
 my $query = "http://groups.google.com/groups?q=author:$email";
 
-my $http = new HTTP::Lite();
-my $req = $http->request($query) or die "Unable to get document: $!";
+my $response = LWP::Simple::get($query);
 
-die "Request failed ($req): " . $http->status_message() if ($req ne '200');
+print "Response is: $response\n";
 
-my $body = $http->body();
-
-print $body;
 exit(0);
