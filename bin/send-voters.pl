@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-#	@(#) send-voters.pl [-r] tally_path 'subject' < message
+#	@(#) send-voters.pl [-r] tally_path < message
 #
 # $Source$
 # $Revision$
@@ -15,7 +15,6 @@ if ($ARGV[0] eq '-r') {
 }
 
 my $tally_path = shift @ARGV || die "Usage: send-voters.pl tally_path 'subject'\n";
-my $subject = shift @ARGV || die "Usage: send-voters.pl tally_path 'subject'\n";
 
 # Read the list of voters
 
@@ -31,21 +30,23 @@ while (<V>) {
 
 	# vote is yes/no/abstain/forge (mostly uppercase)
 	if ($vote =~ /^(yes|no|abstain)$/i) {
-		push(@recipients, $email);
+		push(@recipients, [$email, $timestamp]);
 	}
 }
 
 close(V);
 
-# Now read the body of the message
+# Now read the header and body of the message
 
 my @message = <STDIN>;
 
 # print each address ...
-foreach my $email (@recipients) {
-	print "To: $email\n";
+foreach my $r (@recipients) {
+	my $email = $r->[0];
+	my $timestamp = $r->[1];
+
 	if ($real) {
-		sendmail($email, $subject, \@message);
+		sendmail($email, \@message, $timestamp);
 	}
 }
 
@@ -54,21 +55,21 @@ exit(0);
 # -----------------------------------------------------------------------------
 sub sendmail {
 	my $recipient = shift;
-	my $subject = shift;
 	my $msg_ref = shift;
+	my $vote_id = shift;
 
-	$ENV{'MAILHOST'}="aus.news-admin.org";
+	$ENV{MAILHOST} = "aus.news-admin.org";
+	$ENV{QMAILUSER} = "vote-return-$vote_id";
 	if (!open ( MP, "|/usr/sbin/sendmail $recipient")) {
 		die "MP failed";
 	}
 
-	print MP "From: ausadmin\@aus.news-admin.org (aus Newsgroup Administration)\n";
 	print MP "To: $recipient\n";
-	print MP "Subject: $subject\n";
-	print MP "X-Automated-Reply: this message was sent by an auto-reply program\n";
-	print MP "\n";
-
 	print MP @$msg_ref;
 
 	close(MP);
+}
+
+sub usage {
+	die "Usage: send-voters.pl newsgroup-name < message-file | /bin/bash\n";
 }
