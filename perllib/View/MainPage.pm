@@ -8,7 +8,7 @@ use strict;
 use VoteList qw();
 
 sub output {
-	my $lr = shift;;
+	my $lr = shift;
 
 	foreach my $s (@$lr) {
 		if ((ref $s) eq 'ARRAY') {
