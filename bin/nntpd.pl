@@ -19,7 +19,16 @@ open(LOG, ">>/home/ausadmin/tmp/nntpd.log");
 
 out("200 ausadmin newsserver welcomes $ENV{TCPREMOTEHOST}\n");
 
-while (<STDIN>) {
+$SIG{'ALRM'} = sub { out("503 timeout, exiting\n"); exit(0); };
+
+while (1) {
+	alarm(20);
+	$_ = <STDIN>;
+	if (!defined $_) {
+		last;
+	}
+	alarm(0);
+
 	last if ($errs >= 4);
 	chomp;
 	s/\r//;
