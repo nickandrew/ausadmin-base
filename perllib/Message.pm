@@ -95,8 +95,8 @@ sub parse {
 			}
 		} else {
 			# Body
-			if (/I vote (\S+) on (\S+)/) {
-				push(@votes, [$1, $2]);
+			if (/I vote (\S+) (on|to|for) (\S+)/i) {
+				push(@votes, [$1, $3]);
 			}
 		}
 	}
@@ -134,7 +134,7 @@ sub headers {
 # lowercase names of headers which we will use to extract info ...
 
 $Message::interesting_headers = {
-	'from' => [0, 5, 'name and email of sender', '(.*)', ['junk']],
+	'from' => [0, 5, 'name and email of sender', '(.*)', ['from']],
 	'message-id' => [0, 5, 'message id', '(.*)', ['junk']],
 	'x-fastmail-ip' => [0, 5, 'ip address of sender', '(.*)', ['ip']],
 	'x-freemailid' => [0, 5, 'userid of sender', '(.*)', ['uid']],
