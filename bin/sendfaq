@@ -1,6 +1,7 @@
 #!/bin/sh
 #	Post the aus.* group creation FAQ to aus.net.news
 #
+# $Source$
 # $Revision$
 # $Date$
 
