@@ -72,5 +72,21 @@ foreach my $hier (@hiers) {
 
 $s .= qq~</grouplist>\n~;
 
-print $s;
+my $ts;
+{
+	my($sec,$min,$hour,$mday,$mon,$year) = localtime($cfg->{now});
+	$mon++; $year += 1900;
+	$ts = sprintf ("%04d-%02d-%02d %02d:%02d",$year,$mon,$mday,$hour,$min);
+}
+
+open(P, "|/usr/sbin/sendmail $cfg->{email_to}") || die "Unable to open pipe to sendmail";
+print P <<EOF;
+From: $cfg->{my_email}
+To: $cfg->{email_to}
+Subject: Data for $cfg->{news_server} at $ts
+
+$s
+EOF
+close(P);
+
 exit(0);
