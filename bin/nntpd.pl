@@ -11,29 +11,28 @@ use Ausadmin qw();
 my $errs = 0;
 my $time = time();
 
+my $remote = $ENV{TCPREMOTEHOST} || 'stdin';
+
 my @hiers = qw(aus bne canb melb syd);
 
 $| = 1;
 chdir('/home/ausadmin');
 open(LOG, ">>/home/ausadmin/tmp/nntpd.log");
 
-out("200 ausadmin newsserver welcomes $ENV{TCPREMOTEHOST}\n");
+out("200 ausadmin newsserver welcomes $remote\n");
 
 $SIG{'ALRM'} = sub { out("503 timeout, exiting\n"); exit(0); };
 
 while (1) {
 	alarm(20);
-	$_ = <STDIN>;
-	if (!defined $_) {
-		last;
-	}
+	last if (!defined ($_ = readline(*STDIN)));
+	$_ = lc($_);
 	alarm(0);
 
 	last if ($errs >= 4);
 	chomp;
 	s/\r//;
 
-	my $cmd = lc($_);
 	print LOG "$time < ", $_, "\n";
 
 	if (/mode reader/) {
