@@ -240,7 +240,11 @@ sub gen_newgroup {
 	# $control_type = [booster|initial]
 	my $control_type = shift || confess('Missing parameter in call to gen_newgroup');
 
+	my $hier_name = $self->{hier_name};
+	my $name = $self->{name};
+
 	my $template_path = "config/${control_type}.template";
+	my $template2_path = "config/${hier_name}.control.ctl";
 	my $ngline_path = "$self->{datadir}/$self->{name}/ngline";
 
 	if (! -f $template_path) {
@@ -252,11 +256,10 @@ sub gen_newgroup {
 	}
 
 	my $template = Ausadmin::readfile($template_path);
+	my $control_ctl = Ausadmin::readfile($template2_path);
 	my $ngline = Ausadmin::read1line($ngline_path);
 
 	my $moderated = 0;		# FIXME ... a safe assumption!
-
-	my $name = $self->{name};
 
 	my $control;
 	my $modname;

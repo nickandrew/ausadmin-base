@@ -15,16 +15,26 @@ use Newsgroup;
 
 my %opts;
 
-getopts('sl:', \%opts);
+getopts('h:sl:', \%opts);
 
-my @groups = Newsgroup::list_newsgroups();
+my($hier_name, $datadir);
+
+if ($opts{'h'}) {
+	$datadir = "$opts{'h'}.data";
+	$hier_name = $opts{'h'};
+} else {
+	$datadir = "data";
+	$hier_name = "aus";
+}
+
+my @groups = Newsgroup::list_newsgroups(datadir => $datadir);
 
 my $limit = $opts{'l'} || 99999;
 
 foreach my $group (sort @groups) {
-	my $ng = new Newsgroup (name => $group);
+	my $ng = new Newsgroup(hier_name => $hier_name, name => $group, datadir => $datadir);
 	if (!defined $ng) {
-		print STDERR "Unable to create Newsgroup(name => $group)";
+		print STDERR "Unable to instantiate Newsgroup(name => $group)";
 	}
 
 	# Read current newgroup.booster.ctl, if any
