@@ -71,7 +71,7 @@ select(STDOUT);
 $| = 1;
 
 
-my $subject = "CFV: @newsgroups";
+my $subject = "Call For Votes (CFV): @newsgroups";
 my $dist = join(',', @$distribution);
 
 print <<"EOHEADERS";
