@@ -34,7 +34,7 @@ of that newsgroup.
 Accepted votes are appended to the B<tally.dat> file in the vote
 directory in the format:
 
-	userid@domain newsgroup YES|NO|ABSTAIN time
+	userid@domain newsgroup YES|NO|ABSTAIN time pathname
 
 =cut
 
@@ -46,7 +46,7 @@ my $BaseDir = "./vote";
 
 while ( <STDIN> ) {
 	chomp;
-	my($EmailAddress, $Newsgroup, $Vote, $CTime, $fn) = split;
+	my($EmailAddress, $Newsgroup, $Vote, $ts, $fn) = split;
 
 	if ($Newsgroup !~ /^[a-z0-9+-]+\.[a-z0-9+-]+(\.[a-z0-9+-]+)*$/) {
 		FailVote($EmailAddress, "Invalid newsgroup name (must be of the format aus.whatever, in lower case");
@@ -77,7 +77,7 @@ while ( <STDIN> ) {
 		chomp( $_ = <CONFIGFILE> );
 		my $VoteTime = $_;
 		close( CONFIGFILE );
-		if ($CTime > $VoteTime) {
+		if ($ts > $VoteTime) {
 			FailVote($EmailAddress, "$Newsgroup vote ended" );
 			next;
 		}
@@ -110,12 +110,12 @@ while ( <STDIN> ) {
 	my $tf = new IO::File("$BaseDir/$Newsgroup/tally.dat", O_WRONLY|O_APPEND|O_CREAT, 0640);
 	die "Collater failed (couldn't create/append tally file: $!" if (!defined $tf);
 	flock($tf, LOCK_EX);
-	$tf->print("$EmailAddress $Newsgroup $Vote $CTime $fn\n");
+	$tf->print("$EmailAddress $Newsgroup $Vote $ts $fn NEW\n");
 	if (!$tf->close()) {
 		die "Error writing to tally file for $Newsgroup";
 	}
 
-	AckVote($EmailAddress, $Vote, $Newsgroup, $CTime);	
+	AckVote($EmailAddress, $Vote, $Newsgroup, $ts);	
 }
 # End of main loop
 
