@@ -25,6 +25,7 @@ use Vote;
 use DateFunc;
 
 my %action_states = (
+	'vote/checking' => 'Check for multi-votes and forgeries then use action',
 	'vote/running' => 'Wait for end of vote',
 	'complete/resultnotposted' => '',
 	'complete/pass/signed' => 'Create and post newgroup message?',
