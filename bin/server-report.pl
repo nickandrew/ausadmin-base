@@ -6,6 +6,7 @@
 use XML::Simple qw();
 use Date::Format qw(time2str);
 
+my $min_age = time() - 86400 * 6;		# Require fresh data
 my $path = "$ENV{AUSADMIN_HOME}/server_reports.xml";
 my $db = XML::Simple::XMLin($path, forcearray => 1);
 
@@ -60,6 +61,7 @@ my $position = 1;
 my $pct = '';
 
 foreach my $r (sort { $b->{tpct} <=> $a->{tpct} } (values %{$db->{server}})) {
+	next if ($r->{last_report} < $min_age);
 	if ($pct eq '') {
 		$pct = $r->{tpct};
 	} elsif ($pct > $r->{tpct}) {
@@ -77,6 +79,28 @@ foreach my $r (sort { $b->{tpct} <=> $a->{tpct} } (values %{$db->{server}})) {
 		$r->{tpct}/10;
 	$position ++;
 }
+
+my $ignored;
+foreach my $r (sort { $a->{name} cmp $b->{name} } (values %{$db->{server}})) {
+	next if ($r->{last_report} >= $min_age);
+
+	$ignored .= sprintf(
+		"  %-25s - last checked %s\n",
+		$r->{name},
+		time2str("%A, %d %B %Y", $r->{last_report})
+	);
+}
+
+if ($ignored) {
+	print <<EOF;
+
+Some servers are not included in this list because we have not received
+a recent report for them:
+
+$ignored
+EOF
+}
+
 
 print <<EOF;
 
