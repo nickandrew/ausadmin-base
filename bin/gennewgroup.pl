@@ -1,6 +1,7 @@
-#!/usr/bin/perl -w
-# $Revision$
-# $Date$
+#!/usr/bin/perl
+#	gennewgroup.pl vote
+#	$Revision$
+#	$Date$
 
 use strict;
 require "bin/misc.pli";
@@ -25,7 +26,7 @@ sub checkmessage ( $ ) {
   local (*FILE,*POST);
   
   if (not open FILE,"<vote/$vote/$file") {
-    warn "Unable to open file $file $!\n";
+    warn "Unable to open file vote/$vote/$file $!\n";
     return;
   }
   
@@ -34,27 +35,11 @@ sub checkmessage ( $ ) {
   }
   
   while (<FILE>) {
-    my ($group,$firstpostdate,$interval,$count)=split /\t/;
-    
-    if ($now>$firstpostdate) {
-      makemessage $group,$file;
-      
-      $count--;
-      if ($count) {
-	
-	$firstpostdate += $interval;
-	
-	print POST "$group\t$firstpostdate\t$interval\t$count\n";
-	close POST;
-      }
-      
-    } else {
-      print POST $_;
-    }
-    
+    my ($group,$firstpostdate,$interval,$count)=split /\t/;    
+    makemessage $group,$file;      
   }
   
-  system "mv /tmp/$file vote/$vote/$file";
+#  system "mv /tmp/$file vote/$vote/$file";
 }
 
 sub makemessage ( $$ ) {
@@ -74,11 +59,11 @@ sub makemessage ( $$ ) {
 		 "post.real" => "Aus news admin <ausadmin\@aus.news-admin.org>",
 		 "post.fake.phil" => "Phil Herring <revdoc\@cs.uow.edu.au>",
 		 "post.fake.robert" => "kre\@munnari.OZ.AU (Robert Elz)",
-		} -> {$file};
+		} -> {$name};
      my $post;
-     
+
      if ($newgroup) {
-	  &donewsgroup($moderated);
+	  $post=&donewsgroup($moderated,$from,$file);
      } else {
 # Do stuff for rmgroup
      }
@@ -93,16 +78,16 @@ sub makemessage ( $$ ) {
 
 sub donewsgroup {
 
-     my $moderated=shift;
+     my ($moderated,$from,$name)=@_;
 
      if (not $moderated) {
 	  
 	  my $ngline = read1line("vote/$vote/ngline");
 	  my $charter = readfile("vote/$vote/charter");
-	  $post =<<"EOT";
+	  my $post =<<"EOT";
 From: $from
 Subject: Cmsg newgroup $name
-Newsgroup: aus.news,$name
+Newsgroup: aus.net.news,$name
 Control: Newgroup $name
       
 $name is an unmoderated newsgroup which passed its vote for creation as reported
@@ -114,7 +99,7 @@ $ngline
 This charter culled from the vote result announcement.
 $charter
 EOT
-	  
+	  return $post;
      } else {
 # Do stuff for moderated group  
      }
