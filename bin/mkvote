@@ -12,8 +12,8 @@ then
 fi
 
 # Get command line arguments
-Newsgroup=$1
-Info=$2
+Newsgroup="$1"
+Info="$2"
 
 # Commonly used variables
 HomeDir=/virt/web/ausadmin
@@ -47,23 +47,20 @@ echo "2 3 10" > $Newsgroup/conf/voterule
 echo "14" > $Newsgroup/conf/voteperiod
 
 # Run the Perl script mkcvf to make the CFV and PGP-sign it then post it away!
-tr -d '\r' < $HomeDir/tmp/info.$$ | mkcfv.pl > $HomeDir/tmp/cfv.$$
+tr -d '\r' < $HomeDir/tmp/info.$$ | mkcfv.pl > $Newsgroup/conf/posted.cfv 2>$HomeDir/tmp/pgp.$$
 s=$?
 if [ $s != 0 ] ; then
 	echo "Unable to make Call For Votes -- code $s - fatal"
 	exit 7
 fi
 
-pgp -s -f < $HomeDir/tmp/cfv.$$ > $Newsgroup/conf/posted.cfv 2>$HomeDir/tmp/pgp.$$
-s=$?
-if [ $s != 0 ] ; then
-	echo "pgp signing failed -- code $s - fatal"
-	exit 8
-fi
-
 rm -f $HomeDir/CFV/$Newsgroup
 ln -s $BaseDir/$Newsgroup/conf/posted.cfv $HomeDir/CFV/$Newsgroup
 
-# Post the CFG
+# Post the CFV
 inews -h < $Newsgroup/conf/posted.cfv
+
 echo `date +%s` > $Newsgroup/conf/posted.cfg
+
+echo Done at `date`
+exit 0
