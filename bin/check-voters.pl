@@ -1,10 +1,34 @@
 #!/usr/bin/perl
-#	@(#) check-voters.pl newsgroup-name voters-file < message-file
+#	@(#) check-voters.pl vote-name voters-file < message-file
 #
 # $Source$
 # $Revision$
 # $Date$
 #
+
+=head1 NAME
+
+check-voters.pl - Send a test email to all voters in a vote
+
+=head1 SYNOPSIS
+
+ check-voters.pl vote-name voters-file < message-file
+
+=head1 DESCRIPTION
+
+This program sends a message to everybody who voted for B<vote-name>
+and who has not been checked recently (180 days) as listed in
+B<voters-file>.
+
+The timestamp of all checked voters is updated to reflect the
+latest time the email address was sent a message. In other words,
+if an email address is sent a message, then its timestamp is updated.
+
+This means that an address which votes regularly will be checked
+at most once every 6 months; new (or one-off) voters will be
+checked the first time they vote.
+
+=cut
 
 use lib 'bin';
 use Vote;
@@ -53,7 +77,7 @@ while (<V>) {
 	# Now check if we checked them before
 	if (exists $voter_state{$email} && $voter_state{$email} =~ /^\d+$/) {
 		# It's ok if last check was recent
-		if ($voter_state{$email} < $check_cutoff_ts) {
+		if ($voter_state{$email} > $check_cutoff_ts) {
 			my $diff = int(($now - $voter_state{$email})/86400);
 			print STDERR "Ignoring $email - checked $diff days ago.\n";
 			next;
