@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+#	@(#) vote-date: Return the yyyy-mm-dd date of a vote ...!
+#
+# $Source$
+# $Revision$
+# $Date$
+
+my $vote = shift @ARGV || die "Usage: vote-date groupname\n";
+
+my $home = $ENV{'HOME'};
+
+die "No such vote: $vote\n" if (!-d "$home/vote/$vote");
+die "No posted.cfg for $vote\n" if (!-f "$home/vote/$vote/posted.cfg");
+
+open(F, "<$home/vote/$vote/posted.cfg") || die "Unable to open posted.cfg\n";
+my $ts = <F>;
+chomp($ts);
+close(F);
+
+my($sec,$min,$hour,$mday,$mon,$year) = localtime($ts);
+$mon++; $year += 1900;
+printf "%d-%02d-%02d\n", $year, $mon, $mday;
+exit(0);
