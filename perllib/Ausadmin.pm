@@ -15,6 +15,7 @@ Ausadmin - misc functions class
  use Ausadmin;
  $line = Ausadmin::read1line($path);
  $string = Ausadmin::readfile($path);
+ $ref = Ausadmin::read_keyed_file($path);
  @lines = Ausadmin::format_para($line)
  @lines = Ausadmin::centred_text(@lines)
 
@@ -37,8 +38,8 @@ package Ausadmin;
 
 
 sub read1line {
-	my($path) = @_;
-	my($line);
+	my $path = shift;
+	my $line;
 	if (!open(F, $path)) {
 		return "";
 	}
@@ -48,8 +49,8 @@ sub read1line {
 }
 
 sub readfile {
-	my($path) = @_;
-	my($line);
+	my $path = shift;
+	my $line;
 	if (!open(F, $path)) {
 		return "";
 	}
@@ -58,6 +59,22 @@ sub readfile {
 	}
 	close(F);
 	return $line;
+}
+
+sub read_keyed_file {
+	my $path = shift;
+	my $ref;
+	if (!open(F, $path)) {
+		return undef;
+	}
+	while (<F>) {
+		chomp;
+		if (/^([^:]+): (.*)/) {
+			$ref->{$1} = $2;
+		}
+	}
+	close(F);
+	return $ref;
 }
 
 # Join all lines into one and split them into a paragraph.
