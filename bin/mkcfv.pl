@@ -52,7 +52,7 @@ if ($moderated{$newsgroup[0]}) {
 
 print P <<"EOTOPBODY";
                            CALL FOR VOTES
-                 Moderated  $newsgroup[0]
+                 Moderated newsgroup $newsgroup[0]
 
 Newsgroups line(s)
 EOTOPBODY
@@ -61,7 +61,7 @@ EOTOPBODY
 
 print P <<"EOTOPBODY";
                            CALL FOR VOTES
-                 UnModerated  $newsgroup[0]
+                 UnModerated newsgroup $newsgroup[0]
 
 Newsgroups line(s)
 EOTOPBODY
@@ -70,7 +70,7 @@ EOTOPBODY
 }
 
 for my $group (@newsgroup) {
-  print P $group $NGLine{$group},"\n";
+  print P $group," ",$NGLine{$group},"\n";
 }
 
 print P <<"EOMIDBODY";
@@ -155,10 +155,11 @@ GROUP:	       while (<>) {
 	  }
 
 
-	  if ($_ =~ /^DISTRIBUTION:/i) {
+	  if ($_ =~ /^DISTRIBUTION:(.*)/i) {
+	       $distribution=$1;
 DIST:	       while (<>) {
 		    chomp;
-		    last DIST if (/^Proponets?:.*/i);
+		    last DIST if (/^Propo(?:nets?|sers?):.*/i);
 		    $distribution .= "$_," if not /^\s*$/;
 	       }
 	  }
