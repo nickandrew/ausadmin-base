@@ -335,7 +335,8 @@ sub create_rfd {
 		}
 		rename("$ng_dir/rfd-temp.$$", "$ng_dir/rfd.unsigned");
 		$v->audit("Unsigned RFD created");
-		print "Done!\n";
+		print "Done! Check it for errors then run action again.\n";
+		# User probably wants to look at the file before continuing.
 		return 16;
 	}
 }
