@@ -17,7 +17,7 @@ $BaseDir = "$HomeDir/vote";
 
 # Section 1 and 2 (see above)
 # Read in headers
-S1: while ( <STDIN> ) {
+S1: while ( <> ) {
 	if ( $_ eq "\n" ) {
 		last S1;
 	}
@@ -38,7 +38,7 @@ if ( $EmailAddress eq "" ) {
 my %vote;
 
 # Section 2 (see above)
-S2: while ( <STDIN> ) {
+S2: while ( <> ) {
 	chomp;
 	if ( $_ =~ /^I vote [^\s]* (on|to|for) aus.*/i ) {
 		/^I vote ([^\s]*).*(aus[.a-z0-9]*).*/i;
