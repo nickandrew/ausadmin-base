@@ -1,5 +1,5 @@
-#!/usr/bin/perl -w
-#	@(#) genresult.pl vote
+#!/usr/bin/perl
+#	@(#) genresult.pl - Create the results file for a vote
 #
 # $Source$
 # $Revision$
@@ -43,7 +43,7 @@ getopts('dr', \%opts);
 my $debug = $opts{'d'};
 my $opt_recount = $opts{'r'};
 
-my $votename = shift;
+my $votename = shift @ARGV;
 
 if ($votename eq '') {
 	print STDERR "genresult.pl: No vote specified\n";
@@ -99,6 +99,7 @@ my %forge;
 my %multi;
 my %total;
 my %invalid = ('YES' => 0, 'NO' => 0, 'ABSTAIN' => 0);
+my $vote_info = { };
 
 my $tally_lr = $vote->get_tally();
 
@@ -111,64 +112,54 @@ foreach my $vline (@$tally_lr) {
 	my $status = $vline->{status};
 
 	if ($ng ne $votename) {
-		print STDERR "Ignoring vote from $email for different group $ng (expecting $votename)\n";
+		print STDERR "Ignoring vote from $email for different vote $ng (expecting $votename)\n";
 		next;
 	}
 
 	$v=uc($v);
 
-	if ($v ne "YES" && $v ne "NO" && $v ne "ABSTAIN" && $v ne "FORGE") {
+	if ($v ne 'YES' && $v ne 'NO' && $v ne 'ABSTAIN' && $v ne 'FORGE') {
 		print STDERR "Unknown vote: $v ($email in $votename)\n";
 #		$rc |= 16;
 		next;
 	}
 
-	if (!defined($voters{$ng})) {
-		$voters{$ng} = [];
-		$total{$ng} = 0;
-		$yes{$ng} = 0;
-		$no{$ng} = 0;
-		$abstain{$ng} = 0;
-		$forge{$ng} = 0;
-		$multi{$ng} = 0;
+	# This is for backwards compatibility
+
+	if ($v eq 'FORGE') {
+		$status = 'FORGE';
 	}
 
-	$total{$ng}++;
+	$vote_info->{total}++;
 
 	if ($status =~ /^MULTI/i) {
-		$multi{$ng}++;
-		push(@{$voters{$ng}}, "$email MULTI");
-		$invalid{$v}++;
+		$vote_info->{multi_count}++;
+		$vote_info->{invalid_count}++;
+		push(@{$vote_info->{voters}}, "$email MULTI");
+		$vote_info->{invalid_tally}->{$v}++;
 		next;
 	}
 
 	if ($status =~ /^FORGE/i) {
-		$forge{$ng}++;
-		push(@{$voters{$ng}}, "$email INVALID");
-		$invalid{$v}++;
+		$vote_info->{invalid_count}++;
+		push(@{$vote_info->{voters}}, "$email INVALID");
+		$vote_info->{invalid_tally}->{$v}++;
 		next;
 	}
 
-	if ($v eq "FORGE") {
-		$forge{$ng}++;
-		push(@{$voters{$ng}}, "$email INVALID");
-		$invalid{$v}++;
-		next;
-	}
+	# It's a valid vote, so add to the valid_tally etc...
 
-	if ($v eq "YES") {
-		$yes{$ng}++;
-	} elsif ($v eq "NO") {
-		$no{$ng}++;
-	} elsif ($v eq "ABSTAIN") {
-		$abstain{$ng}++;
-	}
-
-	push(@{$voters{$ng}}, $email);
-
+	$vote_info->{valid_tally}->{$v}++;
+	$vote_info->{valid_count}++;
+	push(@{$vote_info->{voters}}, "$email");
 }
 
-my($yvotes, $nvotes, $abstentions, $forgeries);
+# Quick access ...
+my $yes = $vote_info->{valid_tally}->{'YES'} || 0;
+my $no = $vote_info->{valid_tally}->{'NO'} || 0;
+my $abstain = $vote_info->{valid_tally}->{'ABSTAIN'} || 0;
+
+my($yvotes, $nvotes, $abstentions, $invalids);
 
 # Output results
 my $ng = $votename;
@@ -176,7 +167,7 @@ my $ng = $votename;
 my $status;
 my $subjstat;
 
-if (($yes{$ng} >= ($yes{$ng} + $no{$ng}) * $numer / $denomer) && ($yes{$ng} - $no{$ng} >= $minyes)) {
+if (($yes >= ($yes + $no) * $numer / $denomer) && ($yes - $no >= $minyes)) {
 	$status = "pass";
 	$subjstat = "passes";
 } else {
@@ -184,30 +175,30 @@ if (($yes{$ng} >= ($yes{$ng} + $no{$ng}) * $numer / $denomer) && ($yes{$ng} - $n
 	$subjstat = "fails";
 }
 
-if ($yes{$ng} == 1) {
+if ($yes == 1) {
 	$yvotes = "vote";
 } else {
 	$yvotes = "votes";
 }
 
-if ($no{$ng} == 1) {
+if ($no == 1) {
 	$nvotes = "vote";
 } else {
 	$nvotes = "votes";
 }
 
-if ($abstain{$ng} == 1) {
+if ($abstain == 1) {
 	$abstentions = "abstention";
 } else {
 	$abstentions = "abstentions";
 }
 
-if ($forge{$ng} == 0) {
-	$forgeries = "no invalid votes";
+if ($vote_info->{invalid_count} == 0) {
+	$invalids = "no invalid votes";
 } elsif ($forge{$ng} == 1) {
-	$forgeries = "1 invalid vote";
+	$invalids = "1 invalid vote";
 } else {
-	$forgeries = "$forge{$ng} invalid votes";
+	$invalids = "$vote_info->{invalid_count} invalid votes";
 }
 
 
@@ -216,9 +207,9 @@ if ($forge{$ng} == 0) {
 my %header;
 
 if (not $opt_recount) {
-	$header{Subject} = "RESULT: $ng $subjstat vote $yes{$ng}:$no{$ng}";
+	$header{Subject} = "RESULT: $ng $subjstat vote $yes:$no";
 } else {
-	$header{Subject} = "RECOUNT: $ng $subjstat vote $yes{$ng}:$no{$ng}";
+	$header{Subject} = "RECOUNT: $ng $subjstat vote $yes:$no";
 }
 
 Ausadmin::print_header(\%header);
@@ -251,25 +242,25 @@ sub pass_msg() {
 
 	# Formatted line
 	if ($pass) {
-		$line = "The newsgroup $ng has passed its vote by $yes{$ng} YES $yvotes to $no{$ng} NO $nvotes. There were $abstain{$ng} $abstentions and $forgeries detected.";
+		$line = "The vote $ng has passed its vote by $yes YES $yvotes to $no NO $nvotes. There were $abstain $abstentions and $invalids detected.";
 	} else {
-		$line = "The newsgroup $ng has failed its vote by $yes{$ng} YES $yvotes to $no{$ng} NO $nvotes. There were $abstain{$ng} $abstentions and $forgeries detected.";
+		$line = "The vote $ng has failed its vote by $yes YES $yvotes to $no NO $nvotes. There were $abstain $abstentions and $invalids detected.";
 	}
 
 	push(@body, format_para($line));
 	push(@body, "");
 
-	push(@body, sprintf("Total number of votes received:   %5d", $total{$ng}));
-	push(@body, sprintf("Number of YES votes:              %5d", $yes{$ng}));
-	push(@body, sprintf("Number of NO votes:               %5d", $no{$ng}));
-	push(@body, sprintf("Number of ABSTAIN votes:          %5d", $abstain{$ng}));
+	push(@body, sprintf("Total number of votes received:   %5d", $vote_info->{total}));
+	push(@body, sprintf("Number of YES votes:              %5d", $yes));
+	push(@body, sprintf("Number of NO votes:               %5d", $no));
+	push(@body, sprintf("Number of ABSTAIN votes:          %5d", $abstain));
 
-	if ($invalid{'YES'} > 0 && $invalid{'NO'} > 0) {
+	if ($vote_info->{invalid_tally}->{'YES'} > 0 && $vote_info->{invalid_tally}->{'NO'} > 0) {
 		# Don't reveal counts of invalid votes if they are all
 		# of the same type
-		push(@body, sprintf("Number of invalid YES votes:      %5d", $invalid{'YES'}));
-		push(@body, sprintf("Number of invalid NO votes:       %5d", $invalid{'NO'}));
-		push(@body, sprintf("Number of invalid ABSTAIN votes:  %5d", $invalid{'ABSTAIN'}));
+		push(@body, sprintf("Number of invalid YES votes:      %5d", $vote_info->{invalid_tally}->{'YES'}));
+		push(@body, sprintf("Number of invalid NO votes:       %5d", $vote_info->{invalid_tally}->{'NO'}));
+		push(@body, sprintf("Number of invalid ABSTAIN votes:  %5d", $vote_info->{invalid_tally}->{'ABSTAIN'}));
 	}
 
 	push(@body, "");
@@ -297,7 +288,7 @@ sub pass_msg() {
 
 
 	push(@body, "\nVOTES RECEIVED:\n");
-	foreach my $voter (sort by_domain_userid @{$voters{$ng}}) {
+	foreach my $voter (sort by_domain_userid @{$vote_info->{voters}}) {
 		$voter =~ s/\@/ at /;
 		push(@body, "  $voter");;
 	}
