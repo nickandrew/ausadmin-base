@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #	Send updated public key to the keyservers
 
 if [ "x$keyserver" = "x" ] ; then

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #	@(#) bin/sendcheckgroup - Create/post newsgroup list and checkgroups
 #
 # $Source$
