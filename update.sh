@@ -14,4 +14,4 @@ for i in `find . \! -perm -4 -print` ; do
 done
 
 echo Updating $package to $dest
-rsync -C -v -a -e ssh --delete * $dest
+rsync -C -v -a -e ssh --delete bin cgi-bin root $dest

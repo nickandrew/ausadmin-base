@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-#	gencheckgroups.pl
+#	gengrouplist.pl
 
 require "bin/postheader.pli";
 require "bin/misc.pli";
@@ -15,12 +15,12 @@ if (-f "/usr/bin/pgps") {
 select(STDOUT); $| = 1;
 
 if (!-f "data/ausgroups") {
-	print "gencheckgroups.pl: No list of newsgroups\n";
+	print "gengrouplist.pl: No list of newsgroups\n";
 	exit(3);
 }
 
-$checkgroups_header = readfile("data/checkgroups.header");
-$checkgroups_footer = readfile("data/checkgroups.footer");
+$grouplist_header = readfile("data/grouplist.header");
+$grouplist_footer = readfile("data/grouplist.footer");
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = localtime(time);
 $year += 1900; $mon++;
@@ -42,23 +42,23 @@ if (!open(C, "<data/ausgroups")) {
 print_header(\%header);
 
 # Can't send this in @body because an extra blank line will be added
-# push(@body, $checkgroups_header);
+# push(@body, $grouplist_header);
 
-push(@body, $checkgroups_footer);
+push(@body, $grouplist_footer);
 
 if (!open(P, "|$pgpcmd")) {
 	print "Unable to open pipe to pgp!\n";
 	exit(7);
 }
 
-print P $checkgroups_header;
+print P $grouplist_header;
 
 while (<C>) {
 	print P $_;
 }
 close(C);
 
-print P $checkgroups_footer;
+print P $grouplist_footer;
 
 close(P);
 
