@@ -15,21 +15,33 @@ parse-rfd.pl - Read an RFD file and split into its components
 
 =head1 SYNOPSIS
 
-parse-rfd.pl [-d] newsgroup-name < rfd-file
+parse-rfd.pl [B<-r>] [B<-d>] proposal < rfd-file
 
 =head1 DESCRIPTION
 
 Parse the RFD file and write one or more of the following files in the
-vote/$newsgroup subdirectory:
+vote/$proposal subdirectory:
 
 change,
-charter,
+charter:$newsgroup,
 distribution,
-ngline,
+ngline$newsgroup,
 proposer,
 rationale,
 
 and optionally: modinfo
+
+A B<proposal> and a B<newsgroup> are usually the same thing, unless the
+proposal includes multiple newsgroups, in which case it should be named
+differently.
+
+=head1 OPTIONS
+
+B<-d> turns on debugging mode; this is more verbose
+
+B<-r> signals that this input file revises an existing RFD (so the
+directory used is assumed to exist already). If this flag is not
+specified, the directory must not already exist, and will be created.
 
 =cut
 
@@ -45,27 +57,24 @@ use Newsgroup;
 my $BaseDir = "./vote";
 
 my %opts;
-getopts('d', \%opts);
+getopts('rd', \%opts);
+
+my $proposal_name = shift @ARGV;
 
 die "In wrong directory - no $BaseDir" if (!-d $BaseDir);
 
+if (-d "$BaseDir/$proposal_name" && !$opts{'r'}) {
+	die "$BaseDir/$proposal_name already exists, specify the -r option\n";
+}
+	
 my $g = ReadRFD();
 
 die "Unable to parse the RFD, no newsgroups, sorry" unless %$g;
 
-# Ignore special keys in the $g hashref, they are not newsgroup names.
-
-my @newsgroups = grep { /^[a-z0-9-]+\.([a-z0-9.-]+)$/ } (sort (keys %$g));
-
-# Setup defaults if CHANGE: line not supplied
+# Die if a change is not defined. This is very important!
 
 if (!defined $g->{change}) {
-	# Default change is to create a new unmoderated group
-	$g->{change} = {
-		'type' => 'newgroup',
-		'newsgroup' => $newsgroups[0],		# KLUDGE
-		'mod_status' => 'y'
-	};
+	die "A CHANGE line is required for all proposals";
 }
 
 # All proposals need these
@@ -79,74 +88,88 @@ my $change_type = $g->{change}->{'type'};
 
 # KLUDGE ... circular logic!
 
-@newsgroups = ($g->{change}->{newsgroup});
+foreach my $change ($g->{change}) {
 
-foreach my $newsgroup (@newsgroups) {
+	my $change_type = $change->{'type'};
+	my $change_newsgroup = $change->{'newsgroup'};
 
-	my $r = $g->{$newsgroup};
+	if ($change_newsgroup eq '') {
+		print STDERR "No newsgroup specified for this change!\n";
+		next;
+	}
+
+	my $r = $g->{newsgroup}->{$change_newsgroup};
 
 	if ($change_type =~ /^(newgroup|moderate|unmoderate)$/) {
 		# Needs a newsgroups line
-		die "$newsgroup: No newsgroups line" if (!defined $r->{ngline});
+		die "$change_newsgroup: No newsgroups line" if (!defined $r->{ngline});
 	}
 
 	if ($change_type =~ /^(newgroup|moderate|unmoderate|charter)$/) {
 		# Needs a charter paragraph
-		die "$newsgroup: No charter" if (!defined $r->{charter});
+		die "$change_newsgroup: No charter" if (!defined $r->{charter});
 	}
 
 	# KLUDGE ...
 	if (defined $r->{modinfo}) {
-		die "$newsgroup: No moderator" if (!defined $r->{moderator});
+		die "$change_newsgroup: No moderator" if (!defined $r->{moderator});
 	}
 
 	# Now look for things which are not permitted
 	if ($change_type =~ /^(rmgroup)$/) {
-		die "$newsgroup: No charter permitted" if (defined $r->{charter});
-		die "$newsgroup: No ngline permitted" if (defined $r->{ngline});
+		die "$change_newsgroup: No charter permitted" if (defined $r->{charter});
+		die "$change_newsgroup: No ngline permitted" if (defined $r->{ngline});
+	}
+}
+
+my $directory = "$BaseDir/$proposal_name";
+
+if (!$opts{'r'}) {
+	if (!mkdir($directory, 0755)) {
+		die "Unable to mkdir($directory,0755)!";
 	}
 }
 
 # Now output all the control file information ...
 
-foreach my $newsgroup (@newsgroups) {
+open(O, ">$directory/change") or die "Unable to open change for write: $!";
+foreach my $k (sort (keys %{$g->{change}})) {
+	print O $k, ": ", $g->{change}->{$k}, "\n";
+}
+close(O);
 
-	my $r = $g->{$newsgroup};
+open(O, ">$directory/proposer") or die "Unable to open proposer for write: $!";
+print O $g->{proposer}, "\n";
+close(O);
 
-	mkdir("$BaseDir/$newsgroup", 0755);
+open(O, ">$directory/distribution") or die "Unable to open distribution for write: $!";
+print O join("\n",@{$g->{distribution}}), "\n";
+close(O);
 
-	open(O, ">$BaseDir/$newsgroup/change") or die "Unable to open change for write: $!";
-	foreach my $k (sort (keys %{$g->{change}})) {
-		print O $k, ": ", $g->{change}->{$k}, "\n";
-	}
-	close(O);
+open(RATIONALE, ">$directory/rationale") or die "Unable to open rationale for write: $!";
+print RATIONALE $g->{rationale};
+close(RATIONALE);
 
-	open(O, ">$BaseDir/$newsgroup/proposer") or die "Unable to open proposer for write: $!";
-	print O $g->{proposer}, "\n";
-	close(O);
+# Now the newsgroup-specific information ...
 
-	open(O, ">$BaseDir/$newsgroup/distribution") or die "Unable to open distribution for write: $!";
-	print O join("\n",@{$g->{distribution}}), "\n";
-	close(O);
+foreach my $newsgroup (sort (keys %{$g->{newsgroup}})) {
 
-	open(RATIONALE, ">$BaseDir/$newsgroup/rationale") or die "Unable to open rationale for write: $!";
-	print RATIONALE $g->{rationale};
-	close(RATIONALE);
+	my $r = $g->{newsgroup}->{$newsgroup};
 
 	if (defined $r->{charter}) {
-		open(CHARTER, ">$BaseDir/$newsgroup/charter") or die "Unable to open charter for write: $!";
+		open(CHARTER, ">$directory/charter:$newsgroup") or die "Unable to open charter:$newsgroup for write: $!";
 		print CHARTER $r->{charter};
 		close(CHARTER);
 	}
 
 	if (defined $r->{ngline}) {
-		open NGLINE,">$BaseDir/$newsgroup/ngline" or die "Unable to open ngline: $!";
+		open NGLINE,">$directory/ngline:$newsgroup" or die "Unable to open ngline:$newsgroup: $!";
 		print NGLINE "$newsgroup\t$r->{ngline}\n";
 		close NGLINE or die "Unable to close ngline: $!";
 	}
 
 	if (defined $r->{modinfo}) {
-		open(MODINFO, ">$BaseDir/$newsgroup/modinfo") or die "Unable to open modinfo for write: $!";
+		open(MODINFO, ">$directory/modinfo:$newsgroup") or die "Unable to open modinfo:$newsgroup for write: $!";
 		print MODINFO $r->{modinfo};
 		close(MODINFO);
 	}
@@ -220,19 +243,19 @@ sub ReadRFD {
 			next;
 		}
 
-		if (/^RATIONALE:\s*(.*)/i ) {
+		if (/^RATIONALE:/i ) {
 			$state = 'rationale';
 			next;
 		}
 
-		if (/^CHARTER:\s*(.*)/i ) {
+		if (/^CHARTER:\s*(\S*)/i ) {
 			$state = 'charter';
 			die "Charter line missing group name" if (!defined $1);
 			$groupname = $1;
 			next;
 		}
 
-		if (/^MODERATOR INFO:\s*(.*)/i ) {
+		if (/^MODERATOR INFO:\s*(\S*)/i ) {
 			$state = 'modinfo';
 			die "Moderator Info line missing group name" if (!defined $1);
 			$groupname = $1;
@@ -279,7 +302,7 @@ sub ReadRFD {
 
 		if ($state eq 'ngline') {
 			if (/^([^\s]+)\s+(.*)/i) {
-				$g{$1}->{ngline} = $2;
+				$g{newsgroup}->{$1}->{ngline} = $2;
 			}
 			next;
 		}
@@ -290,16 +313,16 @@ sub ReadRFD {
 		}
 
 		if ($state eq 'charter') {
-			$g{$groupname}->{charter} .= $_ . "\n";
+			$g{newsgroup}->{$groupname}->{charter} .= $_ . "\n";
 			next;
 		}
 
 		if ($state eq 'modinfo') {
 			if (/^Moderator:\s+(.+)/i) {
-				$g{$groupname}->{moderator} = $1;
+				$g{newsgroup}->{$groupname}->{moderator} = $1;
 				# next ?
 			}
-			$g{$groupname}->{modinfo} .= $_ . "\n";
+			$g{newsgroup}->{$groupname}->{modinfo} .= $_ . "\n";
 			next;
 		}
 
@@ -325,18 +348,17 @@ sub ReadRFD {
 	}
 
 	# Massage the data before returning ...
-	foreach my $group (keys %g) {
-		next if ($group eq 'distribution');
-		my $r = $g{$group};
+	foreach my $group (keys %{$g{newsgroup}}) {
+		my $r = $g{newsgroup}->{$group};
 
 		# Remove leading and trailing empty lines, trailing spaces
 		cleanup_string($r, 'ngline');
-		cleanup_string($r, 'proposer');
 		cleanup_string($r, 'charter');
 		cleanup_string($r, 'moderator');
 		cleanup_string($r, 'modinfo');
 	}
 
+	cleanup_string(\%g, 'proposer');
 	cleanup_string(\%g, 'rationale');
 
 	return \%g;
