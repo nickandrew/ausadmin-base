@@ -105,7 +105,7 @@ if ($ts_end eq "" || $minyes eq "") {
 }
 
 # Ensure vote is actually finished
-if ($now < $ts_date) {
+if ($now < $ts_end) {
 	print STDERR "genresult.pl: Vote $vote not finished yet.\n";
 	exit(5);
 }
@@ -247,9 +247,9 @@ sub pass_msg() {
 
 # 60 sec * 60 min * 24 hours * 5 days = 432000
 
-	&setposts($ng,"post.real",$ts_date + 432000,432000,3);
-	&setposts($ng,"post.fake.phil",$ts_date + 864000,432000,3);
-	&setposts($ng,"post.fake.robert",$ts_date + 1296000,432000,3);
+	&setposts($ng,"post.real",$ts_end + 432000,432000,3);
+	&setposts($ng,"post.fake.phil",$ts_end + 864000,432000,3);
+	&setposts($ng,"post.fake.robert",$ts_end + 1296000,432000,3);
 }
 
 sub fail_msg() {
