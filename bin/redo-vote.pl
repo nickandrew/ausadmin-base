@@ -3,13 +3,16 @@
 #
 #	Usage: cd ~ausadmin ; redo-vote.pl newsgroup-name
 
+use lib 'bin';
+use Newsgroup;
+
 my $newsgroup = shift @ARGV;
 
-die "No vote directory - cd?" if (!-d "vote");
-die "No vote directory for $newsgroup" if (!-d "vote/$newsgroup");
+my $ng_dir = "vote/$newsgroup";
+
+die "redo-vote.pl: No directory $ng_dir" if (!-d "vote/$newsgroup");
 
 # Check that there was a vote for this newsgroup, and that it finished
-my $ng_dir = "vote/$newsgroup";
 
 die "Never voted on $newsgroup" if (!-f "$ng_dir/endtime.cfg");
 die "Never voted on $newsgroup" if (!-f "$ng_dir/vote_start.cfg");
@@ -44,6 +47,6 @@ rename($ng_dir, $old_dir);
 # That will do for the moment.
 
 print "$ng_dir directory renamed to $old_dir.\n";
-print "Now run 'new-rfd newsgroup-name < rfd-file' to setup the new vote.\n";
+print "Now run 'new-rfd newsgroup-name rfd-file' to setup the new vote.\n";
 
 exit(0);

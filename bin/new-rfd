@@ -19,9 +19,12 @@ Newsgroup="$1"
 Info="$2"
 
 # Commonly used variables
-HomeDir=~ausadmin
-BaseDir=$HomeDir/vote
+BaseDir=./vote
 
+if [ ! -d $BaseDir ] ; then
+	echo "new-rfd: No directory $BaseDir - cd?" >&2
+	exit 4
+fi
 
 # Parse the RFD and create appropriate files:
 #	- newsgroup directory
@@ -29,9 +32,9 @@ BaseDir=$HomeDir/vote
 #	  /modinfo
 
 ts=`date '+%Y%m%d-%H%M%S'`
-fn=~/RFD/$ts.rfd
+fn=RFD/$ts.rfd
 
-mkdir -p ~/RFD
+mkdir -p RFD
 
 echo Parsing $fn ...
 
@@ -43,9 +46,7 @@ if [ $s != 0 ] ; then
 	exit 6
 fi
 
-cd $HomeDir
-
-~/bin/parse-rfd.pl < $fn
+bin/parse-rfd.pl < $fn
 s=$?
 
 if [ $s != 0 ] ; then
@@ -56,5 +57,6 @@ fi
 cp $fn $BaseDir/$Newsgroup/rfd
 
 echo new-rfd Done at `date`
+echo "You have to edit the $BaseDir/$Newsgroup/rfd file now"
 
 exit 0

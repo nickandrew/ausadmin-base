@@ -9,6 +9,24 @@
 # and populates them with interesting things like the proposer name and
 # the group rationale and charter.
 
+=head1 NAME
+
+parse-rfd.pl - Read an RFD file and split into its components
+
+=head1 SYNOPSIS
+
+parse-rfd.pl [-d] newsgroup-name rfd-filename
+
+=head1 DESCRIPTION
+
+Parse the RFD file and write the following files in the
+vote/$newsgroup subdirectory:
+
+charter distribution ngline proposer rationale
+
+=cut
+
+
 use Time::Local;
 use IO::Handle;
 use Getopt::Std;
