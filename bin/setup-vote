@@ -40,6 +40,7 @@ pgp-signed Call-For-Votes (CFV) message and post it, so everybody
 knows they can vote.
 =cut
 
+use Time::Local;
 
 my $BaseDir = "./vote";
 
