@@ -102,6 +102,10 @@ if (!-d "vote/$vote") {
 	exit(3);
 }
 
+if (-f "vote/$vote/vote_cancel.cfg") {
+	die "Vote $vote was cancelled";
+}
+
 # Get vote end date and vote pass/fail rule
 my $ts_start = read1line("vote/$vote/vote_start.cfg");
 my $ts_end = read1line("vote/$vote/endtime.cfg");
