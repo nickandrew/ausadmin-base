@@ -192,9 +192,9 @@ sub ReadRFD {
 			my $c = { 'type' => $words[0] };
 			if ($words[0] eq 'newgroup') {
 				$c->{newsgroup} = $words[1];
-				$c->{mod_status} = $words[2];
-				$c->{submission_email} = $words[3];
-				$c->{request_email} = $words[4];
+				$c->{mod_status} = $words[2] || 'y';
+				$c->{submission_email} = $words[3] if ($words[3]);
+				$c->{request_email} = $words[4] if ($words[4]);
 				$g{change} = $c;
 				next;
 			}
