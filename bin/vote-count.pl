@@ -9,11 +9,16 @@ use Vote qw();
 
 my @vote_list = Vote::list_votes(vote_dir => "vote");
 
+my $count_states = {
+	'vote/running' => 1,
+	'vote/checking' => 1,
+};
+
 foreach my $vote_name (sort @vote_list) {
 	my $v = new Vote(name => $vote_name);
 	my $state = $v->state();
 
-	if ($state ne 'vote/running') {
+	if (! $count_states->{$state} ) {
 #		print "Ignoring $vote_name - state is $state\n";
 		next;
 	}
