@@ -57,15 +57,15 @@ foreach my $newsgroup (@newsgroups) {
 	close(O);
 
 	open(O, ">$BaseDir/$newsgroup/distribution") or die "Unable to write distribution";
-	print O join("\n",@{$g->{distribution}});
+	print O join("\n",@{$g->{distribution}}), "\n";
 	close(O);
 
 	open(CHARTER, ">$BaseDir/$newsgroup/charter") or die "Unable to write charter";
-	print CHARTER join("\n",@{$r->{charter}});
+	print CHARTER join("\n",@{$r->{charter}}), "\n";
 	close(CHARTER);
 
 	open(RATIONALE, ">$BaseDir/$newsgroup/rationale") or die "Unable to write rationale";
-	print RATIONALE join("\n",@{$r->{rationale}});
+	print RATIONALE join("\n",@{$r->{rationale}}), "\n";
 	close(RATIONALE);
 
 	open NGLINE,">$BaseDir/$newsgroup/ngline" or die "Unable to open ngline: $!";
@@ -74,7 +74,7 @@ foreach my $newsgroup (@newsgroups) {
 
 	if (exists $r->{modinfo}) {
 		open(MODINFO, ">$BaseDir/$newsgroup/modinfo") or die "Unable to write modinfo";
-		print MODINFO join("\n",@{$r->{modinfo}});
+		print MODINFO join("\n",@{$r->{modinfo}}), "\n";
 		close(MODINFO);
 	}
 }
