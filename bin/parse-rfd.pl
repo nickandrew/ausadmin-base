@@ -24,6 +24,8 @@ vote/$newsgroup subdirectory:
 
 charter distribution ngline proposer rationale
 
+and optionally: modinfo
+
 =cut
 
 
