@@ -21,10 +21,12 @@ No files are changed or created by this program.
 
 use lib 'bin';
 use Vote;
+use DateFunc;
 
 my %action_states = (
 	'vote/running' => 'Wait for end of vote',
 	'complete/resultnotposted' => '',
+	'complete/pass/signed' => 'Create and post newgroup message?',
 	'complete/pass' => '',
 	'complete/result' => 'Do something with the result - pass or fail?',
 	'cancelled' => '',
@@ -62,6 +64,7 @@ foreach my $vote (@votes) {
 		my $config_path = $v->ng_dir("rfd_posted.cfg");
 		open(F, "<$config_path");
 		my $date = <F>;
+		$date = DateFunc::adddays($date, 21);
 		chomp($date);
 		close(F);
 		$a .= $date;
