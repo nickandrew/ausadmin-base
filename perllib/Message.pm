@@ -240,10 +240,15 @@ my $received_regex = [
 
 	['from ccMail by (\S+) \(IMA', []],
 
-	# from [a.b.c.d]
+	# from  [a.b.c.d]
+
+	['from  \[([0-9.]+)\] as user ([a-zA-Z0-9@.-]+) by ([a-zA-Z0-9.-]+)', ['src-ip', 'src-email', 'dst-hostname']],
 
 	['from  \[([0-9.]+)\] by ([a-zA-Z0-9.-]+);', ['src-ip', 'dst-hostname']],
 	['from  \[([0-9.]+)\] by ([a-zA-Z0-9.-]+) ', ['src-ip', 'dst-hostname']],
+
+	# from [a.b.c.d]
+
 	['from \[([0-9.]+)\] by (\S+) \(SMTPD32', []],
 	['from \[([0-9.]+)\] by (\S+) \(SMTPD32', []],
 	['from \[([0-9.]+)\] by (\S+) \(NTMail', []],
@@ -251,6 +256,10 @@ my $received_regex = [
 
 	['from \[([0-9.]+)\] \(helo=(\S+)\) by ([a-zA-Z0-9.-]+)', ['src-ip', 'src-name', 'dst-hostname']],
 	['from \[([0-9.]+)\] by ([a-zA-Z0-9.-]+)', ['src-ip', 'dst-hostname']],
+
+	# from ipaddr by hostname
+
+	['from ([0-9.]+) by ([a-zA-Z0-9.-]+)', ['src-ip', 'dst-hostname']],
 
 	# from hostname(something)
 
@@ -305,6 +314,8 @@ my $received_regex = [
 
 	['from ([a-zA-Z0-9.-]+) \(\[([0-9.]+)\]\) by ([a-zA-Z0-9.-]+) ', ['src-name', 'src-ip', 'dst-hostname']],
 
+	['from ([a-zA-Z0-9.-]+) \[([0-9.]+)\] by ([a-zA-Z0-9.-]+) \[([0-9.]+)\] ', ['src-name', 'src-ip', 'dst-hostname', 'dst-ip']],
+
 	['from \[([0-9.]+)\] \(\[([0-9.]+)\]\) by ([a-zA-Z0-9.-]+)', ['src-fw-ip', 'src-ip', 'dst-hostname']],
 
 	['from ([0-9.]+) by ([0-9.]+) \((WinProxy)\)', ['src-fw-ip', 'dst-fw-ip', 'fw-software']],
@@ -324,7 +335,16 @@ my $received_regex = [
 	['from (\S+) by (\S+) with ', []],
 	['from (.*) by ([a-zA-Z0-9.-]+);', [undef, 'dst-hostname']],
 
+	# by something from something
+
+	['^by ([a-zA-Z0-9.-]+) from ([a-zA-Z0-9.-]+)', ['dst-hostname', 'src-hostname']],
+
+	# by something
+
 	['^by (\S+) \([0-9./]+\)', []],
+
+	# by something;
+
 	['^by ([a-zA-Z0-9.-]+);', ['dst-hostname']],
 	['^by (\S+) with Internet Mail Service', ['dst-hostname']],
 	['^by (\S+) with Microsoft MAPI', []],
@@ -334,6 +354,10 @@ my $received_regex = [
 	['^by ([a-zA-Z0-9.-]+) \(Postfix, from userid (\d+)\)', ['dst-hostname', 'postfix-uid']],
 	['^by (\S+) \([0-9.]+.*SMI', []],
 
+	# (default) by something
+	['^by ([a-zA-Z0-9.-]+)', ['dst-hostname']],
+
+	# crappy stupid headers go under here
 	['^..by (\S+) ', ['dst-hostname']],
 ];
 
@@ -495,7 +519,7 @@ sub header_info {
 	my $data_hr = { };
 
 	foreach (@header_l) {
-		if (/^([^:]+): (.*)/) {
+		if (/^([^:]+):\s(.*)/) {
 			my $hdr_name = lc($1);
 #			print "Checking: $hdr_name\n";
 			if (!exists $int_hr->{$hdr_name}) {
