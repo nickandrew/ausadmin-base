@@ -39,6 +39,7 @@ my %action_states = (
 	'cancelled' => '',
 	'new/norfd' => 'Use action to create the RFD',
 	'rfd/unposted' => 'Use action to post the RFD',
+	'rfd/unsigned' => 'Use action to sign the RFD',
 	'rfd/posted' => 'In discussion, wait until ',
 	'vote/checking' => 'Check for multi-votes and forgeries then use action',
 	'vote/cfvnotsigned' => 'Use action to sign the CFV',
