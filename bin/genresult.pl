@@ -7,6 +7,12 @@ $vote = $ARGV[0];
 
 $now = time;
 $postaddress = "ausadmin\@aus.news-admin.org";
+if (-f "/usr/bin/pgps") {
+	$pgpcmd = "pgps -fat";
+} else {
+	$pgpcmd = "pgp -fast";
+}
+
 select(STDOUT); $| = 1;
 
 sub read1line {
@@ -219,9 +225,14 @@ sub pass_msg() {
 		push(@body, $charter);
 	}
 
+	push(@body, "\nVOTERS:");
+	foreach $voter (sort @{$voters{$ng}}) {
+		push(@body, "  $voter");;
+	}
+	push(@body, "");
 	push(@body, $footer);
 
-	if (!open(P, "|pgp -fast")) {
+	if (!open(P, "|$pgpcmd")) {
 		print "Unable to open pipe to pgp!\n";
 		exit(7);
 	}
