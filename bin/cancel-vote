@@ -84,8 +84,11 @@ be added to this command which will change the default actions.
 =cut
 
 use Getopt::Std;
+use IO::File;
+
 use lib '.', 'bin';
 use Vote;
+use Newsgroup;
 
 my %opts;
 
@@ -95,9 +98,8 @@ my $BaseDir = './vote';
 my $newsgroup = shift @ARGV;
 my $now = time();
 
-# print "opt p is $opts{p}\n";
 
-die "Invalid newsgroup name" if ($newsgroup !~ /^[a-z0-9.-]+$/);
+die "Invalid newsgroup name" if (!Newsgroup::validate($newsgroup));
 die "No $BaseDir directory" if (!-d $BaseDir);
 die "No $BaseDir/$newsgroup directory" if (!-d "$BaseDir/$newsgroup");
 
@@ -146,8 +148,8 @@ if (!-f "$ng_dir/cancel-notes.txt") {
 	die "cancel-vote: Missing cancel-notes.txt for $newsgroup";
 }
 
-if ($opts{p}) {
-	# Generate a PGP-signed article announcing the cancellation
+
+if ($opts{p} || $opts{m}) {
 
 	my $v = new Vote(name=>$newsgroup);
 
@@ -155,42 +157,80 @@ if ($opts{p}) {
 	my $start_time = $v->get_start_time();
 	my $end_time = $v->get_end_time();
 	my $cancel_time = $v->get_cancel_time();
-
-	# Collect the head
-	my $s = cancel_art_head($newsgroup);
-	$s .= "\n\n";
-	$s .= cancel_top($newsgroup, $start_time, $end_time, $cancel_time);
-	$s .= "\n\n";
 	my $lr = $v->read_file("cancel-notes.txt");
-	$s .= join('', @$lr);
 
-	print $s;
+	if ($opts{p}) {
+		# Generate an article announcing the cancellation
+
+		# Collect the head
+		my $s = cancel_art_head($newsgroup);
+		$s .= "\n";
+		$s .= cancel_top($newsgroup, $start_time, $end_time, $cancel_time);
+		$s .= "\n";
+		$s .= join('', @$lr);
+
+		my $article_path = "$ng_dir/cancel-article.txt";
+
+		if (!-f $article_path) {
+			my $fh = new IO::File($article_path, O_WRONLY|O_CREAT, 0644);
+			die "Unable to open $article_path for writing: $!" if (!defined $fh);
+			$fh->print($s);
+			close($fh);
+			print "Wrote cancellation article to $article_path\n";
+		}
+	}
+
+	if ($opts{m}) {
+		# Generate an e-mail message announcing the cancellation
+
+		# Collect the head
+		my $s = cancel_msg_head($newsgroup);
+		$s .= "\n";
+		$s .= cancel_top($newsgroup, $start_time, $end_time, $cancel_time);
+		$s .= "\n";
+		$s .= join('', @$lr);
+
+		my $message_path = "$ng_dir/cancel-email.txt";
+
+		if (!-f $message_path) {
+			my $fh = new IO::File($message_path, O_WRONLY|O_CREAT, 0644);
+			die "Unable to open $message_path for writing: $!" if (!defined $fh);
+			$fh->print($s);
+			close($fh);
+			print "Wrote cancellation message to $message_path\n";
+		}
+	}
 }
 
 exit(0);
 
 sub cancel_art_head {
 	my $newsgroup = shift;
+	my $vote = shift;
 
 	my @lines;
 
 	push(@lines, "From: <ausadmin\@aus.news-admin.org>");
 	push(@lines, "Subject: VOTE CANCELLED: $newsgroup");
 
-	my $fh = new IO::File("vote/$newsgroup/distribution");
-	die "Unable to read distribution for $newsgroup" if (!defined $fh);
+	my $g = $vote->get_distribution();
 
-	my @groups;
-	while (<$fh>) {
-		chomp;
-		next if (/@/);		# Ignore e-mail addresses
-		push(@groups, $_);
-	}
-
-	push(@lines, "Newsgroups: " . join(',', sort(@groups)));
+	push(@lines, "Newsgroups: " . join(',', sort(@$g)));
 	push(@lines, "Followup-To: aus.net.news");
 
-	return join("\n", @lines);
+	return join("\n", @lines) . "\n";
+}
+
+sub cancel_msg_head {
+	my $newsgroup = shift;
+	my $vote = shift;
+
+	my @lines;
+
+	push(@lines, "From: <ausadmin\@aus.news-admin.org>");
+	push(@lines, "Subject: VOTE CANCELLED: $newsgroup");
+
+	return join("\n", @lines) . "\n";
 }
 
 sub cancel_top {
@@ -199,7 +239,7 @@ sub cancel_top {
 	my $end_time = shift;
 	my $cancel_time = shift;
 
-	
+
 	my @lines;
 	my $a;
 
@@ -211,5 +251,5 @@ sub cancel_top {
 	push(@lines, sprintf("%-30s %s", "Vote was expected to end at:", $a = gmtime($end_time) . " UTC"));
 	push(@lines, sprintf("%-30s %s", "Vote was cancelled at:", $a = gmtime($cancel_time) . " UTC"));
 
-	return join("\n", @lines);
+	return join("\n", @lines) . "\n";
 }
