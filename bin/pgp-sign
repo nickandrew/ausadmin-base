@@ -28,15 +28,15 @@ my $header = 1;
 my $cmd;
 my $signer = 'ausadmin@aus.news-admin.org';
 
-if (-f "/usr/bin/pgps") {
+if (-f '/usr/bin/gpg') {
+	$cmd = "gpg -a --clearsign -u $signer";
+} elsif (-f '/usr/bin/pgps') {
 	$cmd = "pgps -fat -u $signer";
 } elsif (-f '/usr/bin/pgp') {
 	$cmd = "pgp -s -f -u $signer";
 	# also "pgp -fast" - "-t" will convert input to CRLF before signing
-} elsif (-f '/usr/bin/gpg') {
-	$cmd = "gpg -a --clearsign -u $signer";
 } else {
-	warn "Couldn't find pgps or pgp or gpg, using cat";
+	warn "Couldn't find gpg or pgps or pgp, using cat";
 	$cmd = "cat";
 }
 
