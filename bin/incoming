@@ -9,4 +9,4 @@ fn=messages/$ts.$suffix
 
 cat > $fn
 
-bin/incoming.pl $fn | bin/collater.pl
+incoming.pl $fn | collater.pl

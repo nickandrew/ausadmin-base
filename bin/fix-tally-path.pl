@@ -10,7 +10,7 @@ fix-tally-path.pl - Add missing pathnames into tally file
 
 =head1 SYNOPSIS
 
-bin/incoming.pl was changed sometime in 1998 and the change broke
+incoming.pl was changed sometime in 1998 and the change broke
 the passing of filenames through to collater.pl. This program looks
 through the B<messages> directory and all B<vote/*/tally.dat> files
 and adds pathnames where it can.

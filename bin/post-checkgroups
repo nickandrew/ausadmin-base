@@ -20,7 +20,7 @@ if [ ! -f data/checkgroups.signed ] ; then
 	exit 8
 fi
 
-bin/post.pl < data/checkgroups.signed
+post.pl < data/checkgroups.signed
 s=$?
 if [ $s -ne 0 ] ; then
 	echo "post.pl submission of data/checkgroups.signed returned status $s"

@@ -21,7 +21,7 @@ if [ ! -f data/grouplist.signed ] ; then
 	exit 8
 fi
 
-bin/post.pl < data/grouplist.signed
+post.pl < data/grouplist.signed
 s=$?
 if [ $s -ne 0 ] ; then
 	echo "post.pl submission of data/grouplist.signed returned status $s"

@@ -61,7 +61,7 @@ if [ -d $BaseDir/$Proposal ] ; then
 	exit 7
 fi
 
-bin/parse-rfd.pl $Proposal < $fn
+parse-rfd.pl $Proposal < $fn
 s=$?
 
 if [ $s != 0 ] ; then
@@ -69,7 +69,7 @@ if [ $s != 0 ] ; then
 	exit 6
 fi
 
-echo "Good. Now do bin/action $Proposal"
+echo "Good. Now do action $Proposal"
 
 exit 0
 

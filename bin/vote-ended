@@ -8,7 +8,7 @@ if [ "x$vote" = "x" ] ; then
 	exit 2
 fi
 
-bin/genresult.pl $vote > tmp/result.$$ 2> tmp/pgp.$$
+genresult.pl $vote > tmp/result.$$ 2> tmp/pgp.$$
 s=$?
 if [ $s -ne 0 ] ; then
 	echo "genresult.pl failed, code $s - see tmp/result.$$ and tmp/pgp.$$"

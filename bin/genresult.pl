@@ -13,7 +13,7 @@ genresult.pl - Create the results file for a vote
 
 genresult.pl [B<-d>] [B<-r>] $votename > tmp/result.$votename
 pgp-sign < tmp/result.$votename > vote/$votename/result
-bin/post.pl < vote/$votename/result
+post.pl < vote/$votename/result
 
 =head1 DESCRIPTION
 
