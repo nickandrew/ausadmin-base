@@ -64,7 +64,7 @@ foreach my $vote (@votes) {
 		my $config_path = $v->ng_dir("rfd_posted.cfg");
 		open(F, "<$config_path");
 		my $date = <F>;
-		$date = DateFunc::adddays($date, 21);
+		$date = DateFunc::addday($date, 21);
 		chomp($date);
 		close(F);
 		$a .= $date;
