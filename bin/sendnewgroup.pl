@@ -38,7 +38,7 @@ close POST;
 system "mv /tmp/schedule.$$.$^T $schedule";
 
 sub sendmessage {
-  my $filename=shift;
+#  my $filename=shift;
   die "Newgroup message file $filename not made" if not -e $filename;
   if ($filename =~ /fake/) {
        system "cat $filename|rnews";
