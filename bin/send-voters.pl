@@ -14,7 +14,7 @@ if ($ARGV[0] eq '-r') {
 	$real = 0;
 }
 
-my $tally_path = shift @ARGV || die "Usage: send-voters.pl tally_path 'subject'\n";
+my $tally_path = shift @ARGV || die "Usage: send-voters.pl tally_path < message\n";
 
 # Read the list of voters
 
@@ -71,5 +71,5 @@ sub sendmail {
 }
 
 sub usage {
-	die "Usage: send-voters.pl newsgroup-name < message-file | /bin/bash\n";
+	die "Usage: send-voters.pl tally-path < message-file\n";
 }

@@ -1,6 +1,8 @@
 #!/usr/bin/perl
 #	@(#) send-notify-email.pl - Send email to all voters
-#	Usage: send-notify-email.pl newsgroup-name filename-to-send
+#	Usage: send-notify-email.pl newsgroup-name filename-to-send | /bin/bash
+#
+# $Id$
 
 use lib '.', 'bin';
 use Vote;
