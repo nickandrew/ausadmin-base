@@ -15,12 +15,12 @@ open POST,"<$filename" or die "Unable to open $filename $!";
 open PGP,"|pgp -fast >/tmp/$$.$^T.pgp.output"
   or die "Unable to fork for pgp $!";
 
-@post=<POST>;
+my @post=<POST>;
 
 close POST or die "Unable to close $filename $!";
 
-$header=grep {/.*/../^$/} @post;
-$body =grep {/^$/..undef} @post;
+my $header=grep {/.*/../^$/} @post;
+my $body =grep {/^$/..undef} @post;
 
 print PGP $body;
 
