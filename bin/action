@@ -271,7 +271,7 @@ sub post_cfv {
 	print F $yyyymmdd, "\n";
 	close(F);
 
-	print "\nOkay.\n";
+	print "\nOkay. Nothing more to do until vote is finished.\n";
 
 	return 16;	# nothing more to do for this group
 }

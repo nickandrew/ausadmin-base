@@ -43,6 +43,8 @@ B<cfv-procedure.txt>
 
 use Time::Local;
 use IO::Handle;
+
+use lib 'bin';
 use Ausadmin;
 
 # Info Needed to run the script
