@@ -13,7 +13,7 @@ use Time::Local;
 use IO::Handle;
 
 # Info Needed to run the script
-my $VoteAddress = 'vote\@aus.news-admin.org';
+my $VoteAddress = 'vote@aus.news-admin.org';
 my $BaseDir = './vote';
 
 my $sign_it = 1;
@@ -43,9 +43,14 @@ foreach my $newsgroup (@newsgroups) {
 	$g->{$newsgroup}->{ngline} = read_line("$BaseDir/$newsgroup/ngline");
 	$g->{$newsgroup}->{rationale} = read_file("$BaseDir/$newsgroup/rationale");
 	$g->{$newsgroup}->{charter} = read_file("$BaseDir/$newsgroup/charter");
+
 	eval {
 		$g->{$newsgroup}->{modinfo} = read_file("$BaseDir/$newsgroup/modinfo");
 		$g->{$newsgroup}->{moderator} = read_file("$BaseDir/$newsgroup/moderator");
+	};
+
+	eval {
+		$g->{$newsgroup}->{cfv_notes} = read_file("$BaseDir/$newsgroup/cfv-notes.txt");
 	};
 
 	$g->{$newsgroup}->{voterule} = read_file("$BaseDir/$newsgroup/voterule");
@@ -108,6 +113,14 @@ foreach my $newsgroup (@newsgroups) {
 
 }
 
+foreach my $newsgroup (@newsgroups) {
+	if ($g->{$newsgroup}->{cfv_notes}) {
+		print P "\nNOTE: $newsgroup\n";
+		P->print(join("\n",@{$g->{$newsgroup}->{cfv_notes}}));
+		print P "\n\n";
+	}
+}
+
 print P <<"EOMIDBODY";
 
 PROPOSER: $proposer
@@ -152,7 +165,7 @@ I vote YES on aus.good.group
 
 Anything else may be rejected by the automatic vote counting program.
 
-The ausadmin system will respond to your received ballots with a personal
+The ausadmin system will respond to your received message with a personal
 acknowledgement by E-mail so you must send from your real e-mail address,
 not a spam-block address. If you do not receive an acknowledgement within
 24 hours, try again. It is your responsibility to make sure your vote is
