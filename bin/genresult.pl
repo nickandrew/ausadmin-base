@@ -311,6 +311,12 @@ sub by_domain_userid {
 	my($a1,$a2) = split("\@", lc($a));
 	my($b1,$b2) = split("\@", lc($b));
 
+	# make it empty string if it is undef
+	$a1 ||= '';
+	$a2 ||= '';
+	$b1 ||= '';
+	$b2 ||= '';
+
 	$a2 cmp $b2 || $a1 cmp $b1;
 }
 
