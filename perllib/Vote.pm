@@ -222,6 +222,14 @@ sub state {
 		return "complete/pass";
 	}
 
+	if (-f "$ng_dir/control.signed") {
+		return "complete/pass/signed";
+	}
+
+	if (-f "$ng_dir/control.msg") {
+		return "complete/pass/unsigned";
+	}
+
 	if (-f "$ng_dir/result_posted.cfg") {
 		return "complete/result";
 	}

@@ -23,7 +23,11 @@ use lib 'bin';
 use Vote;
 
 my %action_states = (
-	'test/state' => 'Need action',
+	'vote/running' => 'Wait for end of vote',
+	'complete/resultnotposted' => '',
+	'complete/pass' => '',
+	'complete/result' => 'Do something with the result - pass or fail?',
+	'cancelled' => '',
 );
 
 if (!-d "./vote") {
