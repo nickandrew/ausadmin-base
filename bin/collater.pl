@@ -19,7 +19,7 @@ $LOCK_UN = 8;
 $HomeDir = "/virt/web/ausadmin";
 $BaseDir = "$HomeDir/vote";
 
-while ( <STDIN> ) {
+BIG:while ( <STDIN> ) {
 	($EmailAddress, $Newsgroup, $Vote, $CTime, $fn) = split;
 
 	# Section 1 (see above)
@@ -29,9 +29,11 @@ while ( <STDIN> ) {
 		close( CONFIGFILE );
 		if ($CTime > $VoteTime) {
 			FailVote( "$Newsgroup vote ended" );
+			next;
 		}
 	} else {
 		FailVote( "invalid newsgroup" );
+		next;
 	}
 
 	# Section 2 (see above)
@@ -42,6 +44,7 @@ while ( <STDIN> ) {
 			if ( $EmailAddress eq $EA ) {
 				FailVote( "already voted on $Newsgroup" );
 			}
+			next BIG;
 		}
 		close( TALLYFILE );
 	}
@@ -62,9 +65,9 @@ while ( <STDIN> ) {
 # This sub returns a message (using sendmail) to say the vote failed
 sub FailVote {
 	$ENV{'MAILHOST'}="aus.news-admin.org";
-	if ( open ( MAILPIPE, "|/usr/sbin/sendmail $EmailAddress" ) ) {
+	if ( open ( MAILPIPE, "|/usr/sbin/sendmail $EmailAddress ausadmin\@aus.news-admin.org" ) ) {
 		print MAILPIPE "From: ausadmin\@aus.news-admin.org (aus Newsgroup Administration)\n";
-		print MAILPIPE "To: $EmailAddress\n";
+		print MAILPIPE "To: $EmailAddress,ausadmin\@aus.news-admin.org\n";
 		print MAILPIPE "Subject: Vote Failed ($_[0])\n";
 		print MAILPIPE "X-Automated-Reply: this message was sent by an auto-reply program\n\n";
 
