@@ -28,8 +28,8 @@ sub endtime {
 	       warn ("inews -h $path/$vote/result\n");
 	       
 	  } else {	       
-	       system ("genresult.pl $vote >$path/$vote/result") or die "System failed for $vote";
-	       system ("inews -h $path/$vote/result") or die;
+	       system ("bin/genresult.pl $vote >$path/$vote/result");
+	       system ("inews -h $path/$vote/result");
 	  }
      }
 }
@@ -44,7 +44,7 @@ sub realpost {
 	  if ($debug) {
 	       warn "sendnewgroup.pl $path/$vote/$name $path/$vote/newgroup.post.real\n";
 	  } else {
-	       system ("sendnewgroup.pl $path/$vote/$name $path/$vote/newgroup.post.real");
+	       system ("bin/sendnewgroup.pl $path/$vote/$name $path/$vote/newgroup.post.real");
 	  }
 	  
      }
@@ -60,7 +60,7 @@ sub fakepost_phil {
 	  if ($debug) {
 	       warn ("sendnewgroup.pl $path/$vote/$name $path/$vote/newgroup.post.fake.phil\n");
 	  } else {
-	       system ("sendnewgroup.pl $path/$vote/$name $path/$vote/newgroup.post.fake.phil");
+	       system ("bin/sendnewgroup.pl $path/$vote/$name $path/$vote/newgroup.post.fake.phil");
 	  }
      }
      
@@ -76,7 +76,7 @@ sub fakepost_robert {
 	  if ($debug) {
 	       warn ("sendnewgroup.pl $path/$vote/$name $path/$vote/newgroup.post.fake.robert\n");
 	  } else {
-	       system ("sendnewgroup.pl $path/$vote/$name $path/$vote/newgroup.post.fake.robert");
+	       system ("bin/sendnewgroup.pl $path/$vote/$name $path/$vote/newgroup.post.fake.robert");
 	  }
 
      }
@@ -100,7 +100,7 @@ sub creategroup {
 	       warn ("gennewgroup.pl $vote\n");
 	       
 	  } else {	       
-	       system ("gennewgroup.pl $vote");
+	       system ("bin/gennewgroup.pl $vote");
 	  }
      }
 }
