@@ -41,7 +41,7 @@ my %opts;
 getopts('dr', \%opts);
 
 my $debug = $opts{'d'};
-my $recount = $opts{'r'};
+my $opt_recount = $opts{'r'};
 
 my $votename = shift;
 
@@ -217,7 +217,7 @@ if ($forge{$ng} == 0) {
 
 my %header;
 
-if (not $recount) {
+if (not $opt_recount) {
 	$header{Subject} = "RESULT: $ng $subjstat vote $yes{$ng}:$no{$ng}";
 } else {
 	$header{Subject} = "RECOUNT: $ng $subjstat vote $yes{$ng}:$no{$ng}";
@@ -280,7 +280,7 @@ sub pass_msg() {
 	push(@body, format_para("For a group to pass, YES votes must be at least $numer/$denomer of all valid (YES and NO) votes. There must also be at least $minyes more YES votes than NO votes. Abstentions, forgeries and multiple votes do not affect the outcome. Anybody wishing to challenge the apparent multiple votes must do so in aus.net.news."));
 	push(@body, "");
 
-	if ($pass) {
+	if ($pass && !$opt_recount) {
 		push(@body, format_para("A five-day discussion period follows this announcement. If no serious allegations of voting irregularities or scoring mistakes are raised, ausadmin will issue the newgroup message shortly afterward."));
 
 		push(@body, "");
