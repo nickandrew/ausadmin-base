@@ -60,9 +60,6 @@ sub load {
 		chomp;
 		my($email,$timestamp,$state,$check_id) = split;
 
-		# This is protection against me supplying the wrong filename.
-		die "Invalid state: $state (for $email)" if ($state ne 'OK' && $state ne 'FAIL' && $state ne 'NEW');
-
 		$data->{$email} = {
 			timestamp => $timestamp,
 			state => $state,
@@ -138,6 +135,53 @@ sub getCheckRef {
 	}
 
 	return $r;
+}
+
+sub idToEmail {
+	my($self, $check_id) = @_;
+
+	$self->load();
+
+	foreach my $email (keys %{$self->{data}}) {
+		if ($self->{data}->{$email}->{check_id} eq $check_id) {
+			return $email;
+		}
+	}
+
+	return undef;
+}
+
+sub setState {
+	my($self, $email, $state) = @_;
+
+	$self->load();
+
+	if (exists $self->{data}->{$email}) {
+		$self->{data}->{$email}->{state} = $state;
+		return;
+	}
+
+	die "No state known for $email";
+}
+
+sub getState {
+	my($self, $email) = @_;
+
+	if (exists $self->{data}->{$email}) {
+		return $self->{data}->{$email}->{state};
+	}
+
+	return undef;
+}
+
+sub set {
+	my($self, $email, $key, $value) = @_;
+
+	if (!exists $self->{data}->{$email}) {
+		die "No such voter: $email";
+	}
+
+	$self->{data}->{$email}->{$key} = $value;
 }
 
 1;
