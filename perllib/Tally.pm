@@ -88,7 +88,7 @@ sub remove {
 
 =head2
 
-C<set_vote($email, $vote)>
+C<($count,$old_vote) = set_vote($email, $vote)>
 
 Change the vote for a particular email address to the $vote specified.
 
@@ -110,12 +110,14 @@ sub set_vote {
 	die "Tally::remove - cannot open $tally_file: $!" if (!defined $tf);
 	flock($tf, LOCK_EX);
 	my $found = 0;
+	my $old_vote;
 
 	# Now read all the lines
 	while (<$tf>) {
 		my($v_email,$v_newsgroup,$v_vote,$v_timestamp) = split(/\s/);
 		if ($email eq $v_email) {
 			# Set the vote now
+			$old_vote = $v_vote;
 			push(@lines, "$v_email $v_newsgroup $vote $v_timestamp\n");
 			$found++;
 			next;
@@ -135,7 +137,7 @@ sub set_vote {
 		die "Tally::remove() Error writing to $tally_file: $!";
 	}
 
-	return $found;
+	return ($found,$old_vote);
 }
 
 1;

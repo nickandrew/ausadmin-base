@@ -26,7 +26,7 @@ my $t = new Tally(name => $ng);
 print "Updating $ng ...\n";
 
 foreach my $email (@ARGV) {
-	my $count = $t->set_vote($email, "FORGE");
+	my($count,$old_vote) = $t->set_vote($email, "FORGE");
 
 	if ($count > 1) {
 		print " $email done (and changed $count votes!)\n";
@@ -38,7 +38,7 @@ foreach my $email (@ARGV) {
 		next;
 	}
 
-	print " $email done\n";
+	print " $email done (was $old_vote)\n";
 }
 
 exit(0);
