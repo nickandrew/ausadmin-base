@@ -144,7 +144,7 @@ $Message::interesting_headers = {
 	'x-mdremoteip' => [0, 5, 'inside firewall source ip', '(.*)', ['ip']],
 	'x-originating-ip' => [0, 5, 'ip address of sender', '\[(.*)\]', ['ip']],
 	'x-sender-ip' => [0, 5, 'ip address of sender', '(.*)', ['ip']],
-	'x-sender' => [0, 5, 'email address of sender'],
+	'x-sender' => [0, 5, 'email address of sender', '(.*)', ['email']],
 	'x-senders-ip' => [0, 5, 'ip address of sender', '(.*)', ['ip']],
 	'x-sent-from' => [0, 5, 'email address of sender'],
 	'x-version' => [0, 5, 'freemail software version', '(.*)', ['fm_vers']],
@@ -195,70 +195,142 @@ my $freemail_regexes = [
 	'http://www.cubuffs.com',
 ];
 
+# Notes on Received headers ... ultraman (qmail) at least, seems to use
+# one of the following types:
+#  from dns-discovered-hostname (ident-lookup@src-ip-address) by ultra...
+#  from some-hostname (src-ip-address) by ultra...
+#  from dns-discovered-hostname (HELO what-they-say) (src-ip-address) by ul...
+#  from dns-discovered-hostname (HELO what-they-say) (ident-lookup@src-ip-address) by ultra...
+#  from unknown (HELO what-they-say) (src-ip-address) by ultra...
+
+# So the general form is:
+# from some-hostname (HELO \S+) (\S+@\S+) by \S+ with E?SMTP
+
 my $received_regex = [
-	['\(qmail \d+ invoked from network\);', []],
-	['\(cpmta \d+ invoked from network\);', []],
-	['\(qmail \d+ invoked by uid (\d+)\);', []],
+	['\(qmail (\d+) invoked from network\);', ['qmail-qid']],
+	['\(cpmta (\d+) invoked from network\);', ['cpmta-qid']],
+	['\(qmail (\d+) invoked by uid (\d+)\);', ['qmail-qid', 'sender-uid']],
 
-	['\(from (\S+)\) by (\S+) \([0-9./]+\)', []],
-	['by (\S+) \([0-9./]+\)', []],
-	['by ([a-zA-Z0-9.-]+);', []],
-	['by (\S+) with Internet Mail Service', []],
-	['by (\S+) with Microsoft MAPI', []],
-	['by (\S+) with Microsoft Mail', []],
-	['by (\S+)\(Lotus SMTP MTA', []],
-	['by (\S+) \(Postfix, from userid (\d+)\)', []],
-	['by (\S+) \(Fastmailer', []],
-	['by (\S+) \([0-9.]+.*SMI', []],
+	['\(from (\S+)\) by (\S+) \([0-9./]+\)', ['src-userid', 'dst-hostname']],
 
-	['from mail pickup service', []],
+	['from mail pickup service by ([a-zA-Z0-9.-]+) with Microsoft SMTPSVC', ['webmail-domain']],
+
 	['from ccMail by (\S+) \(IMA', []],
 
-	['from \[(\S+)\] by (\S+) \(SMTPD32', []],
-	['from \[(\S+)\] by (\S+) \(NTMail', []],
-	['from \[(\S+)\] by (\S+) with ESMTP', []],
-	['from  \[(\S+)\] by (\S+);', ['src-ip', 'dst-hostname']],
-	['from  \[(\S+)\] by (\S+) ', ['src-ip', 'dst-hostname']],
+	# from [a.b.c.d]
 
-	['from (\S+)\((\S+) (\S+)\) by ([a-zA-Z0-9.-]+) via smap', []],
+	['from  \[([0-9.]+)\] by ([a-zA-Z0-9.-]+);', ['src-ip', 'dst-hostname']],
+	['from  \[([0-9.]+)\] by ([a-zA-Z0-9.-]+) ', ['src-ip', 'dst-hostname']],
+	['from \[([0-9.]+)\] by (\S+) \(SMTPD32', []],
+	['from \[([0-9.]+)\] by (\S+) \(SMTPD32', []],
+	['from \[([0-9.]+)\] by (\S+) \(NTMail', []],
+	['from \[([0-9.]+)\] by ([a-zA-Z0-9.-]+) with ESMTP', ['src-ip', 'dst-hostname']],
+
+	['from \[([0-9.]+)\] \(helo=(\S+)\) by ([a-zA-Z0-9.-]+)', ['src-ip', 'src-name', 'dst-hostname']],
+	['from \[([0-9.]+)\] by ([a-zA-Z0-9.-]+)', ['src-ip', 'dst-hostname']],
+
+	# from hostname(something)
+
+	['from (\S+)\((\S+) ([0-9.]+)\) by ([a-zA-Z0-9.-]+) via smap', ['src-name', 'src-name', 'src-ip']],
 	['from (\S+)\((\S+)\), claiming to be "\S+".* by ([a-zA-Z0-9.-]+),', []],
 	['from (\S+)\((\S+)\) by ([a-zA-Z0-9.-]+) via smap', []],
 
-	['from (\S+)\(([0-9.]+)\) via SMTP by ([a-zA-Z0-9.-]+),', []],
+	['from (\S+)\(([0-9.]+)\) via SMTP by ([a-zA-Z0-9.-]+),', ['src-name', 'src-ip', 'dst-hostname']],
+
 
 	['from (\S+) \(\[(.*)\]\) by ([a-zA-Z0-9.-]+)\(', ['src-hostname', 'src-ip', 'dst-hostname']],
 	['from (\S+) \[(.*)\] by ([a-zA-Z0-9.-]+) \[(\S+)\] with ', []],
-	['from (\S+) \[(.*)\] by ([a-zA-Z0-9.-]+) with ', []],
-	['from (\S+) \[(.*)\] by ([a-zA-Z0-9.-]+) with ', []],
-	['from (\S+) \[(.*)\] by ([a-zA-Z0-9.-]+) \((.*)\) .*;', []],
 
-	['from (\S+) by (\S+) for \[(\S+)\]', []],
+	['from ([a-zA-Z0-9.-]+) \[([0-9.]+)\] by ([a-zA-Z0-9.-]+) with ', ['src-name', 'src-ip', 'dst-hostname']],
+
+	['from ([a-zA-Z0-9.-]+) \[([0-9.]+)\] by ([a-zA-Z0-9.-]+) \((.*)\) .*;', ['src-name', 'src-ip', 'dst-hostname']],
+
+	# this is a webmail thingy
+	['from ([0-9.]+) by ([a-zA-Z0-9.-]+) for \[([0-9.]+)\]', ['src-ip', 'dst-hostname', 'src-ip']],
+
 	['from (\S+) by (\S+) \(PMDF', []],
-	['from (\S+) by ([a-zA-Z0-9.-]+) with ', []],
-	['from ([a-zA-Z0-9.-]+) \((\S+) \[(\S+)\]\) by ([a-zA-Z0-9.-]+) .*with ', ['src-hostname', 'src-ip', 'dst-hostname']],
-	['from ([a-zA-Z0-9.-]+) \((.*)\) by ([a-zA-Z0-9.-]+) .*with ', ['src-hostname', 'src-ip', 'dst-hostname']],
-	['from (\S+) \((.*)\) by ([a-zA-Z0-9.-]+) ', []],
-	['from (.*) by (.*) with ', []],
-	['from (.*) by (.*) ', []],
+	['from ([0-9.]+) by ([a-zA-Z0-9.-]+) with (HTTP)', ['src-ip', 'dst-hostname', 'webmail-proto']],
+
+	# from something (something [a.b.c.d])
+
+	['from ([a-zA-Z0-9.-]+) \((\S+)@([a-zA-Z0-9.-]+) \[([0-9.]+)\]\) by ([a-zA-Z0-9.-]+)', ['src-name', 'src-userid', 'src-domain', 'src-ip', 'dst-hostname']],
+	['from ([a-zA-Z0-9.-]+) \(([a-zA-Z0-9.-]+) \[([0-9.]+)\] \(may be forged\)\) by ([a-zA-Z0-9.-]+)', ['src-name', 'src-hostname', 'src-ip', 'dst-hostname']],
+	['from ([a-zA-Z0-9.-]+) \(([a-zA-Z0-9.-]+) \[([0-9.]+)\]\) by ([a-zA-Z0-9.-]+)', ['src-name', 'src-hostname', 'src-ip', 'dst-hostname']],
+
+	# from something (HELO something) (user@a.b.c.d) by something
+
+	['from ([a-zA-Z0-9.-]+) \(HELO ([^)]+)\) \((\S+)@([0-9.]+)\) by ([a-zA-Z0-9.-]+) .*with ', ['src-hostname', 'src-name', 'src-ident', 'src-ip', 'dst-hostname']],
+	['from ([a-zA-Z0-9.-]+) \(HELO ([^)]+)\) \(([0-9.]+)\) by ([a-zA-Z0-9.-]+) .*with ', ['src-hostname', 'src-name', 'src-ip', 'dst-hostname']],
+
+	['from ([a-zA-Z0-9.-]+) \((\S+)@([0-9.]+)\) by ([a-zA-Z0-9.-]+) .*with ', ['src-name', 'src-ident', 'src-ip', 'dst-hostname']],
+
+	['from ([a-zA-Z0-9.-]+) \(([0-9.]+)\) by ([a-zA-Z0-9.-]+) .*with ', ['src-name', 'src-ip', 'dst-hostname']],
+
+	# from something ([a.b.c.d])
+
+	['from ([a-zA-Z0-9.-]+) \(\[([0-9.]+)\] helo=([^)]+)\) by ([a-zA-Z0-9.-]+)', ['src-hostname', 'src-ip', 'src-name', 'dst-hostname']],
+
+	['from ([a-zA-Z0-9.-]+) \(\[([0-9.]+)\]\) by ([a-zA-Z0-9.-]+) .*with ', ['src-name', 'src-ip', 'dst-hostname']],
+
+	# from something (a.b.c.d) by something
+
+	['from ([a-zA-Z0-9.-]+) \(([0-9.]+)\) by ([a-zA-Z0-9.-]+) ', ['src-hostname', 'src-ip', 'dst-hostname']],
+
+	['from (\S+) by ([a-zA-Z0-9.-]+) with local', ['src-userid', 'dst-hostname']],
+
+
+	['from ([a-zA-Z0-9.-]+) \(\[([0-9.]+)\]\) by ([a-zA-Z0-9.-]+) ', ['src-name', 'src-ip', 'dst-hostname']],
+
+	['from \[([0-9.]+)\] \(\[([0-9.]+)\]\) by ([a-zA-Z0-9.-]+)', ['src-fw-ip', 'src-ip', 'dst-hostname']],
+
+	['from ([0-9.]+) by ([0-9.]+) \((WinProxy)\)', ['src-fw-ip', 'dst-fw-ip', 'fw-software']],
+
+
+	['from ([a-zA-Z0-9.-]+) \(unverified\) by ([a-zA-Z0-9.-]+)', ['src-name', 'dst-hostname']],
+	['from ([a-zA-Z0-9.-]+) \(([a-zA-Z0-9.-]+)\) by ([a-zA-Z0-9.-]+)', ['src-name', 'src-hostname', 'dst-hostname']],
+
+
+	['from localhost \((\S+)@localhost\) by ([a-zA-Z0-9.-]+)', ['src-userid', 'dst-hostname']],
+
+
+	# this is for AOL
+
+	['from (\S+)@(\S+) by ([a-zA-Z0-9.-]+)', ['src-userid', 'src-domain', 'dst-hostname']],
+
+	['from (\S+) by (\S+) with ', []],
+	['from (.*) by ([a-zA-Z0-9.-]+);', [undef, 'dst-hostname']],
+
+	['^by (\S+) \([0-9./]+\)', []],
+	['^by ([a-zA-Z0-9.-]+);', ['dst-hostname']],
+	['^by (\S+) with Internet Mail Service', ['dst-hostname']],
+	['^by (\S+) with Microsoft MAPI', []],
+	['^by (\S+) with Microsoft Mail', []],
+	['^by (\S+)\(Lotus SMTP MTA', []],
+	['^by ([a-zA-Z0-9.-]+) \(Fastmailer, from userid (\d+)\)', ['dst-hostname', 'fastmailer-uid']],
+	['^by ([a-zA-Z0-9.-]+) \(Postfix, from userid (\d+)\)', ['dst-hostname', 'postfix-uid']],
+	['^by (\S+) \([0-9.]+.*SMI', []],
+
+	['^..by (\S+) ', ['dst-hostname']],
 ];
 
 sub check_received {
 	my $self = shift;
 	my $header = shift;
+	my $data_hr = { };
 
 	$header =~ s/^Received: //;
-	my $match = 0;
+	$data_hr->{header} = $header;
+	$data_hr->{match} = 0;
 
 	foreach my $r (@$received_regex) {
 		my $regex = $r->[0];
 		my $hash_map = $r->[1];
 
 		if ($header =~ /$regex/) {
-			print "Header: $header\n";
-			print "Matched this regex: $regex\n";
-			print "References: $1, $2, $3\n";
 
-			my $data_hr = { };
+			$data_hr->{match} = 1;
+			$data_hr->{regex} = $regex;
+			$data_hr->{references} = "$1, $2, $3";
 
 			# Ok, we got something. Now grab the contents and stick in hashref
 			my @refs = ($1,$2,$3,$4,$5,$6,$7,$8,$9);
@@ -272,27 +344,64 @@ sub check_received {
 				}
 			}
 
-			# Print out the useful data
-			print "The data we got was:\n";
-			foreach my $v (sort (keys %$data_hr)) {
-				printf "\t%-20s :", $v;
-				foreach my $l (@{$data_hr->{$v}}) {
-					print ' ', $l;
-				}
-				print "\n";
-			}
-
-			print "\n";
-
-			# Grab the useful data
-			$match = 1;
 			last;
 		}
 	}
 
-	if (!$match) {
-		print "No match: $header\n";
+	return $data_hr;
+}
+
+=pod
+
+ print_received_data($data_hash) ...
+
+Print to STDOUT the interesting information we gleaned from a Received header
+
+=cut
+
+sub print_received_data {
+	my $self = shift;
+	my $data_hash = shift;
+
+	if (!$data_hash->{match}) {
+		print "No match: ", $data_hash->{header};
+		print "\n";
+		return;
 	}
+
+	print "Header: ", $data_hash->{header}, "\n";
+	print "Matched this regex: ", $data_hash->{regex}, "\n";
+	print "References: ", $data_hash->{references}, "\n";
+
+	if ($data_hash->{references} eq ', , ') {
+		print "No references (header): ", $data_hash->{header}, "\n";
+		print "No references (regex): ", $data_hash->{regex}, "\n";
+	}
+
+	# Print out the useful data
+
+	print "The data we got was:\n";
+	my $data_count = 0;
+	foreach my $v (sort (keys %$data_hash)) {
+
+		# Ignore these ones which are info about the header and not
+		# about the data gleaned from it
+		next if ($v eq 'header' || $v eq 'match' || $v eq 'references' || $v eq 'regex');
+
+
+		$data_count++;
+		printf "\t%-20s :", $v;
+		foreach my $l (@{$data_hash->{$v}}) {
+			print ' ', $l;
+		}
+		print "\n";
+	}
+
+	if (!$data_count) {
+		print "No data!\n";
+	}
+
+	print "\n";
 }
 
 =pod
@@ -342,7 +451,7 @@ sub parse_header {
 
 =pod
 
-header_info() ...
+ header_info() ...
 
 Check every interesting header and extract the data contained in it.
 Organise all data by name and return a reference to a hash: the key
