@@ -38,11 +38,16 @@ directory in the format:
 
 =cut
 
+use lib 'bin';
+
 use FileHandle;
 use IO::File;
 use Fcntl qw(:flock);
 
+use VoterState qw();
+
 my $basedir = "./vote";
+my $vs = new VoterState();
 
 while ( <STDIN> ) {
 	chomp;
@@ -52,6 +57,9 @@ while ( <STDIN> ) {
 		FailVote($emailaddress, "Invalid newsgroup name (must be of the format aus.whatever, in lower case");
 		next;
 	}
+
+	my $vr = $vs->getCheckRef($emailaddress);
+	my $check_id = $vr->{check_id};
 
 	my $ng_dir = "$basedir/$newsgroup";
 
@@ -115,10 +123,12 @@ while ( <STDIN> ) {
 		die "Error writing to tally file for $newsgroup";
 	}
 
-	AckVote($emailaddress, $Vote, $newsgroup, $ts);	
+	AckVote($emailaddress, $Vote, $newsgroup, $check_id);	
 }
-# End of main loop
 
+$vs->save();
+
+exit(0);
 
 # This sub returns a message (using sendmail) to say the vote failed
 sub FailVote {
@@ -149,7 +159,6 @@ sub FailVote {
 	}
 
 	print STDERR "Collater failed ($_[0])\n";
-	exit(0);
 }
 
 # This sub returns a message (using sendmail) to say the vote was accepted
@@ -157,10 +166,10 @@ sub AckVote {
 	my $emailaddress = shift;
 	my $Vote = shift;
 	my $newsgroup = shift;
-	my $vote_id = shift;
+	my $check_id = shift;
 
 	$ENV{MAILHOST} = "aus.news-admin.org";
-	$ENV{QMAILUSER} = "vote-return-$vote_id";
+	$ENV{QMAILUSER} = "vote-return-$check_id";
 
 	if ( open ( MAILPIPE, "|/usr/sbin/sendmail $emailaddress" ) ) {
 		print MAILPIPE "From: ausadmin\@aus.news-admin.org (aus Newsgroup Administration)\n";
@@ -168,13 +177,15 @@ sub AckVote {
 		print MAILPIPE "Subject: Vote accepted for $newsgroup\n";
 		print MAILPIPE "X-Automated-Reply: this message was sent by an auto-reply program\n";
 		
-		printf MAILPIPE "
+		print MAILPIPE "
 This is an automatic message sent to you after your vote has been counted.
-If this is correct, there is no need for you to reply. 
+If this is correct, there is no need for you to reply.\n";
 
-	Newsgroup                                         Vote
-	---------					  ----
-	%-50s $Vote
+		printf MAILPIPE "\t%-50s %s\n", "Newsgroup", "Vote";
+		printf MAILPIPE "\t%-50s %s\n", "---------", "----";
+		printf MAILPIPE "\t%-50s %s\n", $newsgroup, $Vote;
+
+		print MAILPIPE "
 
 This is a public vote, and all voting e-mail addresses will be listed
 in the final voting results.
@@ -183,7 +194,7 @@ For a copy of the Call For Votes (CFV) go to:
 
 	http://aus.news-admin.org/cgi-bin/voteinfo?newsgroup=$newsgroup
 
-If you have a problem please contact <ausadmin\@aus.news-admin.org>. ", $newsgroup;
+If you have a problem please contact <ausadmin\@aus.news-admin.org>.\n";
 
 		close( MAILPIPE );
 	} else {
