@@ -1,0 +1,14 @@
+#!/bin/sh
+#	Post the aus.* group creation FAQ to aus.net.news
+#
+# $Revision$
+# $Date$
+
+if ! [ -f "data/faq.header" -a -f "root/Faq/aus_faq" ] ; then
+	echo "No header files"
+	exit 3
+fi
+
+( cat data/faq.header ; echo "" ; cat root/Faq/aus_faq ) | inews -h
+
+exit 0
