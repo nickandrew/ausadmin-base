@@ -314,4 +314,32 @@ sub pgp_signer {
 	return $Ausadmin::pgp_signer_default;
 }
 
+sub resolve_template {
+	my($text, $hr) = @_;
+
+	$text =~ s/\$([A-Z0-9]+)\$/$hr->{$1}/eg;
+
+	return $text;
+}
+
+sub sendmail_template {
+	my($file, $hr, @recipients) = @_;
+
+	open(SMTP, "<$file") || die "Unable to open $file for read: $!";
+	my $text = join('', <SMTP>);
+	close(SMTP);
+
+	$text = resolve_template($text, $hr);
+
+	my $recip = join(' ', @recipients);
+	$recip =~ s/[^A-Z0-9a-z.\@_-]+//g;
+
+	$ENV{MAILHOST} = 'aus.news-admin.org';
+	$ENV{QMAILUSER} = 'ausadmin';
+
+	open(SM, "|/usr/sbin/sendmail $recip") || die "Unable to open pipe to sendmail: $!";
+	print SM $text;
+	close(SM);
+}
+
 1;
