@@ -1,0 +1,12 @@
+This is a Request For Discussion, not a call for votes. In this phase of
+the process, any potential problems with the proposal should be raised
+and resolved. The discussion period will continue for a minimum of 21 days
+(starting from when the first RFD for this proposal is posted by ausadmin
+to aus.net.news), after which a Call For Votes (CFV) may be posted
+by ausadmin (see http://aus.news-admin.org/ for further information).
+Please do not attempt to vote until this happens.
+
+All discussion of this proposal should be posted to aus.net.news.
+
+Please see http://aus.news-admin.org/Faq/aus_faq for more information
+about the aus.* newsgroup creation and modification processes.
