@@ -51,9 +51,10 @@ perl -e 'print $^T,"\n"' > $Newsgroup/starttime.cfg
 
 # Run the Perl script mkcvf to make the CFV and PGP-sign it then post it away!
 tr -d '\r' < $HomeDir/tmp/info.$$ | mkcfv.pl > $Newsgroup/posted.cfv 2>$HomeDir/tmp/pgp.$$
-s=$?
+S=$?
 if [ $s != 0 ] ; then
 	echo "Unable to make Call For Votes -- code $s - fatal"
+	cat $Newsgroup/posted.cfv 2>$HomeDir/tmp/pgp.$$
 	exit 7
 fi
 
