@@ -1,8 +1,10 @@
 #!/usr/bin/perl -w
+# $Revision$
+# $Date$
 
 use strict;
 
-# Take in the file name, check it and then if neccery post off a
+# Take in the file name, check it and then if necessary post off a
 # newgroup or rmgroup message.
 sub checkmessage ( $ );
 
@@ -13,7 +15,7 @@ my $votedir = "vote";
 my $vote = $ARGV[0];
 my $now = time;
 
-for my $file ("post.real","post.fake.phill","post.fake.robert") {
+for my $file ("post.real","post.fake.phil","post.fake.robert") {
   checkmessage $file;
 }
 
@@ -42,7 +44,7 @@ sub checkmessage ( $ ) {
   }
   
   while (<FILE>) {
-    my ($group,$firstpostdate,$intervil,$count)=split /\t/;
+    my ($group,$firstpostdate,$interval,$count)=split /\t/;
     
     if ($now>$firstpostdate) {
       makemessage $group,$file;
@@ -50,9 +52,9 @@ sub checkmessage ( $ ) {
       $count--;
       if ($count) {
 	
-	$firstpostdate += $intervil;
+	$firstpostdate += $interval;
 	
-	print POST "$group\t$firstpostdate\t$intervil\t$count\n";
+	print POST "$group\t$firstpostdate\t$interval\t$count\n";
 	close POST;
       }
       
@@ -69,17 +71,17 @@ sub makemessage ( $$ ) {
   my $file=shift;
   my $name=shift;
   
-  # This will be changed to code that works out weather or not I wish to newgroup
+  # This will be changed to code that works out whether or not I wish to newgroup
   # or rmgroup.
   my $newgroup=1;
   my $moderated=0;
   
-  #Get the from line for the forging/setting for the from and apporved lines
-  #should most likely be read from a file, just sticking it here while I deside
+  #Get the from line for the forging/setting for the from and approved lines
+  #should most likely be read from a file, just sticking it here while I decide
   #where it should go.
   my $from = {
 	      "post.real" => "Aus news admin <ausadmin\@aus.news-admin.org>",
-	      "post.fake.phill" => "Phil Herring <revdoc\@uow.edu.au>",
+	      "post.fake.phil" => "Phil Herring <revdoc\@uow.edu.au>",
 	      "post.fake.robert" => "kre\@munnari.OZ.AU (Robert Elz)",
 	     } -> {$file};
   my $post;
@@ -95,10 +97,10 @@ Subject: Cmsg newgroup $name
 Newsgroup: aus.news,$name
 Control: Newgroup $name
       
-$name is an unmoderated newsgroup wich passed its vote for creation as reported
-in aus.news
+$name is an unmoderated newsgroup which passed its vote for creation as reported
+in aus.net.news
 	  
-For your newsgroups File:
+For your newsgroups file:
 $ngline
 	    
 This charter culled from the vote result announcement.
@@ -112,7 +114,7 @@ EOT
   }
 
   if ($name =~ /forged/) {
-    $post .= "\nThis control message has been forged as \"$from\" for the benifit of thouse\nsites still honouring his posts.  If you are one of thouse sites please see \<URL:http://aus.news-admin.org/\>.";
+    $post .= "\nThis control message has been forged as \"$from\" for the benefit of those\nsites still honouring his posts.  If you are one of those sites please see \<URL:http://aus.news-admin.org/\>.";
   }
   local *NEWS;
   if (not open (NEWS,"|pgpverify|inews -h")) {
@@ -123,7 +125,7 @@ EOT
   print NEWS $post;
 
   if (not close NEWS) {
-    print "Unabel to run pgpverify due to $!\n";
+    print "Unable to run pgpverify due to $!\n";
     exit (5);
   } 
 }
