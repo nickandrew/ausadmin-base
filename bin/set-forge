@@ -15,6 +15,7 @@ as a forgery.
 
 =cut
 
+use lib 'bin';
 use Tally;
 
 my $ng = shift @ARGV;
