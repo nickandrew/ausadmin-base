@@ -127,32 +127,32 @@ sub FailVote {
 # This sub returns the email address out of a "from" field
 sub GetAddr {
 
-	my $Address = $_[0];
+	my $address = $_[0];
 
 	# This bit removes any unwanted parts from the email address
-	if ( $Address =~ /<.*>/ ) {
-		$Address =~ s/.*<([^>]+)>.*/$1/;
+	if ( $address =~ /<.*>/ ) {
+		$address =~ s/.*<([^>]+)>.*/$1/;
 	}
-	elsif ( $Address =~ /\(.*\)/ ) {
+	elsif ( $address =~ /\(.*\)/ ) {
 		# remove multiple occurances of ( ) style comments
-		$Address =~ s/\([^\)]+\)/$1/g;
+		$address =~ s/\([^\)]+\)/$1/g;
 
 		# remove all unwanted spaces leaving just one
-		$Address =~ s/\s*([^\s]+)\s*/$1 /g;
+		$address =~ s/\s*([^\s]+)\s*/$1 /g;
 
 		# if more than one space then more than one reply address
-		if ( $Address =~ /\s([^\s]+)\s/g ) {
-			$Address =~ s/^([^\s]+).*/$1/;
-			print "$Address\n";
+		if ( $address =~ /\s([^\s]+)\s/g ) {
+			$address =~ s/^([^\s]+).*/$1/;
+			print "$address\n";
 			die "ERROR More than one reply-to address";
 		}
 
 		# Now remove trailing spaces
-		$Address =~ s/([^\s]+)\s*/$1/;
+		$address =~ s/([^\s]+)\s*/$1/;
 	} else {
 		# Remove any leading or traling spaces
-		$Address =~ s/\s*([^\s]+).*/$1/;
+		$address =~ s/\s*([^\s]+).*/$1/;
 	}
 
-	return $Address;
+	return lc($address);
 }
