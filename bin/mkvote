@@ -47,9 +47,9 @@ echo "2 3 10" > $Newsgroup/conf/voterule
 echo "14" > $Newsgroup/conf/voteperiod
 
 # Run the Perl script mkcvf to make the CFV and PGP-sign it then post it away!
-tr -d '\r' < $Info | $BaseDir/bin/mkcfv.pl | pgp -f > $BaseDir/$Newsgroup/conf/posted.cfv
+tr -d '\r' < $Info | $BaseDir/bin/mkcfv.pl | pgp -f > $Newsgroup/conf/posted.cfv
 ln -s $BaseDir/$Newsgroup/conf/posted.cfv $HomeDir/CFV/$Newsgroup
 
 # Post the CFG
-inews -h < $BaseDir/$Newsgroup/conf/posted.cfv
-echo `date +%s` > $BaseDir/$Newsgroup/conf/posted.cfg
+inews -h < $Newsgroup/conf/posted.cfv
+echo `date +%s` > $Newsgroup/conf/posted.cfg
