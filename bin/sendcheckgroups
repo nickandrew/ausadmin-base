@@ -1,43 +1,47 @@
 #!/bin/sh
-#	Create and post a newsgroups list to aus.net.news
-#	Create and post a signed checkgroups
+#	@(#) bin/sendcheckgroup - Create/post newsgroup list and checkgroups
 #
+# $Source$
 # $Revision$
 # $Date$
 
 bin/gengrouplist.pl > tmp/grouplist.$$ 2> tmp/pgp.$$
 s=$?
 if [ $s -ne 0 ] ; then
-	echo "gengrouplist.pl returned status $s - fatal"
+	echo "bin/gengrouplist.pl returned status $s - fatal"
+	rm -f tmp/grouplist.$$
 	exit 2
 fi
 
 bin/gencheckgroups.pl > tmp/checkgroups.$$ 2> tmp/pgp.$$
 s=$?
 if [ $s -ne 0 ] ; then
-	echo "gencheckgroups.pl returned status $s - fatal"
+	echo "bin/gencheckgroups.pl returned status $s - fatal"
+	rm -f tmp/checkgroups.$$
 	exit 3
 fi
 
-# Keep the latest version always
-cp tmp/grouplist.$$ data/grouplist.msg
-cp tmp/checkgroups.$$ data/checkgroups.msg
+# Replace the current version with the latest
+
+mv tmp/grouplist.$$ data/grouplist.msg
+mv tmp/checkgroups.$$ data/checkgroups.msg
 
 #----------------------------------------------------------------------------
 #  Post the messages
 #----------------------------------------------------------------------------
 
-inews -h  tmp/grouplist.$$
+rc=0
+inews -h data/grouplist.msg
 s=$?
 if [ $s -ne 0 ] ; then
-	echo "inews returned status $s"
+	echo "inews submission of data/grouplist.msg returned status $s"
 	rc=2
 fi
 
-rnews tmp/checkgroups.$$
+inews -h data/checkgroups.msg
 s=$?
 if [ $s -ne 0 ] ; then
-	echo "rnews returned status $s"
+	echo "inews submission of data/grouplist.msg returned status $s"
 	rc=4
 fi
 
