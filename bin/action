@@ -379,7 +379,8 @@ sub post_rfd {
 		print F $yyyymmdd, "\n";
 		close(F);
 
-		return;
+		print "Okay, I posted it. Nothing more to do for 21 days.\n";
+		exit(0);
 	}
 
 	# Otherwise, abort
