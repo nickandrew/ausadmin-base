@@ -26,8 +26,7 @@ while ( <STDIN> ) {
 		if ($CTime > $VoteTime) {
 			FailVote( "$Newsgroup vote ended" );
 		}
-	}
-	else {
+	} else {
 		FailVote( "invalid newsgroup" );
 	}
 
@@ -48,8 +47,7 @@ while ( <STDIN> ) {
 		flock( TALLYFILE, $LOCK_EX );
 		print TALLYFILE "$EmailAddress $Newsgroup $Vote $CTime $fn\n";
 		close( TALLYFILE );
-	}
-	else {
+	} else {
 		die "Collater failed (couldn't open/create tally file)";
 	}
 	AckVote();	
@@ -64,7 +62,7 @@ sub FailVote {
 		print MAILPIPE "From: ausadmin\@aus.news-admin.org (aus Newsgroup Administration)\n";
 		print MAILPIPE "To: $EmailAddress\n";
 		print MAILPIPE "Subject: Vote Failed ($_[0])\n";
-		print MAILPIPE "X-Automated-Reply: this message was sent by an auto-reply program\n";
+		print MAILPIPE "X-Automated-Reply: this message was sent by an auto-reply program\n\n";
 
 		if ( open ( ERRORMSG, "$BaseDir/conf/votefail.msg" ) ) {
 			while ( <ERRORMSG> ) {
@@ -72,17 +70,18 @@ sub FailVote {
 				print MAILPIPE "$_\n";
 			}
 			close( ERRORMSG );
-		}
-		else {
-			die "Couldn't open votefail.msg!";
+		} else {
+			print MAILPIPE "Your vote failed, but I couldn't open my error message file\n";
+			print MAILPIPE "so please contact ausadmin\@aus.news-admin.org for assistance.\n";
+			print STDERR "Couldn't open votefail.msg!";
 		}
 
 		close( MAILPIPE );
-	}
-	else {
+	} else {
 		die "MAILPIPE failed";
 	}
-	die "Collater failed ($_[0])";
+	print STDERR "Collater failed ($_[0])";
+	exit(0);
 }
 
 # This sub returns a message (using sendmail) to say the vote was accepted
@@ -112,8 +111,7 @@ If you have a problem please contact the aus Newsgroup
 Administrator Nick Andrew <ausadmin\@aus.news-admin.org>. ", $Newsgroup;
 
 		close( MAILPIPE );
-	}
-	else {
+	} else {
 		die "MAILPIPE failed";
 	}
 }
