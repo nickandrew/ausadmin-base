@@ -59,11 +59,12 @@ foreach my $hier (@hiers) {
 	foreach my $ng (sort (keys %gl)) {
 		my $r = $gl{$ng};
 		my $desc = $r->{description} || '';
+		my $flags = $r->{flags} || '';
 		$desc =~ s/%/%25/g;
 		$desc =~ s/&/%26/g;
 		$desc =~ s/"/%22/g;
 		$desc =~ s/\+/%2b/g;
-		$s .= qq~  <group name="$ng" description="$desc" flags="$r->{flags}" />\n~;
+		$s .= qq~  <group name="$ng" description="$desc" flags="$flags" />\n~;
 	}
 
 	$s .= qq~ </hier>\n~;
