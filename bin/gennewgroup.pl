@@ -73,7 +73,7 @@ sub makemessage ( $$ ) {
      }
 
      open FILE,">/virt/web/ausadmin/vote/$vote/newgroup.$name" or die "Yipe Yipe Yipe unable to open /virt/web/ausadmin/vote/$vote/newgroup.$name because $!\n";
-     print $post;
+     print FILE $post;
      
 }
 
