@@ -1,45 +1,48 @@
 #!/usr/bin/perl
+#	@(#) incoming.pl
+# $Revision$
+# $Date$
 
 # Processes any incoming mail
-# 1. Grabs the email address (read the From: line and pipes to getaddr.pl)
-# 2. Grabs group out of subject - otherwise fail
-# 3. Grabs vote from body - otherwise fail
-# 4. Assign timestamp (time)
-# 5. output to STDOUT
+# 1. Read in the message header and obtain the return email address 
+#    - otherwise die. Each vote needs a return email address.
+# 2. Grabs vote and group from body - otherwise fail
+# 3. Assign timestamp (time)
+# 4. output to STDOUT
+
 
 $HomeDir = "/virt/web/ausadmin";
 $BaseDir = "$HomeDir/vote";
 
+
 # Section 1 and 2 (see above)
+# Read in headers
 S1: while ( <STDIN> ) {
+	if ( $_ eq "\n" ) {
+		last S1;
+	}
 	chomp;
-	if ( $_ =~ /^From:.*/ ) {
+	if ( ($_ =~ /^From:.*/) && ($EmailAddress eq "") ) {
 		s/^From:(.*)/$1/;
 		$EmailAddress = GetAddr( $_ );
 	}
-	elsif ( $_ =~ /^Subject:.*/ ) {
-		s/^Subject:\s*(.*)/$1/;
-		if ( $_ =~ /aus.*/ ) {
-			s/.*(aus[^\s]*).*/$1/;
-			$Newsgroup = $_;
-		}
-		else {
-			FailVote( "no newsgroup" );
-		}
+	elsif ( $_ =~ /^reply-to:.*/i ) {
+		s/^reply-to:(.*)/$1/i;
+		$EmailAddress = GetAddr( $_ );
 	}
-	if ( ($EmailAddress ne "") && ($Newsgroup ne "") ) {
-		last S1;
-	}
+}
+if ( $EmailAddress eq "" ) {
+	die "NO RETURN EMAIL ADDRESS SUPPLIED IN HEADER";
 }
 
 
-# Section 3 (see above)
-S3: while ( <STDIN> ) {
+# Section 2 (see above)
+S2: while ( <STDIN> ) {
 	chomp;
-	if ( $_ =~ /I vote [^\s]* on $Newsgroup.*/i ) {
-		s/I vote ([^\s]*).*/$1/i;
-		$Vote = $_;
-		last S3;
+	if ( $_ =~ /^I vote [^\s]* (on|to|for) aus.*/i ) {
+		s/^I vote ([^\s]*).*(aus[^\s]*).*/$1-$2/i;
+		( $Vote, $Newsgroup ) = split( "-" );
+		last S2;
 	}
 }
 if ($Vote eq "") {
@@ -49,9 +52,13 @@ elsif ( ($Vote !~ /^yes$/i) & ($Vote !~ /^no$/i) & ($Vote !~ /^abstain$/i) ) {
 	FailVote ( "invalid vote" );
 }
 
+
+# Section 3 (see above)
 $CTime = time;
-# Output Results
+
+# Output Results - Section 4 (see above)
 print "$EmailAddress $Newsgroup $Vote $CTime $ARGV[0]\n";
+
 
 # This sub returns a message (using sendmail) to say the vote failed
 sub FailVote {
@@ -78,6 +85,7 @@ sub FailVote {
 	else {
 		die "MAILPIPE failed";
 	}
+
 	die "Parser failed ($_[0])";
 }
 
