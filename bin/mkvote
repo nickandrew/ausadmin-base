@@ -41,10 +41,12 @@ fi
 
 cd $BaseDir
 
-# set up directories
+# set up control files
+
 gendirs $Newsgroup $Newsgroup/conf $Newsgroup/votes 
 echo "2 3 10" > $Newsgroup/conf/voterule
 echo "14" > $Newsgroup/conf/voteperiod
+echo `date +%s` > $Newsgroup/conf/posted.cfg
 
 # Run the Perl script mkcvf to make the CFV and PGP-sign it then post it away!
 tr -d '\r' < $HomeDir/tmp/info.$$ | mkcfv.pl > $Newsgroup/conf/posted.cfv 2>$HomeDir/tmp/pgp.$$
@@ -60,7 +62,6 @@ ln -s $BaseDir/$Newsgroup/conf/posted.cfv $HomeDir/CFV/$Newsgroup
 # Post the CFV
 inews -h < $Newsgroup/conf/posted.cfv
 
-echo `date +%s` > $Newsgroup/conf/posted.cfg
 
 echo Done at `date`
 exit 0
