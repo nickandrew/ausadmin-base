@@ -31,7 +31,7 @@ sub new {
 sub validate {
 	my $ng_name = shift;
 
-	return 1 if ($ng_name =~ /^[a-z0-9+-]+\.[a-z0-9+-]+(\.[a-z0-9+-]+)*$/);
+	return 1 if ($ng_name =~ /^[a-z0-9+-]+\.[a-z0-9+-]+(\.[a-z0-9+-]+)*(:\d\d\d\d-\d\d-\d\d)?$/);
 	return 0;
 }
 
