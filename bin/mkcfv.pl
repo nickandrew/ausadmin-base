@@ -16,8 +16,8 @@ mkcfv.pl - Create a CFV message for a list of newsgroups (really only one atm)
 =head1 SYNOPSIS
 
  cd ~ausadmin ; mkcfv.pl newsgroup > tmp/cfv-unsigned.$newsgroup
- bin/pgp-sign < tmp/cfv-unsigned.$newsgroup > vote/$newsgroup/posted.cfv
- bin/post.pl < vote/$newsgroup/posted.cfv
+ bin/pgp-sign < tmp/cfv-unsigned.$newsgroup > vote/$newsgroup/cfv.signed
+ bin/post.pl < vote/$newsgroup/cfv.signed
 
 =head1 DESCRIPTION
 

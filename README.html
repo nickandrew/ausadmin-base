@@ -1,0 +1,348 @@
+<html>
+<head>
+<title>Welcome to the ausadmin software release</title>
+</head>
+<body>
+
+<p>
+You have just unpacked a release of the ausadmin software for USENET
+News hierarchy maintenance. If you are not a USENET hierarchy
+maintainer, this software may not be much use to you.
+</p>
+
+<p>
+This software is (C)opyright 1998-2002 by
+Nick Andrew &lt;nick@nick-andrew.net&gt;
+and is released under the terms of the GNU General Public License (GPL).
+</p>
+
+<p>
+To install and configure this software, follow these instructions in
+the order they appear.
+</p>
+
+<h1>Setting up</h1>
+
+<p>
+These instructions are minimal, because this software is alpha quality only!
+
+<h2>Setup the environment</h2>
+
+<ol>
+ <li>Install necessary software: apache-ssl, cronolog, ssh, rsync, pgp, gnupg
+ <li>Create an 'ausadmin' userid and group, and su to ausadmin
+ <li>Edit .profile or .bashrc to add $HOME/bin to your PATH
+ <li>Unpack the ausadmin software release under ausadmin's home directory
+ <li>Setup your apache webserver to serve the website. See doc/apache.conf
+ <li>Unpack the ausadmin website release under your website DocumentRoot
+</ol>
+
+<h2>Import your hierarchy data</h2>
+
+<ol>
+ <li>su to ausadmin
+ <li>mkdir -p data/Newsgroups
+ <li>mkdir -p vote
+ <li>copy your raw "newsgroups" type file to data/ausgroups (yes, that's the name it has to be at this time)
+ <li>do "bin/gen-initial-newsgroups.pl data/ausgroups" to create and populate the data/Newsgroups directories. Just ignore the RCS messages.
+ <li>You have now completed 1% of the setting up!
+ <li>Next, find your charter files (one charter per newsgroup). Make sure the
+charter files are "clean" (i.e. no email headers or leftover rationale from group proposal time).
+ <li>For each charter file:
+  <ol>
+   <li>Do "bin/set-charter.pl newsgroup.name charter.file". Just ignore the RCS messages.
+  </ol>
+ <li>You have now completed 90% of the setting up!
+</ol>
+
+<h2>Create templates</h2>
+
+<p>The "data" directory contains the definitive list of newsgroups in
+the data/Newsgroups directory, the definitive group descriptions (at
+least at the moment) in data/ausgroups, some generated files, and some
+templates for generating messages.
+</p>
+
+<p>
+Samples for all templates are available in the samples/ directory.
+<ol>
+ <li>Copy samples/* into data/
+ <li>Edit each template for your situation and/or language. See below
+     for the list of templates and what they are for.
+</ol>
+</p>
+
+<p>The templates are:
+<table border="1" cellpadding="3" cellspacing="0">
+ <tr>
+  <th>Filename</th>
+  <th>Description</th>
+ </tr>
+
+ <tr>
+  <td>booster.template</td>
+  <td>
+   This is a perl string expression which is eval()ed by the code, so it
+   must start with " and end with " on a line by itself. See bin/Newsgroup.pm
+   to find out what variable substitutions are allowed.
+  </td>
+ </tr>
+
+ <tr>
+  <td>checkgroups.footer</td>
+  <td>
+   This is a text file which is prepended to the generated checkgroups
+   message, default is empty.
+  </td>
+ </tr>
+
+ <tr>
+  <td>checkgroups.header</td>
+  <td>
+   This is a text file which is appended to the generated checkgroups
+   message, default is empty.
+  </td>
+ </tr>
+
+ <tr>
+  <td>faq.header</td>
+  <td>
+   This is a text file containing an article header to be used when
+   posting the regular FAQ.
+  </td>
+ </tr>
+
+ <tr>
+  <td>grouplist.footer</td>
+  <td>
+   This is a text file which is appended to the human-readable group list
+   message.
+  </td>
+ </tr>
+
+ <tr>
+  <td>grouplist.header</td>
+  <td>
+   This is a text file which is prepended to the human-readable group list
+   message.
+  </td>
+ </tr>
+
+ <tr>
+  <td>vote-check.msg</td>
+  <td>
+   This is a text file containing an email header and body which is sent
+   by the vote checker program, to look for invalid email addresses
+   on votes received.
+  </td>
+ </tr>
+</table>
+
+<h2>Setup PGP and GnuPG private and public keys </h2>
+
+<p>
+The software uses PGP 2.6.3(i) to sign control messages, and GnuPG to
+sign ordinary text files, such as RFDs, vote results, etc.
+</p>
+
+<p>
+You will therefore need to have your public and private keys inserted into
+<ul>
+ <li>$HOME/.pgp/pubring.pgp and $HOME/.pgp/secring.pgp
+ <li>$HOME/.gnupg/pubring.gpg and $HOME/.gnupg/secring.gpg
+</ul>
+I can't help with this process, sorry. I had problems getting my very old
+PGP 2.x key to be recognised by GnuPG, but eventually it worked.
+</p>
+
+<h2>Generate checkgroups and grouplist messages</h2>
+
+<ol>
+ <li>Do "bin/gencheckgroups.pl &gt; data/checkgroups.msg". The generated checkgroups is derived from the contents of your data/Newsgroups directory.
+ <li>Do "bin/gen-grouplist". Ironically, the generated grouplist is derived from your original "data/ausgroups" file. So make sure it is up-to-date!
+</ol>
+
+<h2>Setup vote-taker</h2>
+
+<p>
+The ausadmin software uses the email address:
+&lt;vote@aus.news-admin.org&gt;
+to accept email votes on proposals. You will need to use a different
+address.  Set up your system so that emailed votes to your chosen address
+are piped to "bin/incoming" (not "bin/incoming.pl").
+</p>
+
+<h2>Jump and pray</h2>
+
+<p>The above may get you started with the ausadmin software. There is
+more work to do before you can start running votes however.
+</p>
+
+<p>
+Firstly, there are many ausadmin-specific assumptions hardcoded into the
+source code. Things like email addresses, hostnames, home directories
+and domain names. You will need to search and modify these references.
+If you can remove these assumptions, for example by moving them out to
+a config file in the data/ directory, then ausadmin will greatly
+appreciate receiving a patch.
+</p>
+
+<p>
+Secondly, you will need to learn the names of files in the vote directories
+and the meaning of their contents. Each proposal or vote has its own
+directory under vote/ and the files in that directory are created and
+modified as the vote proceeds.
+</p>
+
+<p>
+The source code is starting to use the word "proposal" rather than vote.
+A proposal starts out as an RFD, (Request For Discussion), which is
+constructed from a source file which is received by ausadmin or
+created by ausadmin. See "Faq/RFD-template.txt" on the website for
+the file structure. This file is parsed by "bin/parse-rfd.pl" to
+create a new Proposal in the vote/ subdirectory.
+See, for example, "bin/make-rfd.pl" and "bin/setup-vote".
+</p>
+
+<p>
+An RFD is posted, and discussed, and may become a proper vote after some
+time. In that case a CFV (Call For Votes) is created from the proposal
+information and posted. As soon as a CFV is created, the system is
+ready to receive votes.
+See, for example, "bin/mkcfv.pl".
+</p>
+
+<p>
+Accepted votes are appended to a tally file until the vote completes.
+After the voting time limit is reached, there are various tools for
+analysing the messages to detect forgeries and multiple voting. Look
+for example at "bin/analyse-messages.pl".
+</p>
+
+<p>
+Once the vote tally is confirmed, there are tools for counting the
+vote and creating control messages. See, for example, "bin/genresult.pl"
+</p>
+
+<h2>Bugs</h2>
+
+<p>
+There's one thing which the software doesn't do well at the moment
+and that is updating its control files (data/ausgroups and
+data/Newsgroups/*) when votes pass. This can lead to sending out
+obsolete checkgroups messages, for example.
+</p>
+
+<p>
+There is also an issue with PGP-signing checkgroups and control
+messages. If there is a passphrase on the PGP keys, then automatic
+signing of these messages is not possible. This is not good for
+regular automated posting. I haven't found a way around this
+security/convenience trade-off yet.
+</p>
+
+<h2>The Easy Way (yes, you want this)</h2>
+
+<p>
+Now that I have scared you with a lot of scripts which you need to know
+how to use to do things, I can tell you that it is actually a lot
+easier. There are two tools which you will use all the time. They
+are "todo.pl" and "action".
+</p>
+
+<p>
+"bin/todo.pl" examines every proposal under the vote/ directory and
+determines if you need to do something to advance the proposal. Recall
+that proposals start empty, then become RFDs, then CFV, then get
+voted upon and finally produce a result. There are necessary time
+delays in all parts of this process, and it is the hardest thing
+to remember which proposals are ready for which next stage of the
+process. "todo.pl" helps with this by printing a list of the
+proposals which are ready for you to make some change. For
+example:
+</p>
+
+<pre>
+ausadmin@slim:~$ bin/todo.pl
+aus.sport.touch ... In discussion, wait until 2002-06-06 (rfd/posted)
+aus.music.regurgitator ... In discussion, wait until 2002-05-26 (rfd/posted)
+aus.business ... In discussion, wait until 2002-06-02 (rfd/posted)
+</pre>
+
+<p>
+This output says that the current state of each of the three proposals
+is "rfd/posted" (i.e. it's being discussed and the RFD has been posted)
+and the minimum timeframe for the discussion ends on the listed date.
+</p>
+
+<p>
+The other very useful tool is "action". Action goes through each of the
+proposals in the vote/ directory and determines the proposal's current
+state. Depending on the current state, "action" knows what the next
+state in the process should be, and it knows what commands to issue
+to move the proposal forward. So "action" runs "setup-vote", "mkcfv.pl"
+and the other scary commands mentioned in the previous section.
+</p>
+
+<p>
+"action" prompts you before doing each action. I usually only allow
+"action" to make one change at a time, and in the middle of each
+action I check the files in the vote/proposal_name directory
+to make sure that they are correct (correctly signed, correctly
+generated, etc...).
+</p>
+
+<h1>Big TODO list for the ausadmin software</h1>
+
+<ul>
+<li>Generate messages (e.g. RFD and CFV) from templates as
+much as possible. This will help others to translate the
+software into other languages.
+<li>Provide increased web-based functionality. For example,
+show all information about past completed proposals, whether
+they passed or failed, what revisions the proposals went
+through.
+<li>Maintain more data about the newsgroups, for example the
+date of creation and who did the creation (maybe the control
+message itself). This is especially useful for "grandfathered"
+groups, i.e. groups which were created by somebody else before
+you started in this role.
+<li>Provide web-based submission of proposals. Proposers should
+be able to type in and edit their proposal online.
+<li>Move to a "reviewer panel" management structure rather than
+a single person. Having multiple people review submissions will
+provide some checks to keep the reviewers honest, and may reduce
+delays in getting proposals posted. It may be possible to have
+several reviewers and assign different privilege levels such that
+newbie reviewers are able to assist with proposal grammar and
+justification but are not able to officially accept proposals
+for discussion or voting.
+<li>Provide web-based voting rather than email voting. In some
+ways, it is harder to submit multiple web votes than it is to
+submit multiple email votes. A "registered user" arrangement
+with an SSL web server voting site should be able to discourage
+all but the most persistent attempts at stuffing the ballot box.
+<li>Cleanup the code, remove obsolete source files, move to a
+consistent naming standard for commands
+<li>Reduce the number of commands which need to be executed
+from the command line. This may be accomplished by providing
+more web-based control functions.
+<li>Remove all the "aus" and ausadmin specific assumptions from
+the code.
+</ul>
+
+
+<h1>The End</h1>
+
+<p>
+This is the end of the setup instructions.
+There is some documentation under the doc/ directory also.
+</p>
+
+<p>
+Please provide feedback to &lt;nick@nick-andrew.net&gt; if
+you start to use this software and if you make changes.
+</p>
+
+</body>
+</html>

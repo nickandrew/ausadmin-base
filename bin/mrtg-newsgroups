@@ -1,0 +1,58 @@
+#!/usr/bin/perl
+#	@(#) mrtg-newsgroups: Create a mrtg file for newsgroup traffic
+#
+#  Usage: mrtg-newsgroups nglist_file
+
+use Net::NNTP;
+
+my $nglist_file = shift @ARGV;
+my $newsserver = $ENV{NNTPSERVER} || 'news';
+
+if (!open(F, "<$nglist_file")) {
+	die "Unable to open $nglist_file: $!";
+}
+
+my @groups;
+
+while (<F>) {
+	chomp;
+	s/\s.*//;	# remove cruft after ng name
+	push(@groups, $_);
+}
+
+close(F);
+
+@groups = sort(@groups);
+
+my $s = new Net::NNTP($newsserver, reader => 1);
+if (!defined $s) {
+	die "Unable to connect to $newsserver, sorry!\n";
+}
+
+my $group_ok = 0;
+my $group_err = 0;
+
+foreach my $group (@groups) {
+	my($art_n, $art_low, $art_high, $name) = $s->group($group);
+
+	if ($name eq '') {
+		# This group $group does not exist
+		$group_err++;
+		next;
+	}
+
+	# Output 5 lines of mrtg file ...
+	print "news:$group\n";
+	print "$art_high\n";
+	print "0\n";
+	print "\n";
+	print "\n";
+
+	$group_ok++;
+}
+
+$s->quit();
+
+my $rc = ($group_err < 5) ? 0 : 8;
+
+exit($rc);

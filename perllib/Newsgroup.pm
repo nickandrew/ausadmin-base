@@ -20,11 +20,26 @@ Newsgroup - a newsgroup
  $string = $ng->get_attr('charter') ... Read the charter data, return as string
  $ng->set_attr('charter', $string, 'Update reason') ...
 
+ $string = $ng->gen_newgroup($control_type);	... Create a control msg
+
+ $signed_text = $ng->sign_control($unsigned_text) ... Sign a control msg
+
+ my @newsgroup_list = Newsgroup::list_newsgroups(datadir => $datadir);
+ 	# returns a list of newsgroups in that directory
+
+ $ng->create();
+	# Creates the directory for a new newsgroup
+
 =cut
 
 package Newsgroup;
 
 use IO::File;
+use IPC::Open2;
+
+use Ausadmin;
+
+$Newsgroup::DEFAULT_NEWSGROUP_DIR	= './data/Newsgroups';
 
 sub new {
 	my $class = shift;
@@ -32,6 +47,8 @@ sub new {
 	bless $self, $class;
 
 	die "No name" if (!exists $self->{name});
+
+	$self->{datadir} ||= $Newsgroup::DEFAULT_NEWSGROUP_DIR;
 
 	return $self;
 }
@@ -195,5 +212,112 @@ sub set_attr {
 	return 0;
 }
 
+# gen_newgroup() ... Generate a newgroup message for this group
+
+sub gen_newgroup {
+	my $self = shift;
+
+	# $control_type = [booster|initial]
+	my $control_type = shift || confess('Missing parameter in call to gen_newgroup');
+
+	my $template_path = "config/${control_type}.template";
+	my $ngline_path = "$self->{datadir}/$self->{name}/ngline";
+
+	if (! -f $template_path) {
+		confess("$control_type template file does not exist");
+	}
+
+	if (! -f $ngline_path) {
+		confess("$ngline_path does not exist, required for a newgroup");
+	}
+
+	my $template = Ausadmin::readfile($template_path);
+	my $ngline = Ausadmin::read1line($ngline_path);
+
+	my $moderated = 0;		# FIXME ... a safe assumption!
+
+	my $name = $self->{name};
+
+	my $control;
+	my $modname;
+
+	if ($moderated) {
+		$control = "newgroup $name m";
+		$modname = "a moderated";
+	} else {
+		$control = "newgroup $name";
+		$modname = "an unmoderated";
+	}
+
+	my $post = eval $template;
+
+	return $post;
+}
+
+sub sign_control {
+	my $self = shift;
+	my $unsigned = shift || confess("No message given to sign_control()");
+
+	# I don't like calling perl code from other perl code. I prefer
+	# putting it in a module. But signcontrol is too messy to include
+	# verbatim, so I'll just use it as a filter.
+
+	my $fh_r = new IO::File;
+	my $fh_w = new IO::File;
+	my $pid = open2($fh_r, $fh_w, "bin/signcontrol");
+
+	# Output the unsigned text to the write file handle
+
+	print $fh_w $unsigned;
+
+	# and close it to make the process's output available
+	close($fh_w);
+
+	my @return = <$fh_r>;
+
+	return join('', @return);
+}
+
+# Return a list of all newsgroups in the directory
+#
+sub list_newsgroups {
+	my $args = { @_ };
+
+	my $datadir = $args->{datadir} || $Newsgroup::DEFAULT_NEWSGROUP_DIR;
+
+	# Ignore newsgroup names not containing a dot, and . and ..
+	opendir(D, $datadir);
+	my @files = grep { ! /^\.|^[a-zA-Z0-9-]+$/ } readdir(D);
+	closedir(D);
+
+	my @list;
+
+	foreach my $f (sort @files) {
+		my $path = "$datadir/$f";
+		next if (! -d $path);
+		# It is not a newsgroup if there's no "ngline" file
+		# (later) next if (! -f "$path/ngline");
+		push(@list, $f);
+	}
+
+	return @list;
+}
+
+sub create {
+	my $self = shift;
+
+	die "Newsgroup: create() needs prior call to set_datadir()\n" if (!exists $self->{datadir});
+
+	my $dir = "$self->{datadir}/$self->{name}";
+
+	if (!-d $dir) {
+		mkdir($dir, 0755);
+	}
+
+	if (!-d "$dir/RCS") {
+		mkdir("$dir/RCS", 0755);
+	}
+
+}
 
 1;

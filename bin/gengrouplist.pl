@@ -26,7 +26,8 @@ my $ts = sprintf "%d-%02d-%02d %02d:%02d:%02d", $year, $mon, $mday, $hour, $min,
 
 my %header = (
 	   'Subject' => "List of aus.* newsgroups at $ts",
-	   'Newsgroups' => 'aus.net.news'
+	   'Newsgroups' => 'aus.net.news,news.admin.hierarchies',
+	   'Followup-To' => undef,
 	  );
 
 # Open the groups file

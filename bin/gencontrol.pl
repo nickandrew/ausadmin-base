@@ -15,6 +15,8 @@ gencontrol.pl newsgroup-name
 
 =cut
 
+die "This script is obsolete.\n";
+
 use lib 'bin';
 use Ausadmin;
 
@@ -126,7 +128,7 @@ Approved: $from
 $name is $modname newsgroup which passed its vote for
 creation as reported in aus.net.news.  For full information, see:
 
-	http://aus.news-admin.org/cgi-bin/voteinfo?newsgroup=$vote
+	http://aus.news-admin.org/cgi-bin/voteinfo.pl?newsgroup=$vote
 
 For your newsgroups file:
 $ngline
@@ -160,7 +162,7 @@ Approved: $from
 ausadmin requests removal of group $name as reported in aus.net.news.
 For full information, see:
 
-	http://aus.news-admin.org/cgi-bin/voteinfo?newsgroup=$vote
+	http://aus.news-admin.org/cgi-bin/voteinfo.pl?newsgroup=$vote
 EOF
 
 	return $post;

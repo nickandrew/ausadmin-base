@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-#	@(#) parse-rfd.pl: Read an RFD message, grab important info and save
+#	@(#) parse-rfd.pl: Read an RFD style proposal message, grab important info and save
 #
 # $Source$
 # $Revision$
@@ -11,21 +11,21 @@
 
 =head1 NAME
 
-parse-rfd.pl - Read an RFD file and split into its components
+parse-rfd.pl - Read an RFD style proposal file and split into its components
 
 =head1 SYNOPSIS
 
-parse-rfd.pl [B<-r>] [B<-d>] proposal < rfd-file
+parse-rfd.pl [B<-r>] [B<-d>] proposal-name < rfd-file
 
 =head1 DESCRIPTION
 
-Parse the RFD file and write one or more of the following files in the
+Parse the proposal file and write one or more of the following files in the
 vote/$proposal subdirectory:
 
 change,
 charter:$newsgroup,
 distribution,
-ngline$newsgroup,
+ngline:$newsgroup,
 proposer,
 rationale,
 
@@ -39,7 +39,7 @@ differently.
 
 B<-d> turns on debugging mode; this is more verbose
 
-B<-r> signals that this input file revises an existing RFD (so the
+B<-r> signals that this input file replaces an existing RFD (so the
 directory used is assumed to exist already). If this flag is not
 specified, the directory must not already exist, and will be created.
 
@@ -59,7 +59,7 @@ my $BaseDir = "./vote";
 my %opts;
 getopts('rd', \%opts);
 
-my $proposal_name = shift @ARGV;
+my $proposal_name = shift @ARGV || die "Usage: parse-rfd.pl proposal_name < proposal_file\n";
 
 die "In wrong directory - no $BaseDir" if (!-d $BaseDir);
 
@@ -69,7 +69,7 @@ if (-d "$BaseDir/$proposal_name" && !$opts{'r'}) {
 	
 my $g = ReadRFD();
 
-die "Unable to parse the RFD, no newsgroups, sorry" unless %$g;
+die "Unable to parse the RFD, sorry" unless %$g;
 
 # Die if a change is not defined. This is very important!
 
@@ -77,7 +77,7 @@ if (!defined $g->{change}) {
 	die "A CHANGE line is required for all proposals";
 }
 
-# All proposals need these
+# All proposals need exactly one of these
 die "No proposer" if (!defined $g->{proposer});
 die "No distribution" if (!@{$g->{distribution}});
 die "No rationale" if (!defined $g->{rationale});
@@ -126,7 +126,7 @@ my $directory = "$BaseDir/$proposal_name";
 
 if (!$opts{'r'}) {
 	if (!mkdir($directory, 0755)) {
-		die "Unable to mkdir($directory,0755)!";
+		die "Unable to mkdir($directory,0755): $!\n";
 	}
 }
 
@@ -203,7 +203,13 @@ sub ReadRFD {
 		}
 
 		if (/^Newsgroup(s?) line(s?):/i ) {
-			$state = 'ngline';
+			# This is the old style which doesn't support multi groups
+			print STDERR "Old style Newsgroups line ignored!\n";
+			next;
+		}
+
+		if (/^NGLINE:\s*([a-zA-Z0-9.-]+):\s*(.+)/i ) {
+			$g{newsgroup}->{$1}->{ngline} = $2;
 			next;
 		}
 
@@ -213,29 +219,51 @@ sub ReadRFD {
 		if (/^CHANGE:\s+(.+)/) {
 			my @words = split(/\s+/, $1);
 			my $c = { 'type' => $words[0] };
+
 			if ($words[0] eq 'newgroup') {
 				$c->{newsgroup} = $words[1];
 				$c->{mod_status} = $words[2] || 'y';
 				$c->{submission_email} = $words[3] if ($words[3]);
 				$c->{request_email} = $words[4] if ($words[4]);
+
+				# Charters now default to HTML format
+				$c->{charter} = 'html';
+
 				$g{change} = $c;
 				next;
 			}
+
 			if ($words[0] eq 'rmgroup') {
 				$c->{newsgroup} = $words[1];
 				$g{change} = $c;
 				next;
 			}
+
 			if ($words[0] eq 'moderate') {
 				$c->{newsgroup} = $words[1];
 				$c->{mod_status} = 'm';
 				$c->{submission_email} = $words[2];
 				$c->{request_email} = $words[3];
+
+				# Charters now default to HTML format
+				$c->{charter} = 'html';
+
 				$g{change} = $c;
 				next;
 			}
+
 			if ($words[0] eq 'unmoderate') {
 				die "unmoderate change type not handled yet";
+				next;
+			}
+
+			# Change charter of an existing group
+			if ($words[0] eq 'charter') {
+				$c->{newsgroup} = $words[1];
+
+				# Charters now default to HTML format
+				$c->{charter} = 'html';
+
 				next;
 			}
 
@@ -295,15 +323,13 @@ sub ReadRFD {
 			next;
 		}
 
-		if (/^END MODERATOR INFO/i ) {
+		if (/^END DISTRIBUTION/i ) {
 			undef $state;
 			next;
 		}
 
-		if ($state eq 'ngline') {
-			if (/^([^\s]+)\s+(.*)/i) {
-				$g{newsgroup}->{$1}->{ngline} = $2;
-			}
+		if (/^END MODERATOR INFO/i ) {
+			undef $state;
 			next;
 		}
 
@@ -320,7 +346,7 @@ sub ReadRFD {
 		if ($state eq 'modinfo') {
 			if (/^Moderator:\s+(.+)/i) {
 				$g{newsgroup}->{$groupname}->{moderator} = $1;
-				# next ?
+				next;
 			}
 			$g{newsgroup}->{$groupname}->{modinfo} .= $_ . "\n";
 			next;
@@ -339,11 +365,6 @@ sub ReadRFD {
 			}
 			next;
 		}
-
-#		if ($state eq 'procedure') {
-#			# ignore
-#			next;
-#		}
 
 	}
 
@@ -372,9 +393,15 @@ sub cleanup_string {
 	my $key = shift;
 
 	if (exists $r->{$key}) {
-		$r->{$key} =~ s/ +\n/\n/g;
+		# Remove trailing space and tab from each line
+		$r->{$key} =~ s/[ \t]+\n/\n/g;
+
+		# Remove blank lines at start
 		$r->{$key} =~ s/^\n+//;
+
 		$r->{$key} =~ s/\n\n+$/\n/;
+#		$r->{$key} =~ s/\s+$//;
+#		$r->{$key} =~ s/^\s+//;
 		if ($r->{$key} eq '') {
 			delete $r->{$key};
 		}

@@ -1,0 +1,23 @@
+#!/bin/bash
+#	@(#) bin/post-grouplist - Post newsgroup list
+#
+# $Source$
+# $Revision$
+# $Date$
+
+umask 022
+
+
+#----------------------------------------------------------------------------
+#  Post the messages
+#----------------------------------------------------------------------------
+
+rc=0
+bin/post.pl < data/grouplist.msg
+s=$?
+if [ $s -ne 0 ] ; then
+	echo "post.pl submission of data/grouplist.msg returned status $s"
+	rc=8
+fi
+
+exit $rc

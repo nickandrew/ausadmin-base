@@ -44,32 +44,41 @@ my $debug = $opts{'d'};
 my $opt_recount = $opts{'r'};
 
 my $votename = shift @ARGV;
+my $vote_dir = './vote';
 
 if ($votename eq '') {
 	print STDERR "genresult.pl: No vote specified\n";
 	exit(2);
 }
 
-if (!-d "vote/$votename") {
+if (!-d "$vote_dir/$votename") {
 	print STDERR "genresult.pl: No such vote ($votename)\n";
 	exit(3);
 }
 
-if (-f "vote/$votename/vote_cancel.cfg") {
+if (-f "$vote_dir/$votename/vote_cancel.cfg") {
 	die "genresult.pl: Vote $votename was cancelled\n";
+}
+
+if (! -f "$vote_dir/$votename/endtime.cfg") {
+	die "genresult.pl: Vote $votename did not go to a vote\n";
+}
+
+if (-f "$vote_dir/$votename/vote_result") {
+	die "genresult.pl: Vote $votename already has a vote_result file (delete it first)\n";
 }
 
 my $vote = new Vote(name => $votename);
 
 # Get vote end date and vote pass/fail rule
-my $ts_start = Ausadmin::read1line("vote/$votename/vote_start.cfg");
-my $ts_end = Ausadmin::read1line("vote/$votename/endtime.cfg");
-my $voterule = Ausadmin::read1line("vote/$votename/voterule");
+my $ts_start = Ausadmin::read1line("$vote_dir/$votename/vote_start.cfg");
+my $ts_end = Ausadmin::read1line("$vote_dir/$votename/endtime.cfg");
+my $voterule = Ausadmin::read1line("$vote_dir/$votename/voterule");
 
 # These are the files written at CFV time
-my $ngline = Ausadmin::read1line("vote/$votename/ngline");
-# $rationale = Ausadmin::readfile("vote/$votename/rationale");
-my $charter = Ausadmin::readfile("vote/$votename/charter");
+my $ngline = Ausadmin::read1line("$vote_dir/$votename/ngline");
+# $rationale = Ausadmin::readfile("$vote_dir/$votename/rationale");
+my $charter = Ausadmin::readfile("$vote_dir/$votename/charter");
 
 # General config files
 my $footer = Ausadmin::readfile("config/results.footer");
@@ -97,9 +106,11 @@ my $vote_info = {
 	valid_tally => { 'YES' => 0, 'NO' => 0, 'ABSTAIN' => 0 },
 	invalid_tally => { 'YES' => 0, 'NO' => 0, 'ABSTAIN' => 0 },
 	valid_count => 0,
+	invalid_count => 0,
 	multi_count => 0,
 	total => 0,
 	voters => [ ],
+	vote_result => 'UNKNOWN',
 };
 
 my $tally_lr = $vote->get_tally();
@@ -112,10 +123,11 @@ foreach my $vline (@$tally_lr) {
 	my $path = $vline->{path};
 	my $status = $vline->{status};
 
-	if ($ng ne $votename) {
-		print STDERR "Ignoring vote from $email for different vote $ng (expecting $votename)\n";
-		next;
-	}
+#  Oops ... votes may be renamed later, we don't want to foul the calculation
+#	if ($ng ne $votename) {
+#		print STDERR "Ignoring vote from $email for different vote $ng (expecting $votename)\n";
+#		next;
+#	}
 
 	$v=uc($v);
 
@@ -165,14 +177,13 @@ my($yvotes, $nvotes, $abstentions, $invalids);
 # Output results
 my $ng = $votename;
 
-my $status;
 my $subjstat;
 
 if (($yes >= ($yes + $no) * $numer / $denomer) && ($yes - $no >= $minyes)) {
-	$status = "pass";
+	$vote_info->{'vote_result'} = "PASS";
 	$subjstat = "passes";
 } else {
-	$status = "fail";
+	$vote_info->{'vote_result'} = "FAIL";
 	$subjstat = "fails";
 }
 
@@ -216,7 +227,7 @@ if (not $opt_recount) {
 Ausadmin::print_header(\%header);
 
 # Pass or fail?
-pass_msg($ng, ($status eq 'pass'));
+pass_msg($ng, ($vote_info->{'vote_result'} eq 'PASS'));
 
 # Tack an analysis of multi-votes onto the end
 
@@ -232,9 +243,14 @@ foreach my $l (@body) {
 	print "$l\n";
 }
 
+# Now write the summary vote result:
+
+write_vote_result($ng, $vote_info);
+
+
 exit(0);
 
-sub pass_msg() {
+sub pass_msg {
 	my $ng = shift;
 	my $pass = shift;
 
@@ -319,7 +335,7 @@ sub setposts {
 
 	return if $debug;
 
-	if (not open (POST,">>vote/$votename/$filename")) {
+	if (not open (POST,">>$vote_dir/$votename/$filename")) {
 		die "Unable to mark group $votename as passed: $filename\n";
 	}
 
@@ -327,19 +343,27 @@ sub setposts {
 	close POST;
 }
 
-sub makegroup {
-	my $ng = shift;
-	my $start = shift;
+# Write a file called vote_result with a single line containing:
+#    (PASS|FAIL) yes_valid_votes no_valid_votes abstain_valid_votes invalid_votes
 
-	local *CREATE;
+sub write_vote_result {
+	my $votename = shift;
+	my $vote_info = shift;
 
-	my $fn = "vote/$votename/group.creation.date";
-	open (CREATE,">>$fn")
-		or die "Can't open $fn: $!";
+	local *VR;
 
-	print CREATE "$start\n";
+	my $path = "$vote_dir/$votename/vote_result";
 
-	close CREATE;
+	open(VR, ">$path") || die "Can't open $path for write: $!\n";
+
+	printf VR "%s %d %d %d %d\n",
+		$vote_info->{'vote_result'},
+		$vote_info->{'valid_tally'}->{'YES'},
+		$vote_info->{'valid_tally'}->{'NO'},
+		$vote_info->{'valid_tally'}->{'ABSTAIN'},
+		$vote_info->{'invalid_count'};
+
+	close(VR);
 }
 
 

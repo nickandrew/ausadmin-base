@@ -39,7 +39,7 @@ $pgpheader = "X-PGP-Sig";
 $force{'Path'} = 'bounce-back';
 $force{'From'} = 'aus.* Newsgroups Administration <ausadmin@aus.news-admin.org>';
 $force{'Approved'} = 'ausadmin@aus.news-admin.org';
-$force{'X-Info'} = 'See ftp://ftp.uu.net/networking/news/misc/pgpcontrol/README';
+$force{'X-Info'} = 'See ftp://ftp.isc.org/pub/pgpcontrol/README';
 $force{'X-Aussies'} = 'See http://aus.news-admin.org/ for Australian newsgroup information';
 
 # host for message-id; this could be determined automatically based on where

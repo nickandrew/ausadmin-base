@@ -20,8 +20,11 @@ Ausadmin - misc functions class
  $ref = Ausadmin::read_list_keyed_file($path);
  @lines = Ausadmin::format_para($line)
  @lines = Ausadmin::centred_text(@lines)
- Ausadmin::print_header(\%headers)
+ Ausadmin::print_header(\%headers, [$file_handle] )
+ $string = Ausadmin::make_header(\%headers)
  $yyyymmdd = Ausadmin::today()
+
+ $sign_email = Ausadmin::pgp_signer()
 
 =head1 DESCRIPTION
 
@@ -32,6 +35,12 @@ This package provides some useful file I/O functions
 Update the default headers (which are hardcoded in this class) with
 the caller-supplied headers and output, to the current selected device,
 a message header block.
+
+=head2 $string = Ausadmin::make_header(\%headers)
+
+Update the default headers (which are hardcoded in this class) with
+the caller-supplied headers and return a string containing all the
+headers and ending in \n\n.
 
 =head2 Ausadmin::read_keyed_file($path)
 
@@ -58,6 +67,11 @@ containing one or more (keyword,value) pairs. Return a reference
 to a list where each item in the list is a hash reference to
 each paragraph's parsed contents.
 
+=head2 Ausadmin::pgp_signer()
+
+Return the string (usually an email address) which identifies
+the GPG key to use for signing articles.
+
 =cut
 
 
@@ -71,6 +85,7 @@ package Ausadmin;
 	'Followup-To' => 'aus.net.news'
 );
 
+$Ausadmin::pgp_signer_default = 'ausadmin@aus.news-admin.org';
 
 sub read1line {
 	my $path = shift;
@@ -238,23 +253,38 @@ sub centred_text {
 	return @output;
 }
 
-sub print_header {
+sub make_header {
 	my($hashref) = @_;
 	my %headers = %$hashref;
 
 	foreach my $header (keys %Ausadmin::ph_defaults) {
-		if (!defined($headers{$header})) {
+		if (!exists $headers{$header}) {
 			$headers{$header} = $Ausadmin::ph_defaults{$header};
 		}
 	}
 
+	my $s;
+
 	foreach my $header (keys %headers) {
 		if ($headers{$header} ne "") {
-			print "$header: $headers{$header}\n";
+			$s .= "$header: $headers{$header}\n";
 		}
 	}
 
-	print "\n";
+	$s .= "\n";
+
+	return $s;
+}
+
+sub print_header {
+	my $header_hr = shift;
+	my $fh = shift;
+
+	if (defined $fh) {
+		print $fh Ausadmin::make_header($header_hr);
+	} else {
+		print Ausadmin::make_header($header_hr);
+	}
 }
 
 sub today {
@@ -278,6 +308,10 @@ sub email_obscure {
 	$string =~ s/\@/ at /g;
 
 	return $string;
+}
+
+sub pgp_signer {
+	return $Ausadmin::pgp_signer_default;
 }
 
 1;

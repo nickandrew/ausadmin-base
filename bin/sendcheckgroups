@@ -7,6 +7,14 @@
 
 umask 022
 
+# Recreate ausgroups first
+bin/gen-ausgroups.pl
+s=$?
+if [ $s -ne 0 ] ; then
+	echo "bin/gen-ausgroups.pl returned status $s - fatal"
+	exit 2
+fi
+
 bin/gengrouplist.pl > tmp/grouplist.$$
 s=$?
 if [ $s -ne 0 ] ; then
@@ -25,18 +33,16 @@ fi
 
 rm -f tmp/grouplist.$$
 
-bin/gencheckgroups.pl > tmp/checkgroups.$$
+bin/gen-checkgroups.pl
 s=$?
 if [ $s -ne 0 ] ; then
 	echo "bin/gencheckgroups.pl returned status $s - fatal"
-	rm -f tmp/checkgroups.$$ tmp/signed-grouplist.$$
 	exit 3
 fi
 
 # Replace the current version with the latest
 
 mv tmp/signed-grouplist.$$ data/grouplist.msg
-mv tmp/checkgroups.$$ data/checkgroups.msg
 
 #----------------------------------------------------------------------------
 #  Post the messages

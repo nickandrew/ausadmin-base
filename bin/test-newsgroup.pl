@@ -4,7 +4,7 @@ use lib 'bin';
 
 use Newsgroup;
 
-my $n = new Newsgroup(name => 'aus.tv');
+my $n = new Newsgroup(name => 'aus.test.tv');
 
 my $charter = "A sample charter.\n";
 

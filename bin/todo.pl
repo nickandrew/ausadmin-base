@@ -25,9 +25,11 @@ use Vote;
 use DateFunc;
 
 my %action_states = (
-	'vote/checking' => 'Check for multi-votes and forgeries then use action',
-	'vote/running' => 'Wait for end of vote',
-	'complete/resultnotposted' => '',
+	'complete/fail' => '',
+	'complete/result-wait' => 'Wait for end of result discussion period',
+	'complete/resultnotposted' => 'Use action to post the result',
+	'complete/resultnotsigned' => 'Use action to sign and post the result',
+	'complete/pass/unprocessed' => 'You need to create the control message. Try action',
 	'complete/pass/unsigned' => 'Use action to sign and post the control msg',
 	'complete/pass/signed' => 'Create and post newgroup message?',
 	'complete/pass' => '',
@@ -36,6 +38,9 @@ my %action_states = (
 	'new/norfd' => 'Use action to create the RFD',
 	'rfd/unposted' => 'Use action to post the RFD',
 	'rfd/posted' => 'In discussion, wait until ',
+	'vote/checking' => 'Check for multi-votes and forgeries then use action',
+	'vote/cfvnotposted' => 'Use action to post the CFV',
+	'vote/running' => 'Wait for end of vote',
 );
 
 if (!-d "./vote") {
@@ -44,11 +49,9 @@ if (!-d "./vote") {
 
 my $today = Ausadmin::today();
 
-opendir(D, "./vote");
-my @votes = grep { ! /^\./ } (readdir(D));
-closedir(D);
+my @votes = Vote::list_votes();
 
-foreach my $vote (@votes) {
+foreach my $vote (sort @votes) {
 
 	my $v = new Vote(name => $vote);
 

@@ -9,3 +9,85 @@ TODO for ausadmin ...
  - Write some policies
  - Populate the "data/Newsgroups" directory
  - hurry up
+
+Ausadmin Software release plan
+------------------------------
+
+Milestone 1
+-----------
+
+Goal: to have all data files manipulated automatically. There will be no
+more "forgetting" to update or insert things, because it will all be done
+from action as votes transit states.
+
+ - As a group is "created", also create all data structures relevant to that
+ group.
+
+ - As newsgroup data structures are updated, also update summary data
+ structures like checkgroups and grouplist.
+
+ - Most scripts assume that our data is in a directory relative to our
+ current directory. Most scripts also assume that binaries and libraries
+ are relative to our current directory. And some scripts expect $HOME or
+ $AUSADMIN_HOME instead. This is not good.
+
+ - Decide where our directory dependencies are:
+   - current directory
+   - AUSADMIN_HOME
+   - PATH or PERLLIB
+
+ - Change the code to enforce those dependencies consistently.
+
+ - The website part has a "Charters" directory which is not being kept
+ up-to-date with the groups as they are created. This might be bad.
+
+ - Add abandon-notes.txt to describe the reason why a proposal has been
+ abandoned.
+
+This milestone will require a lengthy checking phase to ensure that it really
+is updating all data files automatically and it is correctly moving proposals
+from state to state.
+
+Milestone 2
+-----------
+
+Goal: to become more efficient and consistent. And automated.
+
+ - Convert all single-line config files into an XML format
+ - Have all data structure manipulation occur within a class
+ - Proactively notify things that need to be done:
+   - RFD discussion period finished, time to choose abandon or CFV
+   - Vote finished, time to analyse results
+   - Result discussion period finished, time to create control message
+
+ - Automate control message signing
+ - Send out regular booster newgroups for existing groups
+
+Milestone 3
+-----------
+
+Goal: to become more web-centric
+
+ - Web registration of voters
+ - Web registration of proposers
+ - Web submission of proposals, and editing of proposals
+ - Web administrator access, running "action" for example.
+ - Web to provide more info on proposals and results
+
+Milestone 4
+-----------
+
+Goal: permit web-based voting. Improve submission system.
+
+ - Add web voting system (cookie-based)
+ - Add templates for charters and rationales.
+
+Milestone 5
+-----------
+
+Goal: remove email voting and automate vote process
+
+ - Disable email voting system
+ - Change how-to-vote message.
+ - Count web votes automatically at the end of the vote period
+ - Post results automatically after count

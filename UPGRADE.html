@@ -1,0 +1,96 @@
+<html>
+<head>
+ <title>Ausadmin software upgrade notes $Date$</title>
+</head>
+
+<body>
+
+<h1>You have to do these things when upgrading Ausadmin</h1>
+
+<p>
+This HTML document contains a sequence of steps which should be
+performed when upgrading ausadmin software, to ensure (at least)
+that the newsgroup data is in the format required for the software.
+In other words, if there is a data structure change between two
+releases, this document will contain instructions on making that
+change which is necessary before running the newer version.
+</p>
+
+<p>
+Follow the instructions from top to bottom.
+</p>
+
+<h2>Upgrade from 20020521 initial release</h2>
+
+<ul>
+ <li>
+  Move data/booster.template to config/booster.template
+ </li>
+ <li>
+  Check bin/pgp-sign, I added default signer email address
+ </li>
+ <li>
+  Might have to "rm -f vote/*/state" because states were not being
+  recalculated correctly.
+ </li>
+ <li>
+  I decided to stop using state files altogether. Basically keeping
+  the state in a file doesn't work when the state is time-dependent, such
+  as when a vote was started and it might have finished already. So please
+  delete all state files.
+ </li>
+ <li>
+  I wrote bin/fix-unsigned-control.pl to add a signed control file
+  for all vote directories which have control.msg but not control.signed.
+  You probably won't have any, but just in case, run this script to
+  fix up.
+ </li>
+ <li>
+  In the next release I am going to take a lot of config information
+  out of the one-line text files and put it into XML using XML::Simple.
+  So you need to install XML::Simple (debian package libxml-simple-perl).
+  I will write a config file converter.
+ </li>
+</ul>
+
+<h2>Upgrade from 20020804 release</h2>
+
+<ul>
+ <li>
+  Run bin/fix-vote-result shell script to create a vote_result file
+  for all votes which have been completed. vote_result will be used
+  for the calculation of vote state, particularly 'vote/fail'.
+ </li>
+ <li>
+  Scripts now use the environment variable <b>$AUSADMIN_HOME</b> in
+  place of <b>$HOME</b>. It means you can place your ausadmin data
+  structure somewhere other than your home directory (good for me, for
+  testing). You will need to ensure that you set this environment variable
+  in your shell (edit <b>.bashrc</b> for example) and make sure that it
+  is set in cron jobs also.
+ </li>
+ <li>
+  Move data/checkgroups.header to config/checkgroups.header
+ </li>
+ <li>
+  Move data/checkgroups.footer to config/checkgroups.footer
+ </li>
+ <li>
+  Delete data/ausgroups.html if it exists.
+ </li>
+ <li>
+  Run bin/fix-signed-cfv-filename.pl to rename all "posted.cfv" files in
+  vote directories to "cfv.signed". This is to start to get some
+  consistency in file naming. PGP-signed files names will always end in
+  ".signed" in future. You will also need to upgrade the ausadmin-website
+  package to a version on or after 20020808.
+ </li>
+ <li>
+  Do "rm -rf CFV". The CFV directory was a bad idea because the symlinks
+  in that directory become invalid when the vote is renamed. Sure I could
+  adjust the symlinks, but the information is in the vote directory anyway.
+ </li>
+</ul>
+
+</body>
+</html>

@@ -5,6 +5,8 @@
 # $Revision$
 # $Date$
 
+die "This program is obsolete";
+
 use strict;
 use lib 'bin';
 use Ausadmin;
@@ -85,7 +87,7 @@ sub makemessage ( $$ ) {
 	  $post .= "\nThis control message has been forged as \"$from\" for the benefit of those\nsites still honouring his posts.  If you are one of those sites please see \<URL:http://aus.news-admin.org/\>.";
      }
 
-     open FILE,">/virt/web/ausadmin/vote/$vote/newgroup.$name" or die "Yipe Yipe Yipe unable to open /virt/web/ausadmin/vote/$vote/newgroup.$name because $!\n";
+     open FILE,">/home/ausadmin/vote/$vote/newgroup.$name" or die "Yipe Yipe Yipe unable to open /home/ausadmin/vote/$vote/newgroup.$name because $!\n";
      print FILE $post;
      
 }

@@ -13,7 +13,7 @@ getopts("d");
 
 my $debug=$opt_d;
 
-chdir '/virt/web/ausadmin/';
+chdir '/home/ausadmin';
 
 sub endtime {
      local *FILE;
@@ -122,7 +122,7 @@ my $action = {
      
 #Get all the file names under the vote hyraky
 
-open FIND,'find /virt/web/ausadmin/vote/ -type f|'
+open FIND,'find /home/ausadmin/vote -type f -print |'
      or die "Can't fork for find because $!";
 
 while (<FIND>) {

@@ -10,6 +10,9 @@ Vote - a Vote of some kind
 
  use Vote;
 
+ my @vote_list = Vote::list_votes(vote_dir => $vote_dir);
+ 		# returns a list of vote names in that directory
+
  my $vote = new Vote(name => 'aus.history');
  $vote_dir = $vote->ng_dir();		# returns relative path of vote's dir
  $config_path = $vote->ng_dir($filename) # returns rel path of this config file
@@ -20,7 +23,7 @@ Vote - a Vote of some kind
  $list_ref = $vote->get_distribution();
  $list_ref = $vote->get_tally();
  $string = $vote->state();		# return string representing vote's state
- $string = $vote->get_state();		# read state from file first, calc 2nd
+ $string = $vote->update_state();	# calc state then update file
  $state = $vote->set_state($state);	# set state in file
 
  $vote->write_voterule($template);
@@ -33,6 +36,14 @@ package Vote;
 
 use IO::File;
 use Newsgroup;
+use Ausadmin;
+use DateFunc;
+
+use vars qw($result_discuss_days);
+
+$Vote::DEFAULT_VOTE_DIR	= './vote';
+
+my $result_discuss_days = 5;
 
 sub new {
 	my $class = shift;
@@ -42,10 +53,34 @@ sub new {
 	die "No name" if (!exists $self->{name});
 
 	if (!exists $self->{vote_dir}) {
-		$self->{vote_dir} = "./vote";
+		$self->{vote_dir} = $Vote::DEFAULT_VOTE_DIR;
 	}
 
 	return $self;
+}
+
+# Return a list of all votes in the directory
+
+sub list_votes {
+	my $args = { @_ };
+
+	my $vote_dir = $args->{vote_dir} || $Vote::DEFAULT_VOTE_DIR;
+
+	opendir(D, $vote_dir);
+	my @files = grep { ! /^\./ } readdir(D);
+	closedir(D);
+
+	my @list;
+
+	foreach my $f (@files) {
+		my $path = "$vote_dir/$f";
+		next if (! -d $path);
+		# It is not a vote if there's no "change" file
+		# (later) next if (! -f "$path/change");
+		push(@list, $f);
+	}
+
+	return @list;
 }
 
 sub _read_config_line {
@@ -69,7 +104,7 @@ sub _read_file {
 
 	my $ng_dir = "$self->{vote_dir}/$self->{name}";
 	my $fh = new IO::File("$ng_dir/$filename", O_RDONLY);
-	die "Expected $ng_dir/$filename" if (!defined $fh);
+	confess("Expected $ng_dir/$filename") if (!defined $fh);
 
 	my @lines = <$fh>;
 
@@ -162,31 +197,32 @@ sub get_tally {
 }
 
 $Vote::expected_files = {
-	'distribution' => 1,
-	'charter' => 1,
-	'rationale' => 1,
-	'ngline' => 1,
-	'proposer' => 1,
-	'vote_start.cfg' => 1,
-	'vote_cancel.cfg' => 1,
-	'rfd_posted.cfg' => 1,
-	'cfv-notes.txt' => 1,
 	'cancel-email.txt' => 1,
 	'cancel-notes.txt' => 1,
+	'cfv' => 1,
+	'cfv-notes.txt' => 1,
 	'change' => 1,
+	'charter' => 1,
+	'control.msg' => 1,
+	'distribution' => 1,
+	'endtime.cfg' => 1,
 	'group.creation.date' => 1,
-	'post.real' => 1,
+	'ngline' => 1,
 	'post.fake.phil' => 1,
 	'post.fake.robert' => 1,
-	'control.msg' => 1,
-	'rfd' => 1,
-	'voterule' => 1,
-	'endtime.cfg' => 1,
-	'cfv' => 1,
-	'posted.cfv' => 1,
+	'post.real' => 1,
 	'posted.cfg' => 1,
+	'cfv.signed' => 1,
+	'proposer' => 1,
+	'rationale' => 1,
 	'result' => 1,
+	'rfd' => 1,
+	'rfd_posted.cfg' => 1,
+	'state' => 1,
 	'tally.dat' => 1,
+	'vote_cancel.cfg' => 1,
+	'vote_start.cfg' => 1,
+	'voterule' => 1,
 };
 
 # Return a list of unexpected filenames in a vote directory
@@ -211,9 +247,9 @@ sub check_files {
 }
 
 
-# $string = $vote->calc_state() ...
+# $string = $vote->calc_state() ... Calculate the state from file existence
 
-sub state {
+sub calc_state {
 	my $self = shift;
 
 	my $ng_dir = $self->ng_dir();
@@ -240,7 +276,33 @@ sub state {
 	}
 
 	if (-f "$ng_dir/result_posted.cfg") {
-		return "complete/result";
+
+		my $posting_date = Ausadmin::read1line("$ng_dir/result_posted.cfg");
+
+		if (DateFunc::days_between($posting_date, Ausadmin::today()) < $result_discuss_days) {
+			return "complete/result-wait";
+		}
+
+		# Otherwise check the vote_result file to see what comes next
+
+		if (!-f "$ng_dir/vote_result") {
+			return "complete/no-vote-result";
+		}
+
+		my $result = Ausadmin::read1line("$ng_dir/vote_result");
+		my($vote_result, $yes, $no, $abstain, $invalid) = split(/\s+/, $result);
+
+		if ($vote_result eq 'PASS') {
+			return "complete/pass/unprocessed";
+		}
+
+		if ($vote_result eq 'FAIL') {
+			# Probably nothing more to do, so don't go into detail
+			return "complete/fail";
+		}
+
+		# Should not happen
+		return "complete/result-unknown";
 	}
 
 	if (-f "$ng_dir/result") {
@@ -263,7 +325,7 @@ sub state {
 			return "vote/running";
 		}
 
-		if (-f "$ng_dir/posted.cfv") {
+		if (-f "$ng_dir/cfv.signed") {
 			return "vote/cfvnotposted";
 		}
 
@@ -285,6 +347,10 @@ sub state {
 	}
 
 	if (-f "$ng_dir/rfd_posted.cfg") {
+		# Really need to check here for the time delay since the
+		# RFD was posted. At least 21 days need to pass before
+		# it can be turned into a vote. bin/action does this
+		# checking right now.
 		return "rfd/posted";
 	}
 
@@ -342,19 +408,28 @@ sub write_voterule {
 	}
 }
 
-sub get_state {
+# Methods to read from the state file first, or if it does not exist
+# then calculate the state.
+
+sub state {
 	my $self = shift;
 
 	my $vote_dir = $self->ng_dir();
 	my $state_file = "$vote_dir/state";
 
-	if (-f $state_file) {
-		my $state = read1line($state_file);
-		return $state;
-	}
+	# Calculate the state
+	my $state = $self->calc_state();
+
+	return $state;
+}
+
+# Get the current state only, from the file or calculate it
+
+sub update_state {
+	my $self = shift;
 
 	# Otherwise, calculate the state and save it in the file
-	my $state = $self->state();
+	my $state = $self->calc_state();
 
 	return $self->set_state($state);
 }
@@ -369,6 +444,8 @@ sub set_state {
 	open(F, ">$state_file");
 	print F $new_state, "\n";
 	close(F);
+
+	$self->audit("Set state to $new_state");
 
 	return $new_state;
 }
@@ -455,6 +532,9 @@ sub abandon {
 	$fh->print($today, "\n");
 	$fh->close();
 
+	# FIXME ... there really should be a post generated to announce the
+	# abandonment.
+
 	$self->audit("Abandoned RFD");
 }
 
@@ -474,5 +554,141 @@ sub get_message_paths {
 
 	return $tally_ref;
 }
+
+=head1 METHOD - setup_vote()
+
+A vote is started if certain control files exist in the vote/newsgroup
+directory. These control files are:
+
+	vote_start.cfg (contains the timestamp of the vote start time)
+	endtime.cfg (contains the timestamp of the vote cutoff time)
+	voterule (the parameters against which this ballot will be judged)
+
+This program creates endtime.cfg for the chosen newsgroups
+if it does not already exist.
+The duration of the vote is taken from the first file found:
+
+	vote/$newsgroup/voteperiod (duration in days)
+	config/voteperiod
+
+The automated vote taker can accept a vote as soon as endtime.cfg
+exists (it must contain a timestamp later than the current time).
+
+After this program has been run, use mkcfv.pl to create the
+pgp-signed Call-For-Votes (CFV) message and post it, so everybody
+knows they can vote.
+
+=cut
+
+# setup_vote() ... Create the necessary control files for a vote to be run
+
+sub setup_vote {
+	my $self = shift;
+
+	my $vote_dir = $self->ng_dir();
+
+	$self->write_voterule("config/voterule");
+
+	my $endtime_cfg = "$vote_dir/endtime.cfg";
+	my $start_file = "$vote_dir/vote_start.cfg";
+
+	if (-f $endtime_cfg) {
+		die "$endtime_cfg already exists";
+		next;
+	}
+
+	my $vp_file = "$vote_dir/voteperiod";
+	if (!-f $vp_file) {
+		$vp_file = "config/voteperiod";
+	}
+
+	my $vote_period;
+
+	if (open(VP, "<$vp_file")) {
+		$vote_period = <VP>;
+		chomp($vote_period);
+		close(VP);
+	} else {
+		die "No $vp_file";
+	}
+
+	# Find the finish date for votes according to the VD (vote duration)
+	my $vote_seconds = $vote_period * 86400;
+	my $start_time = time();
+
+	# Find the gmt end time
+	my($sec,$min,$hour,$mday,$mon,$year) = gmtime($start_time + $vote_seconds);
+
+	# Extend it to nearly midnight
+	($hour,$min,$sec) = (23,59,59);
+	my $then = timegm($sec,$min,$hour,$mday,$mon,$year);
+
+	# Now make the human-readable one
+	my $endtime = gmtime($then);
+
+	# And write to control file
+	open(T, ">$endtime_cfg");
+	print T $then + 1, "\n";
+	close(T);
+
+	open(T, ">$start_file");
+	print T $start_time, "\n";
+	close(T);
+
+	$self->audit("Setup vote to end at $endtime");
+	$self->set_state("vote/nocfv");
+}
+
+# create_rfd ... Make an "rfd.unsigned" file from the components
+
+sub create_rfd {
+	my $self = shift;
+
+	my $vote_dir = $self->ng_dir();
+	my $vote_name = $self->{name} || die "This vote has no name!";
+
+	# FIXME ... move all this executed code into the method!
+	my $rc = system("bin/make-rfd.pl $vote_name > $vote_dir/rfd-temp.$$");
+
+	if ($rc) {
+		$self->audit("RFD creation failed, code $rc");
+		die "RFD creation failed";
+	}
+
+	rename("$vote_dir/rfd-temp.$$", "$vote_dir/rfd.unsigned");
+
+	$self->audit("Created unsigned RFD");
+	$self->set_state("rfd/unsigned");
+}
+
+# post_rfd ... Post the signed RFD file.
+
+sub post_rfd {
+	my $self = shift;
+
+	my $vote_dir = $self->ng_dir();
+	my $vote_name = $self->{name} || die "This vote has no name!";
+
+	# FIXME ... move all this executed code into the method!
+	my $rc = system("bin/post.pl < $vote_dir/rfd");
+
+	if ($rc) {
+		$self->audit("RFD posting failed, code $rc");
+		die "RFD posting failed";
+	}
+
+	$self->audit("Posted signed RFD");
+
+	# Now note the date the RFD was posted
+	#
+	my $yyyymmdd = Ausadmin::today();
+
+	open(F, ">$vote_dir/rfd_posted.cfg");
+	print F $yyyymmdd, "\n";
+	close(F);
+
+	$self->set_state("rfd/posted");
+}
+
 
 1;

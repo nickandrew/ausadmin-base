@@ -7,7 +7,7 @@
 
 my $vote = shift @ARGV || die "Usage: vote-date groupname\n";
 
-my $home = $ENV{'HOME'};
+my $home = $ENV{'AUSADMIN_HOME'};
 
 die "No such vote: $vote\n" if (!-d "$home/vote/$vote");
 my $file = "$home/vote/$vote/posted.cfg";

@@ -16,7 +16,7 @@
 
 my $message_path = shift @ARGV;
 
-my $HomeDir = "/virt/web/ausadmin";
+my $HomeDir = "/home/ausadmin";
 my $BaseDir = "$HomeDir/vote";
 
 

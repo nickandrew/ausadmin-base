@@ -1,6 +1,6 @@
 #!/usr/bin/perl
-#	@(#) action: Do the "next action" for a newsgroup
-#	Usage: action newsgroup-name
+#	@(#) action: Do the "next action" for a proposal
+#	Usage: action proposal-name
 #
 # $Source$
 # $Revision$
@@ -9,12 +9,12 @@
 
 =head1 NAME
 
-action - Do the "next action" for a newsgroup
+action - Do the "next action" for a proposal
 
 =head1 SYNOPSIS
 
 cd ~ausadmin
-action newsgroup-name
+action proposal-name [vote_dir]
 
 =head1 DESCRIPTION
 
@@ -30,7 +30,6 @@ use Vote;
 
 $| = 1;
 
-my $BaseDir = "./vote";
 my $rfd_min_days = 21;
 
 my $state_actions = {
@@ -38,9 +37,13 @@ my $state_actions = {
 	'rfd/posted' => \&check_rfd,
 	'rfd/unposted' => \&post_rfd,
 	'rfd/unsigned' => \&sign_rfd,
-	'complete/pass/unsigned' => \&sign_control,
-	'complete/resultnotposted' => \&post_result,
+	'complete/result-wait' => \&pause_result,
 	'complete/resultnotsigned' => \&sign_result,
+	'complete/resultnotposted' => \&post_result,
+	'complete/pass' => \&group_finished,
+	'complete/pass/unprocessed' => \&make_control,
+	'complete/pass/unsigned' => \&sign_control,
+	'complete/pass/signed' => \&post_one_control,
 	'vote/checking' => \&gen_result,
 	'vote/running' => \&pause_running,
 	'vote/cfvnotposted' => \&post_cfv,
@@ -50,15 +53,15 @@ my $state_actions = {
 	'vote/novoterule' => \&gen_voterule,
 };
 
-die "No vote subdirectory (must cd to ~ausadmin)" if (!-d $BaseDir);
+my $newsgroup = shift @ARGV || die "Usage: action newsgroup-name\n";
+my $vote_dir = shift @ARGV || './vote';
 
-my $newsgroup = shift @ARGV;
+die "No $vote_dir directory (must cd to ~ausadmin)" if (!-d $vote_dir);
 
-my $v = new Vote(name => $newsgroup);
+my $v = new Vote(name => $newsgroup, vote_dir => $vote_dir);
 my $ng_dir = $v->ng_dir();
 
 die "No $ng_dir" if (!-d $ng_dir);
-die "No CFV directory" if (!-d "CFV");
 
 my $s = 0;
 
@@ -96,9 +99,14 @@ while (exists $state_actions->{$state}) {
 	last if ($rc);
 
 	my $new_state = $v->state();
-	last if ($new_state eq $state);
+	if ($new_state eq $state) {
+		print "New state is same as old state, $state, so leaving\n";
+		last;
+	}
 	$state = $new_state;
 }
+
+print "Exit at state $state\n";
 
 if (!exists $state_actions->{$state}) {
 	die "Not prepared to handle state $state\n";
@@ -115,10 +123,11 @@ sub gen_result {
 		die "Ok, try again later.\n";
 	}
 
-	my $rc = system("bin/genresult.pl $newsgroup > $ng_dir/result.unsigned");
+	my $rc = system("genresult.pl $newsgroup > $ng_dir/result.unsigned");
 	$v->audit("generated result (code $rc)");
 	if ($rc) {
-		die "genresult.pl failed code $rc...!";
+		unlink("$ng_dir/result.unsigned");
+		die "genresult.pl failed code $rc, unlinked result.unsigned ...!";
 	}
 
 	print "\nOkay.\n";
@@ -135,10 +144,11 @@ sub sign_result {
 		die "Ok, try again later.\n";
 	}
 
-	my $rc = system("bin/pgp-sign < $ng_dir/result.unsigned > $ng_dir/result");
+	my $rc = system("pgp-sign < $ng_dir/result.unsigned > $ng_dir/result");
 	$v->audit("PGP-signed result (code $rc)");
 	if ($rc) {
-		die "pgp-sign failed code $rc...!";
+		unlink("$ng_dir/result");
+		die "pgp-sign failed code $rc, unlinked result ...!";
 	}
 
 	print "\nOkay.\n";
@@ -187,11 +197,7 @@ sub setup_vote {
 		die "Ok, try again later.\n";
 	}
 
-	my $rc = system("bin/setup-vote $newsgroup");
-	$v->audit("setup vote (code $rc)");
-	if ($rc) {
-		die "setup-vote failed code $rc...!";
-	}
+	$v->setup_vote();
 
 	print "\nOkay.\n";
 
@@ -210,11 +216,11 @@ sub gen_cfv {
 		die "Ok, try again later.\n";
 	}
 
-	my $rc = system("bin/mkcfv.pl $newsgroup > $ng_dir/cfv");
+	my $rc = system("mkcfv.pl $newsgroup > $ng_dir/cfv");
 	$v->audit("created CFV (code $rc)");
 	if ($rc) {
 		unlink("$ng_dir/cfv");
-		die "mkcfv.pl failed code $rc...!";
+		die "mkcfv.pl failed code $rc, unlinked cfv ...!";
 	}
 
 	print "\nOkay.\n";
@@ -223,7 +229,7 @@ sub gen_cfv {
 }
 
 sub sign_cfv {
-	if (!-f "$ng_dir/cfv" || -f "$ng_dir/posted.cfv") {
+	if (!-f "$ng_dir/cfv" || -f "$ng_dir/cfv.signed") {
 		die "Augh. sign_cfv prerequisites not met!";
 	}
 
@@ -234,21 +240,20 @@ sub sign_cfv {
 		die "Ok, try again later.\n";
 	}
 
-	my $rc = system("bin/pgp-sign < $ng_dir/cfv > $ng_dir/posted.cfv");
+	my $rc = system("pgp-sign < $ng_dir/cfv > $ng_dir/cfv.signed");
 	$v->audit("signed CFV (code $rc)");
 	if ($rc) {
-		die "pgp-sign failed code $rc...!";
+		unlink("$ng_dir/cfv.signed");
+		die "pgp-sign failed code $rc, unlinked cfv.signed ...!";
 	}
 
-	unlink("CFV/$newsgroup");
-	symlink("$ng_dir/posted.cfv", "CFV/$newsgroup");
 	print "\nOkay.\n";
 
 	return 0;
 }
 
 sub post_cfv {
-	if (!-f "$ng_dir/posted.cfv" || !-f "$ng_dir/endtime.cfg" || -f "$ng_dir/posted.cfg") {
+	if (!-f "$ng_dir/cfv.signed" || !-f "$ng_dir/endtime.cfg" || -f "$ng_dir/posted.cfg") {
 		die "Augh. post_cfv prerequisites not met!";
 	}
 
@@ -259,7 +264,7 @@ sub post_cfv {
 		die "Ok, try again later.\n";
 	}
 
-	my $rc = system("bin/post.pl < $ng_dir/posted.cfv");
+	my $rc = system("post.pl < $ng_dir/cfv.signed");
 	$v->audit("Posted CFV (code $rc)");
 	if ($rc) {
 		die "post failed code $rc...!";
@@ -274,7 +279,7 @@ sub post_cfv {
 
 	print "\nOkay. Nothing more to do until vote is finished.\n";
 
-	return 16;	# nothing more to do for this group
+	return 0;
 }
 
 sub post_result {
@@ -289,7 +294,7 @@ sub post_result {
 		die "Ok, try again later.\n";
 	}
 
-	my $rc = system("bin/post.pl < $ng_dir/result");
+	my $rc = system("post.pl < $ng_dir/result");
 	$v->audit("posted result (code $rc)");
 	if ($rc) {
 		die "post failed code $rc...!";
@@ -329,13 +334,7 @@ sub create_rfd {
 
 	if ($answer =~ /y/i) {
 		print "Ok, creating the RFD now ...\n";
-		my $rc = system("bin/make-rfd.pl $newsgroup > $ng_dir/rfd-temp.$$");
-		if ($rc) {
-			$v->audit("RFD creation failed");
-			die "make-rfd.pl returned code $rc, check $ng_dir/rfd-temp.$$ for its output";
-		}
-		rename("$ng_dir/rfd-temp.$$", "$ng_dir/rfd.unsigned");
-		$v->audit("Created unsigned RFD");
+		$v->create_rfd();
 		print "Done! Check it for errors then run action again.\n";
 		# User probably wants to look at the file before continuing.
 		return 16;
@@ -379,7 +378,7 @@ sub check_rfd {
 
 	if ($answer =~ /v/i) {
 		print "Setting up vote now ...\n";
-		system("bin/setup-vote $newsgroup");
+		system("setup-vote $newsgroup");
 	}
 }
 
@@ -392,10 +391,11 @@ sub sign_rfd {
 		die "Ok, try again later.\n";
 	}
 
-	my $rc = system("bin/pgp-sign < $ng_dir/rfd.unsigned > $ng_dir/rfd");
+	my $rc = system("pgp-sign < $ng_dir/rfd.unsigned > $ng_dir/rfd");
 	$v->audit("PGP-signed RFD (code $rc)");
 	if ($rc) {
-		die "pgp-sign failed code $rc...!";
+		unlink("$ng_dir/rfd");
+		die "pgp-sign failed code $rc, unlinked rfd ...!";
 	}
 
 	print "\nOkay.\n";
@@ -418,19 +418,7 @@ sub post_rfd {
 	my $answer = <STDIN>;
 	chomp($answer);
 	if ($answer =~ /^y/i) {
-		my $rc = system("bin/post.pl < $ng_dir/rfd");
-		$v->audit("Posted signed RFD (code $rc)");
-		if ($rc != 0) {
-			die "Unable to post, code $rc -- fatal";
-		}
-
-		# Now note which date the RFD was posted
-
-		my $yyyymmdd = Ausadmin::today();
-
-		open(F, ">$ng_dir/rfd_posted.cfg");
-		print F $yyyymmdd, "\n";
-		close(F);
+		$v->post_rfd();
 
 		print "Okay, I posted it. Nothing more to do for 21 days.\n";
 		exit(0);
@@ -442,7 +430,12 @@ sub post_rfd {
 
 sub pause_running {
 	print "(state=$state) Nothing to do, vote is currently running.\n";
-	die;
+	exit(0);
+}
+
+sub pause_result {
+	print "(state=$state) Result is being discussed, wait.\n";
+	exit(0);
 }
 
 sub sign_control {
@@ -454,10 +447,11 @@ sub sign_control {
 		die "Ok, try again later.\n";
 	}
 
-	my $rc = system("bin/signcontrol < $ng_dir/control.msg > $ng_dir/control.signed");
+	my $rc = system("signcontrol < $ng_dir/control.msg > $ng_dir/control.signed");
 	$v->audit("PGP-signed control message (code $rc)");
 	if ($rc) {
-		die "pgp-sign failed code $rc...!";
+		unlink("$ng_dir/control.signed");
+		die "pgp-sign failed code $rc, unlinked control.signed ...!";
 	}
 
 	print "\nOkay.\n";
@@ -465,3 +459,76 @@ sub sign_control {
 	return 0;
 }
 
+#  Create appropriate control messages (use perform-changes.pl to create
+#  messages which do whatever the 'change' file requires).
+
+sub make_control {
+	print "(state=$state) Create control message(s) ? ";
+	my $answer = <STDIN>;
+	chomp($answer);
+	if ($answer !~ /^\s*y/i) {
+		die "Ok, try again later.\n";
+	}
+
+	my $rc = system("perform-changes.pl $newsgroup");
+	$v->audit("Executed perform-changes.pl (code $rc)");
+	if ($rc) {
+		die "perform-changes.pl failed code $rc...!";
+	}
+
+	print "\nOkay.\n";
+
+	return 0;
+}
+
+#  Post the control.signed file to make a newsgroup change effective.
+#  Note: this function assumes there is only one control file to post,
+#  that is not the case with multi-group changes ...!
+
+sub post_one_control {
+	print "(state=$state) Post (one) control message ? ";
+	my $answer = <STDIN>;
+	chomp($answer);
+	if ($answer !~ /^\s*y/i) {
+		die "Ok, try again later.\n";
+	}
+
+	my $rc = system("post.pl < $ng_dir/control.signed");
+	$v->audit("Posted control.signed (code $rc)");
+	if ($rc) {
+		die "post.pl failed code $rc...!";
+	}
+
+	# Now create group.creation.date, containing today's date
+
+	my $yyyymmdd = Ausadmin::today();
+	$rc = write1line("$ng_dir/group.creation.date", "$yyyymmdd\n");
+	$v->audit("Wrote group.creation.date (code $rc)");
+	if ($rc) {
+		die "write1line failed code $rc...!";
+	}
+
+}
+
+sub write1line {
+	my $path = shift;
+	my $string = shift;
+
+	if (!open(ONELINE, ">$path")) {
+		return -1;
+	}
+
+	print ONELINE $string;
+
+	if (!close(ONELINE)) {
+		return -2;
+	}
+
+	return 0;
+}
+
+sub group_finished {
+	print "This newsgroup is now complete (exiting),\n";
+
+	exit(0);
+}

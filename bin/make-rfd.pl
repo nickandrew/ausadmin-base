@@ -11,7 +11,7 @@ make-rfd.pl - Create an RFD message for a proposal
 
 =head1 SYNOPSIS
 
-make-rfd.pl [B<-r>] proposal
+make-rfd.pl [B<-r>] $proposal > vote/$proposal/rfd.unsigned
 
 =head1 DESCRIPTION
 
@@ -150,8 +150,18 @@ push(@lines, "\nEND RATIONALE.\n\n");
 # Now we loop through, emitting all the per-newsgroup information we have
 foreach my $newsgroup (sort (keys %$per_newsgroup)) {
 	if (exists $per_newsgroup->{$newsgroup}->{charter}) {
-		push(@lines, "CHARTER: $newsgroup\n\n", $per_newsgroup->{$newsgroup}->{charter});
-		push(@lines, "\nEND CHARTER.\n\n");
+		if ($change->{'charter'} =~ /html/i) {
+			# Use lynx to reformat HTML charters
+			push(@lines, "CHARTER: $newsgroup\n\n");
+			my $cmd = "cat vote/$newsgroup/charter:$newsgroup | lynx -dump -stdin -force_html";
+			my $charter_text = `$cmd`;
+			push(@lines, $charter_text);
+			push(@lines, "\nEND CHARTER.\n\n");
+		} else {
+			# Other types (or unspecified) assumed plain text
+			push(@lines, "CHARTER: $newsgroup\n\n", $per_newsgroup->{$newsgroup}->{charter});
+			push(@lines, "\nEND CHARTER.\n\n");
+		}
 	}
 
 	# Do the same thing for mod_status (probably not required)
@@ -173,7 +183,7 @@ push(@lines, "DISTRIBUTION:\n\n", $distribution);
 # Print first, the message header ...
 
 my %header = (
-	Subject => "Request For Discussion (RFD): $newsgroup",
+	Subject => "Request For Discussion (RFD): $proposal",
 	Newsgroups => join(',', split("\n", $distribution))
 );
 

@@ -1,0 +1,32 @@
+#!/bin/bash
+#	@(#) $Id$
+#
+#	Run this script once to setup vote_result files in each vote
+#	subdirectory (for votes which actually went to a vote).
+
+cd $AUSADMIN_HOME
+
+mkdir -p tmp
+
+for i in vote/* ; do
+
+	b=`basename $i`
+	echo ============================== $b
+
+	if [ -f $i/vote_result ] ; then
+		echo "$b already has a vote_result"
+		continue
+	fi
+
+	if [ ! -f $i/result ] ; then
+		echo "$b initial result has not been computed yet"
+	else
+		bin/genresult.pl $b > tmp/result.$b
+	fi
+done
+
+echo "Done."
+echo "You might wish to diff the result files in tmp/result.* against"
+echo "the original result files (retained in the vote subdirectories)."
+
+exit 0

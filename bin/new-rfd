@@ -1,13 +1,12 @@
 #!/bin/sh
+#	@(#) $Id$
 #	@(#) new-rfd: Accept a proposal and setup directory/control files
 #	Usage: new-rfd proposal-name source-file
 #
 # The source-file must be in the format outlined in root/Faq/RFD-template.txt
 #
 # The idea is that the ausadmin-approved RFD message is fed into this
-# program and it will create needed directories and generate a new,
-# postable RFD. You will be asked for your passphrase for signing the
-# new RFD.
+# program and it will create needed directories and control files.
 #
 # $Source$
 # $Revision$
@@ -20,7 +19,7 @@ then
 fi
 
 # Get command line arguments
-Newsgroup="$1"
+Proposal="$1"
 Info="$2"
 
 # Commonly used variables
@@ -56,13 +55,13 @@ if [ $s != 0 ] ; then
 	exit 6
 fi
 
-if [ -d $BaseDir/$Newsgroup ] ; then
-	echo "A directory $BaseDir/$Newsgroup already exists - use redo-vote.pl first"
+if [ -d $BaseDir/$Proposal ] ; then
+	echo "A directory $BaseDir/$Proposal already exists - use redo-vote.pl first"
 	echo "or remove that directory before proceeding."
 	exit 7
 fi
 
-bin/parse-rfd.pl < $fn
+bin/parse-rfd.pl $Proposal < $fn
 s=$?
 
 if [ $s != 0 ] ; then
@@ -70,19 +69,7 @@ if [ $s != 0 ] ; then
 	exit 6
 fi
 
-# leave early here because bin/action does the rest
-echo "Good. Now do bin/action $Newsgroup"
-exit 0
-
-bin/make-rfd.pl $Newsgroup | bin/pgp-sign > $BaseDir/$Newsgroup/rfd
-s=$?
-
-if [ $s != 0 ] ; then
-	echo "Unable to create new rfd for $Newsgroup -- code $s - fatal"
-	exit 6
-fi
-
-echo new-rfd Done at `date`
-echo "$BaseDir/$Newsgroup/rfd should now be ready to post, do 'action $Newsgroup'"
+echo "Good. Now do bin/action $Proposal"
 
 exit 0
+

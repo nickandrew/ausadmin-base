@@ -1,4 +1,10 @@
 #!/usr/bin/perl
+#	@(#) $Id$
+#	Usage: perform-changes.pl $vote
+#
+#	This one does all the work to make effective the changes which are
+#	specified in the 'change' file in the vote's directory, including
+#	creating a newsgroup, removing it, or changing the charter.
 
 use lib 'bin';
 
@@ -77,7 +83,7 @@ sub do_charter {
 		$new_charter_string .= $_;
 	}
 
-	if ($new_charter ne '') {
+	if ($new_charter_string ne '') {
 		# Set the new charter
 		my $ng = new Newsgroup(name => $newsgroup, datadir => "data/Newsgroups");
 		$ng->set_attr('charter', $new_charter_string, "perform-changes.pl replaced charter");
@@ -110,9 +116,53 @@ sub do_control {
 
 	print CF $text;
 
-	close(CF);
+	if (!close(CF)) {
+		unlink($control_path);
+		die "Unable to write $control_path: $!";
+	}
 
 	$v->audit("Wrote control message($change_hr->{type}, $type, $vote) into $control_path");
+
+	# Now create a newsgroup directory if required
+	my $newsgroup = $change_hr->{'newsgroup'};
+	my $ng = new Newsgroup(name => $newsgroup, datadir => "data/Newsgroups");
+
+	if ($change_hr->{'type'} eq 'newgroup') {
+		$ng->create();
+		$v->audit("Created Newsgroup structures for $newsgroup");
+
+		# put the charter in
+		my $new_charter_lr = $v->read_file("charter:$newsgroup");
+		my $new_charter_string;
+		foreach (@$new_charter_lr) {
+			$new_charter_string .= $_;
+		}
+
+		if ($new_charter_string ne '') {
+			$ng->set_attr('charter', $new_charter_string, 'perform-changes.pl set initial charter');
+			$v->audit("Set charter in data/Newsgroup/$newsgroup/charter");
+		}
+
+		my $ngline_lr = $v->read_file("ngline:$newsgroup");
+		my $ngline = $ngline_lr->[0];
+		$ngline =~ s/^$newsgroup\s+//;
+		if ($ngline ne '') {
+			$ng->set_attr('ngline', $ngline, 'perform-changes.pl set newsgroup line');
+			$v->audit("Set ngline in data/Newsgroup/$newsgroup/ngline");
+
+			# Recreate the ausgroups file
+			my $gl = new GroupList();
+			$gl->write("./data/ausgroups.$$", "./data/ausgroups");
+			$v->audit("Recreated data/ausgroups for the new group");
+		}
+
+	}
+
+	if ($change_hr->{'type'} eq 'rmgroup') {
+		# FIXME ... What data structure do we keep for a deleted group?
+		die "FIXME Unable to setup data structure for deleted group";
+	}
+
 }
 
 sub make_control {

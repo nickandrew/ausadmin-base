@@ -208,17 +208,16 @@ sub cancel_art_head {
 	my $newsgroup = shift;
 	my $vote = shift;
 
-	my @lines;
-
-	push(@lines, "From: ausadmin <ausadmin\@aus.news-admin.org>");
-	push(@lines, "Subject: VOTE CANCELLED: $newsgroup");
+	my %header = (
+		'Subject' => "Subject: VOTE CANCELLED: $newsgroup",
+		'Followup-To' => "aus.net.news",
+	);
 
 	my $g = $vote->get_distribution();
 
-	push(@lines, "Newsgroups: " . join(',', sort(@$g)));
-	push(@lines, "Followup-To: aus.net.news");
+	$header{'Newsgroups'} = join(',', sort(@$g));
 
-	return join("\n", @lines) . "\n";
+	return Ausadmin::make_header(\%header);
 }
 
 sub cancel_msg_head {
