@@ -11,16 +11,24 @@ use Newsgroup qw();
 
 my $hier_name = shift @ARGV || die "Usage: import-checkgroups.pl hierarchy-short-name < checkgroups-file\n";
 
+mkdir("$hier_name.data", 0755);
+mkdir("$hier_name.data/Newsgroups", 0755);
+
 my $data_dir = "$hier_name.data/Newsgroups";
 
 while (<STDIN>) {
 	chomp;
-	if (/^([^\t]+)\s+(.*)/) {
+	if (/^([^\t]+)\t+\s*(.+)/) {
 		my $name = $1;
 		my $ngline = $2;
 
 		if ($name !~ /^$hier_name\./o) {
-			print STDERR "Refused, out of hierarchy: $name\n";
+			print "Refused, out of hierarchy: $name\n";
+			next;
+		}
+
+		if (! Newsgroup::valid_name($name)) {
+			print "Refused, bad newsgroup name: $name\n";
 			next;
 		}
 
@@ -40,7 +48,7 @@ while (<STDIN>) {
 			$n->set_attr("ngline", $ngline . "\n", 'Imported from checkgroups file');
 		}
 	} else {
-		print STDERR "Invalid line (ignored): $_\n";
+		print "Invalid line (ignored): $_\n";
 	}
 }
 

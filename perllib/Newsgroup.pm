@@ -11,6 +11,7 @@ Newsgroup - a newsgroup
  $nntp = new Net::NNTP(...)
 
  $ng = new Newsgroup(name => 'aus.history', [nntp_server=>$nntp]);
+ $bool = Newsgroup::valid_name('aus.history');
  $bool = Newsgroup::validate('aus.history');
 
  $ng->set_server($nntp)
@@ -52,6 +53,24 @@ sub new {
 
 	return $self;
 }
+
+# ---------------------------------------------------------------------------
+# Check the newsgroup name for compliance with international newsgroup standards.
+# ---------------------------------------------------------------------------
+
+sub valid_name {
+	my $ng_name = shift;
+
+	# NOTE ... this allows no single-group hierarchies
+	return 1 if ($ng_name =~ /^[a-z0-9+-]+\.[a-z0-9+-]+(\.[a-z0-9+-]+)*$/);
+
+	return 0;
+}
+
+# ---------------------------------------------------------------------------
+# Check the newsgroup name for compliance with ausadmin naming (including a
+# group date at the end, after a colon)
+# ---------------------------------------------------------------------------
 
 sub validate {
 	my $ng_name = shift;
