@@ -30,9 +30,9 @@ From: ausadmin\@aus.news-admin.org (Ausadmin)
 Subject: Newsserver analysis report ($today)
 Newsgroups: aus.net.news,aus.computers.linux
 
-Ausadmin (with the help of *nix-using volunteers) monitors
-the list of groups on several newsservers in order to identify
-differences compared to the canonical list maintained by ausadmin.
+Ausadmin with the help of volunteers monitors the list of groups
+on several newsservers in order to identify differences compared
+to the canonical list maintained by ausadmin.
 
 Each server is checked for existing groups (shown as 'Ok' on
 the following report), groups which should be added ('Missing'),
@@ -44,7 +44,8 @@ canonical newsgroup list.
 See the bottom of this message if you would like to help out by
 reporting on your ISP's newsserver. You can also help by emailing
 the list of differences to your support group, and refer them to
-the ausadmin website, http://aus.news-admin.org/
+the ausadmin website, http://aus.news-admin.org/ for details on
+setting up automatic update.
 
 -------------------------------------------------------------------------
 
@@ -111,6 +112,7 @@ EOF
 # Now report on each newsserver by name
 
 foreach my $r (sort { $a->{name} cmp $b->{name} } (values %{$db->{server}})) {
+	next if ($r->{last_report} < $min_age);
 	next if (!exists $r->{notice});
 	next if ($r->{score} <= 0);
 
