@@ -34,5 +34,5 @@ system "mv /tmp/schedule.$$.$^T ~/schedule";
 
 sub sendmessage {
   my $filename=shift;
-  system "rnews $filename";
+  system "cat $filename|signcontrol|rnews -";
 }
