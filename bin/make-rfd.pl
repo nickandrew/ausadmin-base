@@ -46,7 +46,7 @@ if (!-d $d) {
 	die "No $d directory - cd?";
 }
 
-foreach my $i (qw/change ngline rationale charter proposer distribution/) {
+foreach my $i (qw/change rationale proposer distribution/) {
 	if (!-f "$d/$i") {
 		die "No $d/$i";
 	}
@@ -110,10 +110,10 @@ EOF
 
 # Now format the paragraph
 my @fmt = Ausadmin::format_para($x);
-push(@lines, join("\n", @fmt), "\n");
+push(@lines, join("\n", @fmt), "\n\n");
 
 if ($change_type =~ /^(newgroup|moderate)$/) {
-	push(@lines, "\nNewsgroup line:\n", "$ngline\n\n");
+	push(@lines, "Newsgroup line:\n", "$ngline\n\n");
 }
 
 # print "x is $x[0] then $x[1] then $x[2].\n";

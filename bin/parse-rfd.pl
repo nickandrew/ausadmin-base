@@ -19,10 +19,15 @@ parse-rfd.pl [-d] newsgroup-name < rfd-file
 
 =head1 DESCRIPTION
 
-Parse the RFD file and write the following files in the
+Parse the RFD file and write one or more of the following files in the
 vote/$newsgroup subdirectory:
 
-change charter distribution ngline proposer rationale
+change,
+charter,
+distribution,
+ngline,
+proposer,
+rationale,
 
 and optionally: modinfo
 
@@ -52,10 +57,7 @@ die "Unable to parse the RFD, no newsgroups, sorry" unless %$g;
 
 my @newsgroups = grep { /^[a-z0-9-]+\.([a-z0-9.-]+)$/ } (sort (keys %$g));
 
-die "No proposer" if (!defined $g->{proposer});
-die "No distribution" if (!@{$g->{distribution}});
-die "No rationale" if (!defined $g->{rationale});
-
+# Setup defaults if CHANGE: line not supplied
 
 if (!defined $g->{change}) {
 	# Default change is to create a new unmoderated group
@@ -66,16 +68,42 @@ if (!defined $g->{change}) {
 	};
 }
 
+# All proposals need these
+die "No proposer" if (!defined $g->{proposer});
+die "No distribution" if (!@{$g->{distribution}});
+die "No rationale" if (!defined $g->{rationale});
+
+my $change_type = $g->{change}->{'type'};
+
 # Do basic sanity checks on all newsgroups in our RFD
+
+# KLUDGE ... circular logic!
+
+@newsgroups = ($g->{change}->{newsgroup});
 
 foreach my $newsgroup (@newsgroups) {
 
 	my $r = $g->{$newsgroup};
 
-	die "$newsgroup: No newsgroups line" if (!defined $r->{ngline});
-	die "$newsgroup: No charter" if (!defined $r->{charter});
+	if ($change_type =~ /^(newgroup|moderate|unmoderate)$/) {
+		# Needs a newsgroups line
+		die "$newsgroup: No newsgroups line" if (!defined $r->{ngline});
+	}
+
+	if ($change_type =~ /^(newgroup|moderate|unmoderate|charter)$/) {
+		# Needs a charter paragraph
+		die "$newsgroup: No charter" if (!defined $r->{charter});
+	}
+
+	# KLUDGE ...
 	if (defined $r->{modinfo}) {
 		die "$newsgroup: No moderator" if (!defined $r->{moderator});
+	}
+
+	# Now look for things which are not permitted
+	if ($change_type =~ /^(rmgroup)$/) {
+		die "$newsgroup: No charter permitted" if (defined $r->{charter});
+		die "$newsgroup: No ngline permitted" if (defined $r->{ngline});
 	}
 }
 
@@ -101,19 +129,23 @@ foreach my $newsgroup (@newsgroups) {
 	print O join("\n",@{$g->{distribution}}), "\n";
 	close(O);
 
-	open(CHARTER, ">$BaseDir/$newsgroup/charter") or die "Unable to open charter for write: $!";
-	print CHARTER $r->{charter};
-	close(CHARTER);
-
 	open(RATIONALE, ">$BaseDir/$newsgroup/rationale") or die "Unable to open rationale for write: $!";
 	print RATIONALE $g->{rationale};
 	close(RATIONALE);
 
-	open NGLINE,">$BaseDir/$newsgroup/ngline" or die "Unable to open ngline: $!";
-	print NGLINE "$newsgroup\t$r->{ngline}\n";
-	close NGLINE or die "Unable to close ngline: $!";
+	if (defined $r->{charter}) {
+		open(CHARTER, ">$BaseDir/$newsgroup/charter") or die "Unable to open charter for write: $!";
+		print CHARTER $r->{charter};
+		close(CHARTER);
+	}
 
-	if (exists $r->{modinfo}) {
+	if (defined $r->{ngline}) {
+		open NGLINE,">$BaseDir/$newsgroup/ngline" or die "Unable to open ngline: $!";
+		print NGLINE "$newsgroup\t$r->{ngline}\n";
+		close NGLINE or die "Unable to close ngline: $!";
+	}
+
+	if (defined $r->{modinfo}) {
 		open(MODINFO, ">$BaseDir/$newsgroup/modinfo") or die "Unable to open modinfo for write: $!";
 		print MODINFO $r->{modinfo};
 		close(MODINFO);
@@ -168,7 +200,7 @@ sub ReadRFD {
 			}
 			if ($words[0] eq 'rmgroup') {
 				$c->{newsgroup} = $words[1];
-				die "rmgroup change type not handled yet";
+				$g{change} = $c;
 				next;
 			}
 			if ($words[0] eq 'moderate') {
