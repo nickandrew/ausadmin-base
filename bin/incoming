@@ -1,7 +1,10 @@
 #!/bin/bash
 #	@(#) incoming - Save a received message and process it
+#	@(#) $Header$
 
 cd ~ausadmin
+
+export PATH=$HOME/bin:$PATH
 
 ts=`date '+%Y%m%d-%H%M%S'`
 suffix=`printf "%05d" $$`
