@@ -103,6 +103,8 @@ sub import_checkgroups {
 	my $hier_name = shift;
 	my $line_lr = shift;
 
+	print "Importing checkgroups for $hier_name\n";
+
 	mkdir("$hier_name.data", 0755);
 	mkdir("$hier_name.data/Newsgroups", 0755);
 
@@ -136,13 +138,11 @@ sub import_checkgroups {
 			my $old_ngline = $n->get_attr('ngline');
 
 			if (!defined $old_ngline || $old_ngline ne $ngline) {
-				print "Updating $name ngline $ngline\n";
-				$n->set_attr("ngline", $ngline . "\n", 'Imported from checkgroups file');
+				print "Updating $name ngline to $ngline\n";
+				$n->set_attr("ngline", $ngline, 'Imported from checkgroups file');
 			}
-		} else {
-			print "Invalid line (ignored): $_\n";
 		}
 	}
 
-	print "All done for $hier_name.\n";
+	print "$hier_name is complete.\n";
 }
