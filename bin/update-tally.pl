@@ -2,6 +2,8 @@
 #	@(#) $Header$
 #
 #	Annotate the tally file with any known invalid votes
+#
+# Usage: update-tally.pl tally-path new-tally-path
 
 use lib 'bin';
 use VoterState qw();
