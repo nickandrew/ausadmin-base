@@ -33,7 +33,8 @@ my $BaseDir = "./vote";
 my $rfd_min_days = 21;
 
 my $state_actions = {
-	'rfd' => \&check_rfd,
+	'rfd/posted' => \&check_rfd,
+	'rfd/unposted' => \&post_rfd,
 	'complete/resultnotposted' => \&post_result,
 	'complete/resultnotsigned' => \&sign_result,
 	'vote/checking' => \&gen_result,
@@ -348,6 +349,41 @@ sub check_rfd {
 		print "Setting up vote now ...\n";
 		system("setup-vote $newsgroup");
 	}
+}
+
+sub post_rfd {
+	# Signed RFD exists, post it?
+	if (-f "$ng_dir/rfd_posted.cfg") {
+		die "Augh. Did not expect rfd_posted.cfg";
+	}
+
+	if (! -f "$ng_dir/rfd") {
+		die "Augh. Expected signed rfd in $ng_dir/rfd";
+	}
+
+	# Otherwise, ask
+	print "(state=$state) Post RFD ? ";
+	my $answer = <STDIN>;
+	chomp($answer);
+	if ($answer =~ /^y/i) {
+		my $rc = system("bin/post.pl < $ng_dir/rfd");
+		if ($rc != 0) {
+			die "Unable to post, code $rc -- fatal";
+		}
+
+		# Now note which date the RFD was posted
+
+		my $yyyymmdd = today();
+
+		open(F, ">$ng_dir/rfd_posted.cfg");
+		print F $yyyymmdd, "\n";
+		close(F);
+
+		return;
+	}
+
+	# Otherwise, abort
+	die "Ok, try again later.\n";
 }
 
 sub pause_running {

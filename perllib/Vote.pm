@@ -275,8 +275,12 @@ sub state {
 		return "vote/notsetup";
 	}
 
+	if (-f "$ng_dir/rfd_posted.cfg") {
+		return "rfd/posted";
+	}
+
 	if (-f "$ng_dir/rfd") {
-		return "rfd";
+		return "rfd/unposted";
 	}
 
 	return "unknown";

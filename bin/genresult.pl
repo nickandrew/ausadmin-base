@@ -31,15 +31,14 @@ B<-r> notes this result as a recount.
 =cut
 
 use Getopt::Std;
+use lib 'bin';
+use Ausadmin;
 
 my %opts;
 getopts('dr', \%opts);
 
-my $debug=$opts{'d'};
+my $debug = $opts{'d'};
 my $recount = $opts{'r'};
-
-my $postaddress = "ausadmin <ausadmin\@aus.news-admin.org>";
-my $organization = "aus.* newsgroups administration, see http://aus.news-admin.org/";
 
 my $vote = shift;
 
@@ -211,19 +210,17 @@ if ($forge{$ng} == 0) {
 }
 
 
-# This stuff goes into the header
+# Make message header from defaults
 
-print "Newsgroups: aus.general,aus.net.news\n";
-print "From: $postaddress\n";
-print "Organization: $organization\n";
-print "X-PGPKey: at http://aus.news-admin.org/ausadmin.asc\n";
-print "Followup-To: aus.net.news\n";
+my %header;
+
 if (not $recount) {
-	print "Subject: RESULT: $ng $subjstat vote $yes{$ng}:$no{$ng}\n";
+	$header{Subject} = "RESULT: $ng $subjstat vote $yes{$ng}:$no{$ng}";
 } else {
-	print "Subject: RECOUNT: $ng $subjstat vote $yes{$ng}:$no{$ng}\n";
+	$header{Subject} = "RECOUNT: $ng $subjstat vote $yes{$ng}:$no{$ng}";
 }
-print "\n";
+
+Ausadmin::print_header(\%header);
 
 # Pass or fail?
 if ($status eq "pass") {

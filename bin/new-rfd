@@ -1,8 +1,11 @@
 #!/bin/sh
 #	@(#) new-rfd: Setup directories for newsgroup proposals
+#	Usage: new-rfd newsgroup-name rfd-file
 #
 # The idea is that the ausadmin-approved RFD message is fed into this
-# program and it will create needed directories and save the RFD.
+# program and it will create needed directories and generate a new,
+# postable RFD. You will be asked for your passphrase for signing the
+# new RFD.
 #
 # $Source$
 # $Revision$
@@ -54,9 +57,15 @@ if [ $s != 0 ] ; then
 	exit 6
 fi
 
-cp $fn $BaseDir/$Newsgroup/rfd
+bin/make-rfd.pl $Newsgroup | bin/sign.pl > $BaseDir/$Newsgroup/rfd
+s=$?
+
+if [ $s != 0 ] ; then
+	echo "Unable to create new rfd for $Newsgroup -- code $s - fatal"
+	exit 6
+fi
 
 echo new-rfd Done at `date`
-echo "You have to edit the $BaseDir/$Newsgroup/rfd file now"
+echo "You now have to edit $BaseDir/$Newsgroup/rfd (perhaps), sign it, post it, create rfd_posted.cfg"
 
 exit 0

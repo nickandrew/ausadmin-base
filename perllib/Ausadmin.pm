@@ -27,7 +27,7 @@ This package provides some useful file I/O functions
 
 package Ausadmin;
 
-my %ph_defaults = (
+%Ausadmin::ph_defaults = (
 	'Newsgroups' => 'aus.general,aus.net.news',
 	'From' => 'aus group admin <ausadmin@aus.news-admin.org>',
 	'Organization' => 'aus.* newsgroups administration, see http://aus.news-admin.org/',
@@ -69,6 +69,7 @@ sub format_para {
 	my(@result);
 
 	# Format as a paragraph, max 72 chars
+#	$line =~ s/\n/ /g;
 	$line =~ tr/\n/ /;
 	while (length($line) > 72) {
 		$last_space = rindex($line, ' ', 72);
