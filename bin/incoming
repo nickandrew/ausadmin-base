@@ -3,8 +3,9 @@
 
 cd ~ausadmin
 
-ts=`date '+%Y%m%d-%H%M%S'`.$$
-fn=messages/$ts
+ts=`date '+%Y%m%d-%H%M%S'`
+suffix=`printf "%05d" $$`
+fn=messages/$ts.$suffix
 
 cat > $fn
 
