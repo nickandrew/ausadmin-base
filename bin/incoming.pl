@@ -52,9 +52,8 @@ my %vote;
 # Section 2 (see above)
 while ( <M> ) {
 	chomp;
-	if ( $_ =~ /I vote [^\s]* (on|to|for) aus.*/i ) {
-		/I vote ([^\s]*).*(aus[.a-z0-9+-]*).*/i;
-		$vote{$2} = $1;
+	if ( /I vote (\S+) (on|to|for) ([a-z0-9+.-]+)/i ) {
+		$vote{$3} = $1;
 	}
 }
 
@@ -95,7 +94,9 @@ exit(0);
 
 # This sub returns a message (using sendmail) to say the vote failed
 sub FailVote {
+
 	$ENV{'MAILHOST'}="aus.news-admin.org";
+
 	if ( open ( MAILPIPE, "|/usr/sbin/sendmail $EmailAddress" ) ) {
 		print MAILPIPE "From: ausadmin\@aus.news-admin.org (aus Newsgroup Administration)\n";
 		print MAILPIPE "To: $EmailAddress\n";
