@@ -394,8 +394,16 @@ sub audit {
 	my $fh = new IO::File("$ng_dir/audit.log", O_WRONLY|O_APPEND|O_CREAT, 0644);
 	die "Unable to create $ng_dir/audit.log" if (!defined $fh);
 
-	$fh->print($ts, ' ', $message, "\n");
+	my $line = $ts . ' proposal/$self->{name} ' . $message . "\n";
+	$fh->print($line);
 	$fh->close();
+
+	# Also write to combined audit log
+	$fh = new IO::File("tmp/combined-audit.log", O_WRONLY|O_APPEND|O_CREAT, 0644);
+	if ($fh) {
+		$fh->print($line);
+		$fh->close();
+	}
 }
 
 sub write_voterule {
