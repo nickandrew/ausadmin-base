@@ -210,7 +210,7 @@ sub cancel_art_head {
 
 	my @lines;
 
-	push(@lines, "From: <ausadmin\@aus.news-admin.org>");
+	push(@lines, "From: ausadmin <ausadmin\@aus.news-admin.org>");
 	push(@lines, "Subject: VOTE CANCELLED: $newsgroup");
 
 	my $g = $vote->get_distribution();
@@ -227,7 +227,7 @@ sub cancel_msg_head {
 
 	my @lines;
 
-	push(@lines, "From: <ausadmin\@aus.news-admin.org>");
+	push(@lines, "From: ausadmin <ausadmin\@aus.news-admin.org>");
 	push(@lines, "Subject: VOTE CANCELLED: $newsgroup");
 
 	return join("\n", @lines) . "\n";
