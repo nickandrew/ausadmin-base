@@ -34,7 +34,7 @@ my($sec,$min,$hour,$mday,$mon,$year) = localtime($start_time);
 $mon++; $year += 1900;
 my $yyyymmdd = sprintf "%d-%02d-%02d", $year, $mon, $mday;
 
-my $old_dir = "vote/$newgroup:$yyyymmdd";
+my $old_dir = "vote/$newsgroup:$yyyymmdd";
 if (-d $old_dir) {
 	die "Old directory vote/$newsgroup:$yyyymmdd already exists!";
 }
