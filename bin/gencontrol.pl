@@ -16,6 +16,7 @@ gencontrol.pl newsgroup-name
 =cut
 
 use strict;
+use lib 'bin';
 use Ausadmin;
 
 # Take in the file name and post off a newgroup or rmgroup message
