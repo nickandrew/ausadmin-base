@@ -12,6 +12,7 @@ use Newsgroup qw();
 my $hier_name = shift @ARGV || die "Usage: import-checkgroups.pl hierarchy-short-name < checkgroups-file\n";
 
 mkdir("$hier_name.data", 0755);
+mkdir("$hier_name.data/Html", 0755);
 mkdir("$hier_name.data/Newsgroups", 0755);
 
 my $data_dir = "$hier_name.data/Newsgroups";
