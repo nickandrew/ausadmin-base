@@ -50,6 +50,7 @@ if (open(F, "<$opt_f")) {
 	while (<F>) {
 		chomp;
 		my @w = split;
+		my $newsgroup = $w[1];
 
 		if ($w[0] >= $then) {
 			$group_tally{$w[1]}->{immed} += $w[2];
@@ -58,6 +59,14 @@ if (open(F, "<$opt_f")) {
 		if ($w[0] >= $really_old) {
 			$group_tally{$w[1]}->{aged} += $w[2];
 		}
+
+		if (!exists $group_tally{$newsgroup}) {
+			$group_tally{$newsgroup} = {
+				aged => 0,
+				immed => 0,
+			};
+		}
+
 	}
 
 	close(F);
