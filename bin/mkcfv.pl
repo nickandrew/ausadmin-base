@@ -160,7 +160,7 @@ GROUP:	       while (<>) {
 	       $distribution=$1;
 DIST:	       while (<>) {
 		    chomp;
-		    last DIST if (/^Propo(?:nets?|sers?):.*/i);
+		    last DIST if (/^Propo(?:nen?ts?|sers?):.*/i);
 		    $distribution .= "$_," if not /^\s*$/;
 	       }
 	  }
