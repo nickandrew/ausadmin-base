@@ -13,7 +13,7 @@ my $db = XML::Simple::XMLin($path, forcearray => 1);
 foreach my $server (keys %{$db->{server}}) {
 	my $r = $db->{server}->{$server};
 	my $total_groups = $r->{total_groups};
-	my $score = ($total_groups - $r->{missing} - $r->{bogus} * 0.5);
+	my $score = ($total_groups - $r->{missing} * 3 - $r->{bogus} * 0.5);
 	my $tpct = int(1000 * $score / $total_groups);
 	$r->{name} = $server;
 	$r->{score} = $score;
@@ -21,11 +21,16 @@ foreach my $server (keys %{$db->{server}}) {
 }
 
 # Now report on each server
+my $today = time2str('%Y-%m-%d', time());
 
 print <<EOF;
-Ausadmin (with the help of volunteers) monitors the list of groups
-on several newsservers in order to identify differences compared
-to the canonical list maintained by ausadmin.
+From: ausadmin\@aus.news-admin.org (Ausadmin)
+Subject: Newsserver analysis report ($today)
+Newsgroups: aus.net.news,aus.computers.linux
+
+Ausadmin (with the help of linux-using volunteers) monitors
+the list of groups on several newsservers in order to identify
+differences compared to the canonical list maintained by ausadmin.
 
 Each server is checked for existing groups (shown as 'Ok' on
 the following report), groups which should be added ('Missing'),
@@ -33,6 +38,13 @@ and groups which were added but are not part of the canonical list
 (shown as 'Bogus'). Each server is then assigned a score from 0 to
 100 which represents how consistently the server has followed the
 canonical newsgroup list.
+
+See the bottom of this message if you would like to help out by
+reporting on your ISP's newsserver. You can also help by emailing
+the list of differences to your support group, and refer them to
+the ausadmin website, http://aus.news-admin.org/
+
+-------------------------------------------------------------------------
 
 The servers for which Ausadmin has received information are listed
 below, ranked by decreasing score.
@@ -66,9 +78,9 @@ foreach my $r (sort { $b->{tpct} <=> $a->{tpct} } (values %{$db->{server}})) {
 }
 
 print <<EOF;
+
 Now here are the details of all differences for each newsserver
 which is being monitored.
-
 EOF
 
 # Now report on each newsserver by name
@@ -78,7 +90,7 @@ foreach my $r (sort { $a->{name} cmp $b->{name} } (values %{$db->{server}})) {
 
 	my $str = sprintf("Report for %s", $r->{name});
 
-	print "\n$str\n";
+	print "\n\n$str\n";
 	print '-' x length($str), "\n\n";
 
 	printf "  Last checked: %s\n\n",
@@ -93,6 +105,43 @@ foreach my $r (sort { $a->{name} cmp $b->{name} } (values %{$db->{server}})) {
 	}
 
 }
+
+print <<EOF;
+
+-------------------------------------------------------------------------
+
+If you can assist in this effort to keep all the Australian
+newsservers up-to-date and you are a Linux user, please do this
+test first:
+
+	perl -MNet::NNTP -MLWP::UserAgent -e ''
+
+If the perl command returned with no output, then your linux
+box has all the necessary libraries installed to run the group
+list client. Please download:
+
+	http://aus.news-admin.org/download/nntp-group-list.pl
+
+Edit the script, changing the hardcoded values at the start:
+
+  news_server from 'news.example.com' to 'your.local.news.host'
+  my_email    from 'you\@example.com'  to 'your.real.email\@your.domain'
+
+chmod the script to mode 755, then add it to your crontab, on this
+schedule:
+
+0 4 * * 0	nntp-group-list.pl
+
+Then cron will run the script at 4am local time every Sunday. The
+script will connect to the ausadmin website, download the list of
+interesting hierarchies, then connect to your local newsserver
+and download the names and descriptions of all newsgroups in those
+hierarchies. Finally, the script will email the results to
+ausadmin\@aus.news-admin.org. Thank you!
+
+Nick Andrew
+<ausadmin\@aus.news-admin.org>
+EOF
 
 exit(0);
 

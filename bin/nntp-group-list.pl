@@ -13,7 +13,7 @@ my $cfg = {
 	email_to => 'ausadmin@aus.news-admin.org',
 	hier_url => 'http://aus.news-admin.org/data/monitor.txt',
 	now => time(),
-	vers => '$Revision$',
+	vers => 'Revision: 1.9',
 };
 
 # Grab the list of hierarchies to monitor
