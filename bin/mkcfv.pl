@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 # Makes the Call For Votes post from a template and the group charter
-# and outputs to STDOUT. Also created a group configuration file with
+# and outputs to STDOUT. Also creates a group configuration file with
 # only one line - the end date (in system time (s))
 
 # Info Needed to run the script
@@ -37,7 +37,7 @@ $| = 1;
 print <<"EOHEADERS";
 Subject: CFV: $Newsgroup[0]
 From: ausadmin\@aus.news-admin.org
-Newsgroup: $distrabution
+Newsgroup: $distribution
 
 EOHEADERS
 
@@ -82,8 +82,8 @@ Your mail message should contain only one of the following statements:
       I vote NO on aus.example.name
 
 You must replace aus.example.name with the name of the newsgroup that you are 
-voteing for.  If the poll is for mulipul newsgroups you should include one vote
-for each newsgroups e.g.
+voting for. If the poll is for multiple newsgroups you should include one vote
+for each newsgroup, e.g.
 
 I vote YES on aus.example.name
 I vote NO on aus.silly.group
@@ -92,7 +92,7 @@ I vote YES on aus.good.group
 You may also ABSTAIN in place of YES/NO - this will not affect the outcome.
 Anything else may be rejected by the automatic vote counting program.  
 ausadmin will respond to your received ballots with a personal
-acknowledgement by mail - if you do not receive one within 24hrs, try
+acknowledgement by E-mail - if you do not receive one within 24 hours, try
 again. It\'s your responsibility to make sure your vote is registered
 correctly.
 
@@ -142,7 +142,7 @@ sub ReadCharter {
     }
 
     if ($_ =~ /DISTRIBUTION:/i) {
-      $distrabution=<STDIN>;
+      $distribution=<STDIN>;
     }
   }
 }
