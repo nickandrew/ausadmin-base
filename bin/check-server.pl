@@ -11,7 +11,7 @@ use Data::Dumper qw(Dumper);
 
 my $xml = join('', <STDIN>);
 
-my $svr = XML::Simple::XMLin($xml);
+my $svr = XML::Simple::XMLin($xml, forcearray => 1);
 my $hierarchies = { };
 
 print "Report for ", $svr->{news_server}, "\n";
