@@ -83,11 +83,13 @@ while ($art <= $high_art) {
 			print "\tProcessing $fn\n";
 			my $rc = system("bin/parse-checkgroups.pl data/checkgroups.ctl < $fn");
 			if ($rc == 0) {
-				#unlink($fn);
+				unlink($fn);
 			} else {
 				print "\tProcessing failed, leaving $fn\n";
 			}
 
+			$art++;
+			next;
 		} else {
 			# Article _now_ does not exist !?!
 			$art++;
