@@ -80,6 +80,12 @@ sub addmonth {
 		$im -= 12;
 		$iy++;
 	}
+
+	while ($im < 1) {
+		$im += 12;
+		$iy--;
+	}
+
 	# Check for day-of-month overflow
 	my $lastday = lastdayin($im, $iy);
 #	print "Initial result: y $iy m $im lastday $lastday\n";
