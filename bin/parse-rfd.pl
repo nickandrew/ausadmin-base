@@ -63,9 +63,9 @@ foreach my $newsgroup (@newsgroups) {
 	my $r = $g->{$newsgroup};
 
 	die "$newsgroup: No newsgroups line" if (!defined $r->{ngline});
-	die "$newsgroup: No rationale" if (!@{$r->{rationale}});
-	die "$newsgroup: No charter" if (!@{$r->{charter}});
-	if (@{$r->{modinfo}}) {
+	die "$newsgroup: No rationale" if (!defined $r->{rationale});
+	die "$newsgroup: No charter" if (!defined $r->{charter});
+	if (defined $r->{modinfo}) {
 		die "$newsgroup: No moderator" if (!defined $r->{moderator});
 	}
 }
@@ -75,7 +75,6 @@ foreach my $newsgroup (@newsgroups) {
 foreach my $newsgroup (@newsgroups) {
 
 	my $r = $g->{$newsgroup};
-
 
 	mkdir("$BaseDir/$newsgroup", 0755);
 
@@ -88,11 +87,11 @@ foreach my $newsgroup (@newsgroups) {
 	close(O);
 
 	open(CHARTER, ">$BaseDir/$newsgroup/charter") or die "Unable to write charter";
-	print CHARTER join("\n",@{$r->{charter}}), "\n";
+	print CHARTER $r->{charter};
 	close(CHARTER);
 
 	open(RATIONALE, ">$BaseDir/$newsgroup/rationale") or die "Unable to write rationale";
-	print RATIONALE join("\n",@{$r->{rationale}}), "\n";
+	print RATIONALE $r->{rationale};
 	close(RATIONALE);
 
 	open NGLINE,">$BaseDir/$newsgroup/ngline" or die "Unable to open ngline: $!";
@@ -101,7 +100,7 @@ foreach my $newsgroup (@newsgroups) {
 
 	if (exists $r->{modinfo}) {
 		open(MODINFO, ">$BaseDir/$newsgroup/modinfo") or die "Unable to write modinfo";
-		print MODINFO join("\n",@{$r->{modinfo}}), "\n";
+		print MODINFO $r->{modinfo};
 		close(MODINFO);
 	}
 }
@@ -205,20 +204,21 @@ sub ReadRFD {
 		}
 
 		if ($state eq 'rationale') {
-			push(@{$g{$groupname}->{rationale}}, $_);
+			$g{$groupname}->{rationale} .= $_ . "\n";
 			next;
 		}
 
 		if ($state eq 'charter') {
-			push(@{$g{$groupname}->{charter}}, $_);
+			$g{$groupname}->{charter} .= $_ . "\n";
 			next;
 		}
 
 		if ($state eq 'modinfo') {
 			if (/^Moderator:\s+(.+)/i) {
 				$g{$groupname}->{moderator} = $1;
+				# next ?
 			}
-			push(@{$g{$groupname}->{modinfo}}, $_);
+			$g{$groupname}->{modinfo} .= $_ . "\n";
 			next;
 		}
 
@@ -236,11 +236,43 @@ sub ReadRFD {
 			next;
 		}
 
-		if ($state eq 'procedure') {
-			# ignore
-			next;
-		}
+#		if ($state eq 'procedure') {
+#			# ignore
+#			next;
+#		}
+
+	}
+
+	# Massage the data before returning ...
+	foreach my $group (keys %g) {
+		next if ($group eq 'distribution');
+		my $r = $g{$group};
+
+		# Remove leading and trailing empty lines, trailing spaces
+		cleanup_string($r, 'ngline');
+		cleanup_string($r, 'proposer');
+		cleanup_string($r, 'charter');
+		cleanup_string($r, 'rationale');
+		cleanup_string($r, 'moderator');
+		cleanup_string($r, 'modinfo');
 	}
 
 	return \%g;
+}
+
+# cleanup_string() ... removes all trailing blanks from a multi-line
+# string and eliminates empty lines at the start and the end.
+
+sub cleanup_string {
+	my $r = shift;
+	my $key = shift;
+
+	if (exists $r->{$key}) {
+		$r->{$key} =~ s/ +\n/\n/g;
+		$r->{$key} =~ s/^\n+//;
+		$r->{$key} =~ s/\n\n+$/\n/;
+		if ($r->{$key} eq '') {
+			delete $r->{$key};
+		}
+	}
 }
