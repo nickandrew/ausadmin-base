@@ -166,11 +166,12 @@ If this is correct, there is no need for you to reply.
 	---------					  ----
 	%-50s $Vote
 
-This is a public vote, and all addresses and votes will be listed in the 
-final voting results.
+This is a public vote, and all voting e-mail addresses will be listed
+in the final voting results.
 
-For a copy of the Call For Votes (CFV) email cfv\@aus.news-admin.org 
-indicating the newsgroup in the subject line.
+For a copy of the Call For Votes (CFV) go to:
+
+	http://aus.news-admin.org/cgi-bin/voteinfo?newsgroup=$Newsgroup
 
 If you have a problem please contact <ausadmin\@aus.news-admin.org>. ", $Newsgroup;
 
