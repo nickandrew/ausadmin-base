@@ -28,6 +28,7 @@ my %action_states = (
 	'vote/checking' => 'Check for multi-votes and forgeries then use action',
 	'vote/running' => 'Wait for end of vote',
 	'complete/resultnotposted' => '',
+	'complete/pass/unsigned' => 'Use action to sign and post the control msg',
 	'complete/pass/signed' => 'Create and post newgroup message?',
 	'complete/pass' => '',
 	'complete/result' => 'Do something with the result - pass or fail?',

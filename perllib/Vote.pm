@@ -25,6 +25,8 @@ Vote - a Vote of some kind
 
  $vote->write_voterule($template);
 
+ $vote->audit($string);			# Append $string to the audit.log for this vote
+
 =cut
 
 package Vote;
