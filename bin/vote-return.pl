@@ -22,15 +22,16 @@ if ($email) {
 	$new_state = 'BOUNCE';
 	$vs->setState($email, $new_state);
 	$vs->set($email, 'timestamp', time());
+	$vs->save();
 }
 
-if (open(RV, ">$returned_votes")) {
+if (open(RV, ">>$returned_votes")) {
 	my @a;
 	foreach my $v qw(LOCAL EXT EXT2 EXT3) {
-		push(@a, "RETURNED: $v = $ENV{$v}");
+		push(@a, "$v = $ENV{$v}");
 	}
 
-	print RV join(', ', @a), " $old_state -> BOUNCE\n";
+	print RV "RETURNED: ", join(', ', @a), " email -> $email, $old_state -> BOUNCE\n";
 	print RV <STDIN>;
 	close(RV);
 }
