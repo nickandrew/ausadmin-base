@@ -25,6 +25,7 @@ use Vote;
 use DateFunc;
 
 my %action_states = (
+	'abandoned' => '',
 	'complete/fail' => '',
 	'complete/result-wait' => 'Wait for end of result discussion period',
 	'complete/resultnotposted' => 'Use action to post the result',
