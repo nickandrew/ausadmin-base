@@ -30,6 +30,7 @@ my @newsgroups = @ARGV;
 # Now get proposer and distribution info
 my $proposer = read_line("$BaseDir/$newsgroups[0]/proposer");
 my $distribution = read_file("$BaseDir/$newsgroups[0]/distribution");
+my $voterule = read_line("$BaseDir/$newsgroups[0]/voterule");
 
 die "No proposer" if (!defined $proposer);
 die "No distribution" if (!@$distribution);
@@ -53,7 +54,6 @@ foreach my $newsgroup (@newsgroups) {
 		$g->{$newsgroup}->{cfv_notes} = read_file("$BaseDir/$newsgroup/cfv-notes.txt");
 	};
 
-	$g->{$newsgroup}->{voterule} = read_file("$BaseDir/$newsgroup/voterule");
 
 	my $ConfigFile ="$BaseDir/$newsgroup/endtime.cfg";
 
@@ -64,8 +64,9 @@ foreach my $newsgroup (@newsgroups) {
 	$EndDate = gmtime($end_time - 1);
 }
 
-# Opens the template Call For Votes file and constructs the actual CFV file
-# which is output to STDOUT
+# Output the PGP-signed (or unsigned, if -u option given) cfv message to
+# stdout.
+
 select(STDOUT);
 $| = 1;
 
@@ -91,9 +92,7 @@ if (!open(P, "|$cmd")) {
 	exit(3);
 }
 
-print P <<"EOTOPBODY";
-                           CALL FOR VOTES
-EOTOPBODY
+my @heading = ("CALL FOR VOTES");
 
 foreach my $newsgroup (@newsgroups) {
 	my $ng = "UnModerated newsgroup";
@@ -101,9 +100,10 @@ foreach my $newsgroup (@newsgroups) {
 		$ng = "Moderated newsgroup";
 	}
 
-	print P "\t\t\t$ng $newsgroup\n";
+	push(@heading, "$ng $newsgroup");
 }
 
+print P centred_text(@heading);
 print P "\n";
 print P "Newsgroups line(s)\n";
 
@@ -121,11 +121,17 @@ foreach my $newsgroup (@newsgroups) {
 	}
 }
 
+my($numer, $denomer, $minyes) = split(/\s/, $voterule);
+
 print P <<"EOMIDBODY";
 
 PROPOSER: $proposer
 
 Votes must be received by $EndDate
+
+For this vote to pass, YES votes must be at least $numer/$denomer of all
+valid (YES and NO) votes. There must also be at least $minyes more
+YES votes than NO votes.
 
 This vote is being conducted by ausadmin. For voting questions contact
 ausadmin\@aus.news-admin.org. For questions about the proposed group contact
@@ -208,4 +214,30 @@ sub read_file {
 	close(X);
 	return \@v;
 }
+
+=head1 @lines = centred_text(@lines)
+
+Centre (assuming a width of 78 characters) the lines of text and return
+the centred lines. Input lines can contain \n at the end; output lines
+will be terminated with \n.
+
+=cut
+
+sub centred_text {
+	my @output;
+	my $width = 78;
+
+	foreach my $line (@_) {
+		chomp($line);
+		if (length $line >= $width) {
+			push(@output, "$line\n");
+		} else {
+			my $c = ($width - length $line)/2;
+			push(@output, sprintf("%*s%s\n", $c, '', $line));
+		}
+	}
+
+	return @output;
+}
+
 
