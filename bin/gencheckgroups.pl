@@ -4,7 +4,6 @@
 # $Revision$
 # $Date$
 
-
 require "bin/postheader.pli";
 require "bin/misc.pli";
 
@@ -21,8 +20,12 @@ $checkgroups_header = readfile("data/checkgroups.header");
 $checkgroups_footer = readfile("data/checkgroups.footer");
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = localtime(time);
+
+$monthname=("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")[$mon];
+
 $year += 1900; $mon++;
 $now = sprintf "%d-%02d-%02d %02d:%02d:%02d", $year, $mon, $mday, $hour, $min, $sec;
+
 
 # Generate the message, header first
 
@@ -35,6 +38,9 @@ $now = sprintf "%d-%02d-%02d %02d:%02d:%02d", $year, $mon, $mday, $hour, $min, $
 	'Followup-To' => '',
 	'X-PGPKey' => '',
 	'Organization' => '',
+	'Path' => 'aus.news-admin.org|ausadmin',
+	'Message-id' => "$^T$$ausadmin\@aus.news-admin.org",
+        'Date' => "$mday $monthname $year $hour:$min:$sec",
 );
 
 # Open the groups file
