@@ -1,13 +1,13 @@
 #!/usr/bin/perl -w
 #	@(#) $Id$
 #	import-checkgroups.pl - Read a headerless checkgroups and create
-#	newsgroup directories for all groups listed
+#	or update newsgroup directories for all groups listed
 #	
 #	Usage: import-checkgroups.pl hierarchy-short-name < checkgroups-file
 
 use strict;
 
-use Newsgroup;
+use Newsgroup qw();
 
 my $hier_name = shift @ARGV || die "Usage: import-checkgroups.pl hierarchy-short-name < checkgroups-file\n";
 
@@ -26,14 +26,19 @@ while (<STDIN>) {
 
 		my $n = new Newsgroup(name => $name, datadir => $data_dir);
 
-		if (-e "$data_dir/$name") {
-			print STDERR "Already exists: $name\n";
-			next;
+		if (! -e "$data_dir/$name") {
+			print "Creating newsgroup: $name\n";
+			$n->create();
 		}
 
-		$n->create();
+		# "ngline" is a line ending in \n
+		$ngline .= "\n";
+		my $old_ngline = $n->get_attr('ngline');
 
-		$n->set_attr("ngline", $ngline . "\n", 'Imported from checkgroups file');
+		if (!defined $old_ngline || $old_ngline ne $ngline) {
+			print "Updating $name ngline $ngline\n";
+			$n->set_attr("ngline", $ngline . "\n", 'Imported from checkgroups file');
+		}
 	} else {
 		print STDERR "Invalid line (ignored): $_\n";
 	}
