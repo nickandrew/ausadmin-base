@@ -319,7 +319,8 @@ signit
   #      should be converted to recipient's local text line conventions
   # -u = userid to use to sign
   # +verbose=0 = only print errors on stderr
-  open(FH, "$pgp -fast -u $pgpsigner +verbose=0 < $tmp 2>/dev/null |") ||
+  open(FH, "$pgp -fast -u $pgpsigner +verbose=0 < $tmp |") ||
+#  open(FH, "$pgp -fast -u $pgpsigner +verbose=0 < $tmp 2>/dev/null |") ||
     die "$0: open pipe from pgp: $!\n";
   
   $pgpbegin = "-----BEGIN PGP SIGNATURE-----";
