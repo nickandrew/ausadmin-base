@@ -1,13 +1,17 @@
 #!/bin/sh
-
-# Setup everything needed to start a new vote.
+#	@(#) mkvote: Setup everything needed to start a new vote.
+#
 #  - Create the usevote.cfg file
 #  - Create the Call For Votes
 #  - Post Call For Votes in aus.general and aus.net.news
 
+# $Source$
+# $Revision$
+# $Date$
+
 if [ $# -lt 1 ]
 then
-	echo usage: $0 newsgroup-name charter-info-file >&2
+	echo usage: $0 newsgroup-name rfd-file >&2
 	exit 1
 fi
 
@@ -16,7 +20,7 @@ Newsgroup="$1"
 Info="$2"
 
 # Commonly used variables
-HomeDir=/virt/web/ausadmin
+HomeDir=~ausadmin
 BaseDir=$HomeDir/vote
 
 # make directories if they don't already exist
@@ -32,12 +36,6 @@ gendirs ()
 }
 
 # set up common environment
-cp $Info $HomeDir/tmp/info.$$
-s=$?
-if [ $s != 0 ] ; then
-	echo "Unable to copy $Info - fatal"
-	exit 5
-fi
 
 cd $BaseDir
 
@@ -49,8 +47,15 @@ echo "14" > $Newsgroup/voteperiod
 echo `date +%s` > $Newsgroup/posted.cfg
 perl -e 'print $^T,"\n"' > $Newsgroup/starttime.cfg
 
+cp $Info $HomeDir/tmp/info.$$
+s=$?
+if [ $s != 0 ] ; then
+	echo "Unable to copy $Info - fatal"
+	exit 5
+fi
+
 # Save the RFD
-tr -d '\r' < $HomeDir/tmp/info.$$ > $Newsgroup/rfd
+tr -d '\r' < $Info > $Newsgroup/rfd
 # And create all the config files
 parse-rfd.pl < $Newsgroup/rfd
 s=$?
@@ -60,7 +65,7 @@ if [ $s != 0 ] ; then
 fi
 
 # Run the Perl script mkcfv to make the CFV and PGP-sign it then post it away!
-mkcfv.pl < $Newsgroup/rfd > $Newsgroup/posted.cfv 2>$HomeDir/tmp/pgp.$$
+mkcfv.pl $Newsgroup < $Newsgroup/rfd > $Newsgroup/posted.cfv 2>$HomeDir/tmp/pgp.$$
 s=$?
 if [ $s != 0 ] ; then
 	echo "Unable to make Call For Votes -- code $s - fatal"
