@@ -158,6 +158,7 @@ sub setState {
 
 	if (exists $self->{data}->{$email}) {
 		$self->{data}->{$email}->{state} = $state;
+		$self->{updated} = 1;
 		return;
 	}
 
@@ -182,6 +183,7 @@ sub set {
 	}
 
 	$self->{data}->{$email}->{$key} = $value;
+	$self->{updated} = 1;
 }
 
 1;
