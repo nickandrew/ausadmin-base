@@ -21,7 +21,14 @@ to stdout and the body part is filtered through the "pgp" program.
 =cut
 
 my $header = 1;
-my $cmd = "pgp -s -f";
+my $cmd;
+
+if (-f "/usr/bin/pgps") {
+	$cmd = "pgps -fat";
+} else {
+	$cmd = "pgp -s -f";
+	# also "pgp -fast" - "-t" will convert input to CRLF before signing
+}
 
 select(STDOUT); $| = 1;
 open(STDERR, ">/dev/null");
