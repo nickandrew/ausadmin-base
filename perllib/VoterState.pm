@@ -108,6 +108,7 @@ sub checkEmail {
 	my ($self, $email) = @_;
 
 	$self->load();
+	$email = lc($email);
 
 	return $self->{data}->{$email};
 }
@@ -116,6 +117,7 @@ sub getCheckRef {
 	my ($self, $email) = @_;
 
 	$self->load();
+	$email = lc($email);
 
 	my $r = $self->{data}->{$email};
 
@@ -155,6 +157,7 @@ sub setState {
 	my($self, $email, $state) = @_;
 
 	$self->load();
+	$email = lc($email);
 
 	if (exists $self->{data}->{$email}) {
 		$self->{data}->{$email}->{state} = $state;
@@ -168,6 +171,7 @@ sub setState {
 sub getState {
 	my($self, $email) = @_;
 
+	$email = lc($email);
 	if (exists $self->{data}->{$email}) {
 		return $self->{data}->{$email}->{state};
 	}
@@ -178,6 +182,7 @@ sub getState {
 sub set {
 	my($self, $email, $key, $value) = @_;
 
+	$email = lc($email);
 	if (!exists $self->{data}->{$email}) {
 		die "No such voter: $email";
 	}
