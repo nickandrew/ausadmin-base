@@ -103,7 +103,7 @@ if ($ts_end eq "" || $minyes eq "") {
 }
 
 # Ensure vote is actually finished
-if ($now < $end_date) {
+if ($now < $ts_date) {
 	print "genresult.pl: Vote $vote not finished yet.\n";
 	exit(5);
 }
@@ -242,8 +242,32 @@ sub pass_msg() {
 	}
 
 	close(P);
+
+# 60 sec * 60 min * 24 hours * 5 days = 432000
+
+	&setposts($ng,"post.real",$ts_date + 432000,432000,3);
+	&setposts($ng,"post.fake.phill",$ts_date + 864000,432000,3);
+	&setposts($ng,"post.fake.robert",$ts_date + 1296000,432000,3);
 }
 
 sub fail_msg() {
 }
 
+sub setposts {
+
+  my ($groupname,$filename,$firstpostdate,$intervil,$count)=@_;
+
+	local *POST;
+
+	if (not open (POST,">vote/$vote/$name")) {
+	  print "Unable to mark group as passed\n";
+	  exit(8);
+	}
+
+#Post the next post after 5 days then after that at nth (My current guess 5) 
+#day intervils for 3 times.
+
+	print POST "$groupname\t$firstpostdate\t$intervil\t$count\n";
+	close POST;
+
+}
