@@ -126,10 +126,16 @@ sub rightColumn {
 $charter
       </pre>
       </blockquote>
-     <h3>Activity graph of $ng (articles posted per hour)</h3>
+     <h3>Activity graph of $ng (articles posted per day)</h3>
      <center>
       <img src="/article_rate_png.cgi?newsgroup=$ng" alt="Article posting rate graph for $ng">
      </center>
+     <p>The above graph is a moving average of the number of articles
+     posted into $ng per day.
+     The top of the green area counts the number
+     of articles posted in the last 24 hours, whereas the blue line counts
+     the number of articles posted in the last 2 hours, times 12.</p>
+
 
 EOF
 
