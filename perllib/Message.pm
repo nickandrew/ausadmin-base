@@ -77,8 +77,6 @@ sub parse {
 	# Grab the From header
 	foreach (@lines) {
 
-#		print STDERR "Checking: $_\n";
-
 		if ($head) {
 			if ($_ eq '') {
 				push(@headers, $header) if ($header ne '');
@@ -218,16 +216,8 @@ my $freemail_regexes = [
 	'http://www.cubuffs.com',
 ];
 
-# Notes on Received headers ... ultraman (qmail) at least, seems to use
-# one of the following types:
-#  from dns-discovered-hostname (ident-lookup@src-ip-address) by ultra...
-#  from some-hostname (src-ip-address) by ultra...
-#  from dns-discovered-hostname (HELO what-they-say) (src-ip-address) by ul...
-#  from dns-discovered-hostname (HELO what-they-say) (ident-lookup@src-ip-address) by ultra...
-#  from unknown (HELO what-they-say) (src-ip-address) by ultra...
-
-# So the general form is:
-# from some-hostname (HELO \S+) (\S+@\S+) by \S+ with E?SMTP
+# Received headers have no standard syntax.
+# That's why we have 1000 regexes here ...
 
 my $received_regex = [
 	['\(qmail (\d+) invoked from network\);', ['qmail-qid']],
@@ -240,10 +230,12 @@ my $received_regex = [
 
 	['from ccMail by (\S+) \(IMA', []],
 
-	# from  [a.b.c.d]
+	# from [src-ip] as user src-email by dst-hostname
 
 	['from  \[([0-9.]+)\] as user ([a-zA-Z0-9@.-]+) by ([a-zA-Z0-9.-]+)', ['src-ip', 'src-email', 'dst-hostname']],
 
+	# from [src-ip] by dst-hostname
+	['from \[([0-9.]+)\] by ([a-zA-Z0-9.-]+) with E?SMTP', ['src-ip', 'dst-hostname']],
 	['from  \[([0-9.]+)\] by ([a-zA-Z0-9.-]+);', ['src-ip', 'dst-hostname']],
 	['from  \[([0-9.]+)\] by ([a-zA-Z0-9.-]+) ', ['src-ip', 'dst-hostname']],
 
@@ -252,12 +244,11 @@ my $received_regex = [
 	['from \[([0-9.]+)\] by (\S+) \(SMTPD32', []],
 	['from \[([0-9.]+)\] by (\S+) \(SMTPD32', []],
 	['from \[([0-9.]+)\] by (\S+) \(NTMail', []],
-	['from \[([0-9.]+)\] by ([a-zA-Z0-9.-]+) with ESMTP', ['src-ip', 'dst-hostname']],
 
 	['from \[([0-9.]+)\] \(helo=(\S+)\) by ([a-zA-Z0-9.-]+)', ['src-ip', 'src-name', 'dst-hostname']],
 	['from \[([0-9.]+)\] by ([a-zA-Z0-9.-]+)', ['src-ip', 'dst-hostname']],
 
-	# from ipaddr by hostname
+	# from src-ip by dst-hostname
 
 	['from ([0-9.]+) by ([a-zA-Z0-9.-]+)', ['src-ip', 'dst-hostname']],
 
@@ -271,6 +262,7 @@ my $received_regex = [
 	['from (\S+)\(([0-9.]+)\) via SMTP by ([a-zA-Z0-9.-]+),', ['src-name', 'src-ip', 'dst-hostname']],
 
 
+	# from src-hostname [src-ip]
 	['from (\S+) \(\[(.*)\]\) by ([a-zA-Z0-9.-]+)\(', ['src-hostname', 'src-ip', 'dst-hostname']],
 	['from (\S+) \[(.*)\] by ([a-zA-Z0-9.-]+) \[(\S+)\] with ', []],
 
@@ -290,13 +282,24 @@ my $received_regex = [
 	['from ([a-zA-Z0-9.-]+) \(([a-zA-Z0-9.-]+) \[([0-9.]+)\] \(may be forged\)\) by ([a-zA-Z0-9.-]+)', ['src-name', 'src-hostname', 'src-ip', 'dst-hostname']],
 	['from ([a-zA-Z0-9.-]+) \(([a-zA-Z0-9.-]+) \[([0-9.]+)\]\) by ([a-zA-Z0-9.-]+)', ['src-name', 'src-hostname', 'src-ip', 'dst-hostname']],
 
+	# from [src-ip] (HELO src-hostname) by dst-hostname
+	['from \[([0-9.]+)\] \(HELO ([^)]+)\) \([0-9.]+\) by ([a-zA-Z0-9.-]+) \([^)]+\) with E?SMTP', ['src-ip', 'src-hostname', 'dst-hostname']],
+
 	# from something (HELO something) (user@a.b.c.d) by something
 
 	['from ([a-zA-Z0-9.-]+) \(HELO ([^)]+)\) \((\S+)@([0-9.]+)\) by ([a-zA-Z0-9.-]+) .*with ', ['src-hostname', 'src-name', 'src-ident', 'src-ip', 'dst-hostname']],
 	['from ([a-zA-Z0-9.-]+) \(HELO ([^)]+)\) \(([0-9.]+)\) by ([a-zA-Z0-9.-]+) .*with ', ['src-hostname', 'src-name', 'src-ip', 'dst-hostname']],
+	['from ([a-zA-Z0-9.-]+) \(HELO ([^)]+)\) \(([0-9.]+)\)  by ([a-zA-Z0-9.-]+) .*with E?SMTP', ['src-hostname', 'src-name', 'src-ip', 'dst-hostname']],
 
+	# from src-name src-hostname src-ip by dst-hostname
+	['from ([a-zA-Z0-9.-]+) \(([a-zA-Z0-9.-]+) \[([0-9.]+)\]\) by ([a-zA-Z0-9.-]+) \(.*\) with E?SMTP', ['src-name', 'src-hostname', 'src-ip', 'dst-hostname']],
+	['from ([a-zA-Z0-9.-]+) \(([a-zA-Z0-9.-]+) \[([0-9.]+)\]\)\s+by ([a-zA-Z0-9.-]+) \([^)]+\) with E?SMTP', ['src-name', 'src-hostname', 'src-ip', 'dst-hostname']],
+	['from ([a-zA-Z0-9.-]+) \(([a-zA-Z0-9.-]+) \[([0-9.]+)\]\)\s+\(authenticated\)\sby ([a-zA-Z0-9.-]+) \([^)]+\) with E?SMTP', ['src-name', 'src-hostname', 'src-ip', 'dst-hostname']],
+	
+	# from src-name src-ident src-ip by dst-hostname
 	['from ([a-zA-Z0-9.-]+) \((\S+)@([0-9.]+)\) by ([a-zA-Z0-9.-]+) .*with ', ['src-name', 'src-ident', 'src-ip', 'dst-hostname']],
 
+	# from src-name src-ip by dst-hostname
 	['from ([a-zA-Z0-9.-]+) \(([0-9.]+)\) by ([a-zA-Z0-9.-]+) .*with ', ['src-name', 'src-ip', 'dst-hostname']],
 
 	# from something ([a.b.c.d])
@@ -367,6 +370,10 @@ sub check_received {
 	my $data_hr = { };
 
 	$header =~ s/^Received: //;
+	# Massage the header into something easier to parse
+	$header =~ s/\t/ /g;
+	$header =~ s/  +/ /g;
+
 	$data_hr->{header} = $header;
 	$data_hr->{match} = 0;
 
