@@ -1,6 +1,8 @@
 Newsgroups: !DISTRIBUTION!
-From: <ausadmin@aus.news-admin.org>
+From: ausadmin <ausadmin@aus.news-admin.org>
 Subject: The RFD for !NEWSGROUP! has been cancelled
+X-PGPKey: at http://aus.news-admin.org/ausadmin.asc
+Organization: aus.* newsgroups administration, see http://aus.news-admin.org/
 
 The Request For Discussion (RFD) for !NEWSGROUP! has been cancelled.
 
