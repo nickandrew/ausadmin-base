@@ -18,6 +18,9 @@ my $message_path = shift @ARGV;
 
 my $HomeDir = "/home/ausadmin";
 my $BaseDir = "$HomeDir/vote";
+my %vote;
+my %dupe;
+my $bad_instruction = 0;
 
 
 # Section 1 and 2 (see above)
@@ -29,7 +32,7 @@ if (!open(M, "<$message_path")) {
 	die "Unable to open $message_path for input ...!";
 }
 
-while ( <M> ) {
+while (<M>) {
 	if ( $_ eq "\n" ) {
 		last;
 	}
@@ -43,17 +46,26 @@ while ( <M> ) {
 		$EmailAddress = GetAddr( $_ );
 	}
 }
+
 if ( $EmailAddress eq "" ) {
 	die "NO RETURN EMAIL ADDRESS SUPPLIED IN HEADER";
 }
-
-my %vote;
 
 # Section 2 (see above)
 while ( <M> ) {
 	chomp;
 	if ( /I vote (\S+) (on|to|for) ([a-z0-9+.-]+)/i ) {
-		$vote{$3} = $1;
+		my ($instruction, $newsgroup) = (lc($1), $3);
+		if ($instruction !~ /^(yes|no|abstain)$/) {
+			$bad_instruction = $instruction;
+			next;
+		}
+
+		if (exists $vote{$newsgroup} && $vote{$newsgroup} ne $instruction) {
+			$dupe{$newsgroup} = 1;
+		} else {
+			$vote{$newsgroup} = $instruction;
+		}
 	}
 }
 
@@ -63,6 +75,12 @@ if (not keys %vote) {
 	# If there aren't any valid voting instructions in the message,
 	# then assume it is spam and ignore it utterly.
 	exit(2);
+}
+
+if (%dupe) {
+	my $bad_ng = join(', ', keys(%dupe));
+	FailVote("inconsistent votes for $bad_ng");
+	die;
 }
 
 for (keys %vote) {
@@ -94,10 +112,13 @@ for (keys %vote) {
 
 exit(0);
 
+# ---------------------------------------------------------------------------
 # This sub returns a message (using sendmail) to say the vote failed
+# ---------------------------------------------------------------------------
+
 sub FailVote {
 
-	$ENV{'MAILHOST'}="aus.news-admin.org";
+	$ENV{'MAILHOST'} = "aus.news-admin.org";
 
 	if ( open ( MAILPIPE, "|/usr/sbin/sendmail $EmailAddress" ) ) {
 		print MAILPIPE "From: ausadmin\@aus.news-admin.org (aus Newsgroup Administration)\n";
@@ -126,9 +147,11 @@ sub FailVote {
 }
 
 
+# ---------------------------------------------------------------------------
 # This sub returns the email address out of a "from" field
-sub GetAddr {
+# ---------------------------------------------------------------------------
 
+sub GetAddr {
 	my $address = $_[0];
 
 	# This bit removes any unwanted parts from the email address
