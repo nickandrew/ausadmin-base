@@ -12,13 +12,20 @@ Tally - A vote tally.dat file
 
 =head1 SYNOPSIS
 
-my $tally = new Tally(name => $newsgroup);
-$tally->remove($email);
+ my $tally = new Tally(name => $newsgroup);
+ $tally->remove($email);
 
 =head1 DESCRIPTION
 
 This module implements various functions to deal with the tally file.
 
+=head1 UNIMPLEMENTED
+
+ $tally->count() ...
+
+Counts votes and returns a structure with the numbers of yes/no/abstain
+and number of invalid votes (yes/no/abstain also).
+ 
 =cut
 
 package Tally;
