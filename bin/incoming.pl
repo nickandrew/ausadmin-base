@@ -141,8 +141,7 @@ sub GetAddr {
 
 		# Now remove trailing spaces
 		$Address =~ s/([^\s]+)\s*/$1/;
-	}
-	else {
+	} else {
 		# Remove any leading or traling spaces
 		$Address =~ s/\s*([^\s]+).*/$1/;
 	}
