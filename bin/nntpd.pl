@@ -9,6 +9,8 @@ use lib '/home/ausadmin/bin';
 use Ausadmin qw();
 
 my $errs = 0;
+my $time = time();
+
 my @hiers = qw(aus bne canb melb syd);
 
 chdir('/home/ausadmin');
@@ -22,7 +24,7 @@ while (<STDIN>) {
 	s/\r//;
 
 	my $cmd = $_;
-	print LOG "< ", $_, "\n";
+	print LOG "$time < ", $_, "\n";
 
 	if (/mode reader/) {
 		out("200 no-op\n");
@@ -90,7 +92,7 @@ exit(0);
 sub out {
 	my $s = shift;
 
-	print LOG "> ", $s;
+	print LOG "$time > ", $s;
 
 	$s =~ s/\r//g;
 	$s =~ s/\n/\r\n/g;
