@@ -119,6 +119,7 @@ sub addday {
 }
 
 # $days = days_between($start_date, $end_date)
+# Returns a value of 0 if the days are the same!
 
 sub days_between {
 	my($start_date, $end_date) = @_;
@@ -138,6 +139,20 @@ sub days_between {
 	}
 
 	return $days * $sign;
+}
+
+sub find_fy {
+	my $date = shift;
+
+	my($yyyy,$mm,$dd) = split(/-/, $date);
+
+	if ($mm < 7) {
+		# 1998-01 => 1998
+		return $yyyy;
+	}
+
+	# 1998-07 => 1999
+	return $yyyy + 1;
 }
 
 1;
