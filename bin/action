@@ -334,7 +334,7 @@ sub create_rfd {
 			die "make-rfd.pl returned code $rc, check $ng_dir/rfd-temp.$$ for its output";
 		}
 		rename("$ng_dir/rfd-temp.$$", "$ng_dir/rfd.unsigned");
-		$v->audit("Unsigned RFD created");
+		$v->audit("Created unsigned RFD");
 		print "Done! Check it for errors then run action again.\n";
 		# User probably wants to look at the file before continuing.
 		return 16;
@@ -418,6 +418,7 @@ sub post_rfd {
 	chomp($answer);
 	if ($answer =~ /^y/i) {
 		my $rc = system("bin/post.pl < $ng_dir/rfd");
+		$v->audit("Posted signed RFD (code $rc)");
 		if ($rc != 0) {
 			die "Unable to post, code $rc -- fatal";
 		}
