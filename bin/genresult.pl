@@ -109,7 +109,7 @@ if ($now < $end_date) {
 }
 
 # Open the tally file and munch it
-if (!open(T, "vote/$vote/votes/tally.dat")) {
+if (!open(T, "vote/$vote/tally.dat")) {
 	print "genresult.pl: Vote $vote has no tally file.\n";
 	exit(6);
 }

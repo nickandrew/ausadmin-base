@@ -32,7 +32,7 @@ while ( <STDIN> ) {
 	}
 
 	# Section 2 (see above)
-	if ( open( TALLYFILE, "$BaseDir/$Newsgroup/votes/tally.dat" ) ) {
+	if ( open( TALLYFILE, "$BaseDir/$Newsgroup/tally.dat" ) ) {
 		while( <TALLYFILE> ) {
 			chomp;
 			($EA, $NG, $V, $CT, $FN) = split;
@@ -44,7 +44,7 @@ while ( <STDIN> ) {
 	}
 
 	# Section 3 (see above)
-	if ( open( TALLYFILE, ">>$BaseDir/$Newsgroup/votes/tally.dat" ) ) {
+	if ( open( TALLYFILE, ">>$BaseDir/$Newsgroup/tally.dat" ) ) {
 		flock( TALLYFILE, $LOCK_EX );
 		print TALLYFILE "$EmailAddress $Newsgroup $Vote $CTime $fn\n";
 		close( TALLYFILE );
