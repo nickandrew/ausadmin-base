@@ -26,7 +26,7 @@ my @recipients;
 
 while (<V>) {
 	chomp;
-	my($email,$group,$vote,$timestamp) = split(/\s/);
+	my($email,$group,$vote,$timestamp,$path,$status) = split(/\s/);
 
 	# vote is yes/no/abstain/forge (mostly uppercase)
 	if ($vote =~ /^(yes|no|abstain)$/i) {
@@ -53,6 +53,7 @@ foreach my $r (@recipients) {
 exit(0);
 
 # -----------------------------------------------------------------------------
+
 sub sendmail {
 	my $recipient = shift;
 	my $msg_ref = shift;
