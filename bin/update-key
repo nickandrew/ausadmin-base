@@ -1,0 +1,18 @@
+#!/bin/sh
+#	Send updated public key to the keyservers
+
+if [ "x$keyserver" = "x" ] ; then
+	keyserver=pgp-public-keys@keys.pgp.net
+fi
+
+if [ "x$email" = "x" ] ; then
+	email=ausadmin@aus.news-admin.org
+fi
+
+( cat <<EOF
+From: $email
+To: $keyserver
+Subject: add
+
+EOF
+cat ~/ausadmin.asc ) | /usr/sbin/sendmail $keyserver
