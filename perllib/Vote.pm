@@ -39,6 +39,7 @@ use IO::File qw(O_RDONLY O_WRONLY O_APPEND O_CREAT O_EXCL);
 use Newsgroup ();
 use Ausadmin ();
 use DateFunc ();
+use Post qw();
 
 use vars qw($result_discuss_days);
 
@@ -523,20 +524,41 @@ sub calc_result {
 sub abandon {
 	my $self = shift;
 	my $rfd_posted_fn = $self->ng_dir("rfd_posted.cfg");
-	my $cancel_fn = $self->ng_dir("rfd_cancel.cfg");
+	my $cancel_config = $self->ng_dir("rfd_cancel.cfg");
+	my $cancel_file = $self->ng_dir("rfd_cancel.txt");
 	my $name = $self->{name};
 
 	if (!-f $rfd_posted_fn) {
 		die "Augh. Vote::abandon() expected rfd_posted.cfg";
 	}
 
-	if (-f $cancel_fn) {
+	if (-f $cancel_config) {
 		die "Augh. Vote for $name already cancelled";
 	}
 
+	if (! -f $cancel_file) {
+		die "Augh. Need CANCELREASON in $cancel_file";
+	}
+
+	my $cancel_text = Ausadmin::readfile($cancel_file);
+
+	# -------------------------------------------------------------------
+	# Send a cancel post
+	# -------------------------------------------------------------------
+	my $post = new Post(template => "$ENV{AUSADMIN_HOME}/config/rfd-cancel.template");
+	my $distrib = $self->get_distribution();
+	$post->substitute('!DISTRIBUTION!', join(',', @$distrib));
+	$post->substitute('!NEWSGROUP!', $self->getName());
+	$post->substitute('!CANCELREASON!', $cancel_text);
+	$post->send();
+
+	# -------------------------------------------------------------------
+	# Update state
+	# -------------------------------------------------------------------
+
 	my $today = Ausadmin::today();
-	my $fh = new IO::File($cancel_fn, O_WRONLY|O_APPEND|O_CREAT|O_EXCL, 0644);
-	die "Unable to create $cancel_fn" if (!defined $fh);
+	my $fh = new IO::File($cancel_config, O_WRONLY|O_APPEND|O_CREAT|O_EXCL, 0644);
+	die "Unable to create $cancel_config" if (!defined $fh);
 
 	$fh->print($today, "\n");
 	$fh->close();
