@@ -6,14 +6,17 @@
 
 use Net::NNTP qw();
 use LWP::UserAgent qw();
+use Net::SMTP qw();
 
 my $cfg = {
 	news_server => $ENV{NNTPSERVER} || 'news.example.com',
 	my_email => $ENV{MAIL_FROM} || 'you@example.com',
+	email_mode => 'sendmail',		# sendmail or smtp
+	mail_server => 'aus.news-admin.org',
 	email_to => 'ausadmin@aus.news-admin.org',
 	hier_url => 'http://aus.news-admin.org/data/monitor.txt',
 	now => time(),
-	vers => 'Revision: 1.9',
+	vers => 'Revision: 1.11',
 };
 
 # Grab the list of hierarchies to monitor
@@ -87,14 +90,36 @@ my $ts;
 	$ts = sprintf ("%04d-%02d-%02d %02d:%02d",$year,$mon,$mday,$hour,$min);
 }
 
-open(P, "|/usr/sbin/sendmail $cfg->{email_to}") || die "Unable to open pipe to sendmail";
-print P <<EOF;
+my $message = <<EOF;
 From: $cfg->{my_email}
 To: $cfg->{email_to}
 Subject: Data for $cfg->{news_server} at $ts
 
 $s
 EOF
-close(P);
+
+if ($cfg->{email_mode} eq 'sendmail') {
+	open(P, "|/usr/sbin/sendmail $cfg->{email_to}") || die "Unable to open pipe to sendmail";
+	print P $message;
+	close(P);
+}
+elsif ($cfg->{email_mode} eq 'smtp') {
+	my $smtp = new Net::SMTP($cfg->{mail_server}) || die "Unable to connect to mail server $cfg->{mail_server}";
+
+	my $ok = 1;
+
+	$ok = $smtp->mail($cfg->{my_email}) if ($ok);
+	$ok = $smtp->to($cfg->{email_to}) if ($ok);
+	$ok = $smtp->data($message) if ($ok);
+	$ok = $smtp->quit() if ($ok);
+
+	if (! $ok) {
+		die "Message sending through SMTP failed";
+	}
+}
+else {
+	die "Message not sent - no email_mode configured (use 'sendmail' or 'smtp')\n";
+}
+
 
 exit(0);
