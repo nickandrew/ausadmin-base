@@ -74,6 +74,8 @@ while (<V>) {
 	# I was going to ignore MULTI, but let's try keeping them in.
 	# next unless ($status =~ /^NEW/i);
 
+	next if ($status eq 'FORGE' || $status eq 'INVALID');
+
 	# Now check if we checked them before
 	if (exists $voter_state{$email} && $voter_state{$email} =~ /^\d+$/) {
 		# It's ok if last check was recent
