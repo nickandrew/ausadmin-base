@@ -115,7 +115,7 @@ For a copy of the Call For Votes (CFV) email cfv\@aus.news-admin.org
 indicating the newsgroup in the subject line.
 
 If you have a problem please contact the aus Newsgroup 
-Administrator Nick Andrew <ausadmin\@aus.news-admin.org>. ", $Newsgroup;
+Administrators Nick Andrew and David Formosa <ausadmin\@aus.news-admin.org>. ", $Newsgroup;
 
 		close( MAILPIPE );
 	} else {
