@@ -61,6 +61,7 @@ Follow the instructions from top to bottom.
   for all votes which have been completed. vote_result will be used
   for the calculation of vote state, particularly 'vote/fail'.
  </li>
+
  <li>
   Scripts now use the environment variable <b>$AUSADMIN_HOME</b> in
   place of <b>$HOME</b>. It means you can place your ausadmin data
@@ -69,15 +70,19 @@ Follow the instructions from top to bottom.
   in your shell (edit <b>.bashrc</b> for example) and make sure that it
   is set in cron jobs also.
  </li>
+
  <li>
   Move data/checkgroups.header to config/checkgroups.header
  </li>
+
  <li>
   Move data/checkgroups.footer to config/checkgroups.footer
  </li>
+
  <li>
   Delete data/ausgroups.html if it exists.
  </li>
+
  <li>
   Run bin/fix-signed-cfv-filename.pl to rename all "posted.cfv" files in
   vote directories to "cfv.signed". This is to start to get some
@@ -85,11 +90,33 @@ Follow the instructions from top to bottom.
   ".signed" in future. You will also need to upgrade the ausadmin-website
   package to a version on or after 20020808.
  </li>
+
  <li>
   Do "rm -rf CFV". The CFV directory was a bad idea because the symlinks
   in that directory become invalid when the vote is renamed. Sure I could
   adjust the symlinks, but the information is in the vote directory anyway.
  </li>
+
+ <li>
+  Run bin/fix-checkgroups-filename.pl to rename from data/checkgroups.msg
+  to data/checkgroups.signed (new standard that all PGP-signed files end 
+  in the extension <b>.signed</b>) and to rename the associated RCS file
+  too.
+ </li>
+
+ <li>
+  Issue these commands:
+  <pre>
+   mv data/grouplist.header config/grouplist.header
+   mv data/grouplist.footer config/grouplist.footer
+   mkdir config/RCS
+   mv data/RCS/grouplist.header,v config/RCS/
+   mv data/RCS/grouplist.footer,v config/RCS/
+  </pre>
+  (Moving all configuration files into the config directory, retaining all
+  generated files in the data directory).
+ </li>
+  
 </ul>
 
 </body>

@@ -41,11 +41,12 @@ These instructions are minimal, because this software is alpha quality only!
 
 <ol>
  <li>su to ausadmin
+ <li>umask 027
  <li>mkdir -p data/Newsgroups
  <li>mkdir -p vote
  <li>copy your raw "newsgroups" type file to data/ausgroups (yes, that's the name it has to be at this time)
  <li>do "bin/gen-initial-newsgroups.pl data/ausgroups" to create and populate the data/Newsgroups directories. Just ignore the RCS messages.
- <li>You have now completed 1% of the setting up!
+ <li>You have now completed 10% of the setting up!
  <li>Next, find your charter files (one charter per newsgroup). Make sure the
 charter files are "clean" (i.e. no email headers or leftover rationale from group proposal time).
  <li>For each charter file:
@@ -59,14 +60,13 @@ charter files are "clean" (i.e. no email headers or leftover rationale from grou
 
 <p>The "data" directory contains the definitive list of newsgroups in
 the data/Newsgroups directory, the definitive group descriptions (at
-least at the moment) in data/ausgroups, some generated files, and some
-templates for generating messages.
+least at the moment) in data/ausgroups and some generated files.
 </p>
 
 <p>
 Samples for all templates are available in the samples/ directory.
 <ol>
- <li>Copy samples/* into data/
+ <li>Copy samples/* into config/
  <li>Edit each template for your situation and/or language. See below
      for the list of templates and what they are for.
 </ol>
@@ -136,6 +136,16 @@ Samples for all templates are available in the samples/ directory.
    on votes received.
   </td>
  </tr>
+
+ <tr>
+  <td>voter-check.msg</td>
+  <td>
+   This is a text file containing an email header and body which is sent
+   by the voter address checking program, to look for invalid email addresses
+   on votes received. Yes, this is slightly different from the above file.
+  </td>
+ </tr>
+
 </table>
 
 <h2>Setup PGP and GnuPG private and public keys </h2>
@@ -158,8 +168,8 @@ PGP 2.x key to be recognised by GnuPG, but eventually it worked.
 <h2>Generate checkgroups and grouplist messages</h2>
 
 <ol>
- <li>Do "bin/gencheckgroups.pl &gt; data/checkgroups.msg". The generated checkgroups is derived from the contents of your data/Newsgroups directory.
- <li>Do "bin/gen-grouplist". Ironically, the generated grouplist is derived from your original "data/ausgroups" file. So make sure it is up-to-date!
+ <li>Do "bin/gen-checkgroups.pl". The generated checkgroups is derived from the contents of data/ausgroups and data/Newsgroups subdirectories.
+ <li>Do "bin/gen-grouplist.pl". Ironically, the generated grouplist is derived from your original "data/ausgroups" file. So make sure it is up-to-date!
 </ol>
 
 <h2>Setup vote-taker</h2>
@@ -183,7 +193,7 @@ Firstly, there are many ausadmin-specific assumptions hardcoded into the
 source code. Things like email addresses, hostnames, home directories
 and domain names. You will need to search and modify these references.
 If you can remove these assumptions, for example by moving them out to
-a config file in the data/ directory, then ausadmin will greatly
+a config file in the config/ directory, then ausadmin will greatly
 appreciate receiving a patch.
 </p>
 
@@ -227,17 +237,10 @@ vote and creating control messages. See, for example, "bin/genresult.pl"
 <h2>Bugs</h2>
 
 <p>
-There's one thing which the software doesn't do well at the moment
-and that is updating its control files (data/ausgroups and
-data/Newsgroups/*) when votes pass. This can lead to sending out
-obsolete checkgroups messages, for example.
-</p>
-
-<p>
-There is also an issue with PGP-signing checkgroups and control
-messages. If there is a passphrase on the PGP keys, then automatic
-signing of these messages is not possible. This is not good for
-regular automated posting. I haven't found a way around this
+There is an issue with PGP-signing checkgroups and control messages. If
+there is a passphrase on the PGP keys (which there should be) ,
+then automatic signing of these messages is not possible. This is not
+good for regular automated posting. I haven't found a way around this
 security/convenience trade-off yet.
 </p>
 
@@ -254,7 +257,8 @@ are "todo.pl" and "action".
 "bin/todo.pl" examines every proposal under the vote/ directory and
 determines if you need to do something to advance the proposal. Recall
 that proposals start empty, then become RFDs, then CFV, then get
-voted upon and finally produce a result. There are necessary time
+voted upon, eventually produce a result, and maybe go to generate a
+newgroup message. There are necessary time
 delays in all parts of this process, and it is the hardest thing
 to remember which proposals are ready for which next stage of the
 process. "todo.pl" helps with this by printing a list of the
@@ -263,7 +267,7 @@ example:
 </p>
 
 <pre>
-ausadmin@slim:~$ bin/todo.pl
+ausadmin@slim:~$ todo.pl
 aus.sport.touch ... In discussion, wait until 2002-06-06 (rfd/posted)
 aus.music.regurgitator ... In discussion, wait until 2002-05-26 (rfd/posted)
 aus.business ... In discussion, wait until 2002-06-02 (rfd/posted)
@@ -323,7 +327,7 @@ submit multiple email votes. A "registered user" arrangement
 with an SSL web server voting site should be able to discourage
 all but the most persistent attempts at stuffing the ballot box.
 <li>Cleanup the code, remove obsolete source files, move to a
-consistent naming standard for commands
+consistent naming standard for commands and files
 <li>Reduce the number of commands which need to be executed
 from the command line. This may be accomplished by providing
 more web-based control functions.
@@ -341,7 +345,7 @@ There is some documentation under the doc/ directory also.
 
 <p>
 Please provide feedback to &lt;nick@nick-andrew.net&gt; if
-you start to use this software and if you make changes.
+you start to use this software and/or you make changes.
 </p>
 
 </body>

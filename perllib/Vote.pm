@@ -34,10 +34,11 @@ Vote - a Vote of some kind
 
 package Vote;
 
-use IO::File;
-use Newsgroup;
-use Ausadmin;
-use DateFunc;
+use Carp qw(confess);
+use IO::File qw(O_RDONLY O_WRONLY O_APPEND O_CREAT O_EXCL);
+use Newsgroup ();
+use Ausadmin ();
+use DateFunc ();
 
 use vars qw($result_discuss_days);
 
@@ -104,7 +105,7 @@ sub _read_file {
 
 	my $ng_dir = "$self->{vote_dir}/$self->{name}";
 	my $fh = new IO::File("$ng_dir/$filename", O_RDONLY);
-	confess("Expected $ng_dir/$filename") if (!defined $fh);
+	confess("Unable to open $ng_dir/$filename: $!") if (!defined $fh);
 
 	my @lines = <$fh>;
 
@@ -279,7 +280,7 @@ sub calc_state {
 
 		my $posting_date = Ausadmin::read1line("$ng_dir/result_posted.cfg");
 
-		if (DateFunc::days_between($posting_date, Ausadmin::today()) < $result_discuss_days) {
+		if (DateFunc::days_between($posting_date, Ausadmin::today()) < $result_discuss_days + 1) {
 			return "complete/result-wait";
 		}
 

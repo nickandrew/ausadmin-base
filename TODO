@@ -20,10 +20,10 @@ Goal: to have all data files manipulated automatically. There will be no
 more "forgetting" to update or insert things, because it will all be done
 from action as votes transit states.
 
- - As a group is "created", also create all data structures relevant to that
+DONE - As a group is "created", also create all data structures relevant to that
  group.
 
- - As newsgroup data structures are updated, also update summary data
+DONE - As newsgroup data structures are updated, also update summary data
  structures like checkgroups and grouplist.
 
  - Most scripts assume that our data is in a directory relative to our
@@ -41,12 +41,30 @@ from action as votes transit states.
  - The website part has a "Charters" directory which is not being kept
  up-to-date with the groups as they are created. This might be bad.
 
- - Add abandon-notes.txt to describe the reason why a proposal has been
- abandoned.
-
 This milestone will require a lengthy checking phase to ensure that it really
 is updating all data files automatically and it is correctly moving proposals
 from state to state.
+
+Milestone 1B
+------------
+
+Goal: To provide multi-hierarchy support. It should be configurable to
+display completely different newsgroup list, different votes, different
+proposals, different body text in the website, as necessary.
+
+ - Decide on a hierarchy-choosing standard which is compatible with current
+ default of "aus"
+
+ - Move vote directory under the data directory
+
+ - Maybe make a config file which maps hierarchy name to the data directory
+
+ - Add CNAMEs and virtualhost entries as needed to create new ausadmin clones
+
+ - Setup a system to receive signed checkgroups and import/update contents
+ into hierarchy's data directory
+
+ - Publicise this mapping, solicit input.
 
 Milestone 2
 -----------
@@ -72,7 +90,6 @@ Goal: to become more web-centric
  - Web registration of proposers
  - Web submission of proposals, and editing of proposals
  - Web administrator access, running "action" for example.
- - Web to provide more info on proposals and results
 
 Milestone 4
 -----------
