@@ -4,14 +4,15 @@
 # and outputs to STDOUT. Also created a group configuration file with
 # only one line - the end date (in system time (s))
 
-$Newsgroup = $ARGV[0];
-
 # Info Needed to run the script
 $VoteAddress = "vote\@aus.news-admin.org";
 $HomeDir = "/virt/web/ausadmin";
 $BaseDir = "$HomeDir/vote";
+
+ReadCharter();
+
 $ConfigFile ="$BaseDir/$Newsgroup/conf/group.cfg";
-chop($VotePeriod =`cat $BaseDir/$Newsgroup/conf/voteperiod`);
+chop($VotePeriod = `cat $BaseDir/$Newsgroup/conf/voteperiod`);
 
 # Find the finish date for votes according to the VD (vote duration)
 # Currently set to 21days
@@ -88,8 +89,6 @@ sub preprocess {
 	close(TEMPLATE);
 	return 0;
 }
-
-ReadCharter();
 
 # Opens the template Call For Votes file and constructs the actual CFV file
 # which is output to STDOUT
