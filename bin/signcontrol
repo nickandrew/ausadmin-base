@@ -64,7 +64,7 @@ $get_date = "/bin/date -u '+%a, %-d %h %Y %T %Z'";
 # set to match only hierarchies you will use it on
 # include no '|' for a single hierarchy (eg, "$hierarchies = 'uk';").
 
-$hierarchies = 'aus';
+$hierarchies = 'aus|zeta';
 
 # the draft news article format standard says:
 #   "subsequent components SHOULD begin with a letter"
@@ -315,6 +315,7 @@ signit
   $header{$pgpheader} = "$1 $signheaders";
 
   chomp($_ = <FH>);
+  chomp($_ = <FH>) if (/^Charset/);
   die "$0: didn't find an empty line after PGP Version\n" unless /^$/;
 
   while (<FH>) {
