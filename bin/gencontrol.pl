@@ -15,39 +15,56 @@ gencontrol.pl newsgroup-name
 
 =cut
 
-use strict;
 use lib 'bin';
 use Ausadmin;
 
-# Take in the file name and post off a newgroup or rmgroup message
-sub makemessage ( $$$ );
-
-my $votedir = "vote";
 my $vote = shift @ARGV;
-
 my $ng_dir = "vote/$vote";
-my $control_file = "vote/$vote/control.msg";
 
 die "No directory $ng_dir" if (!-d $ng_dir);
-die "There is already a file $control_file" if (-s $control_file);
+# die "There is already a file $control_file" if (-s $control_file);
 
 # KLUDGE ... This assumes only one change per proposal
-my $change = Ausadmin::read_keyed_file("$ng_dir/change");
+my $change = Ausadmin::read_list_keyed_file("$ng_dir/change");
+# change->{type} ...
+#	newgroup, rmgroup, moderate, unmoderate, charter
 
-# Otherwise make the message...
-my $rc = makemessage($control_file, "post.real", $vote);
+foreach my $changelet (@$change) {
+	my $type = $changelet->{type};
+	my $ng = $changelet->{newsgroup};
 
-exit($rc);
+	if ($type =~ /^(newgroup|rmgroup|moderate|unmoderate)$/) {
+		make_control("post.real", $vote, $changelet);
+	} elsif ($type eq 'charter') {
+		print STDERR "Unable to handle charter change requests.\n";
+	} else {
+		print STDERR "Unknown change type: $type\n";
+	}
+}
+	
+exit(0);
 
-sub makemessage ( $$$ ) {
-	my $file=shift;
+sub make_control {
 	my $type=shift;
 	my $vote=shift;
+	my $changelet = shift;
 
 # This will be changed to code that works out whether or not I wish to newgroup
 # or rmgroup.
-	my $newgroup=1;
-	my $moderated=0;
+	my $newgroup = 1;
+	my $moderated = 0;
+
+	if ($changelet->{type} =~ /^(moderate|unmoderate|newgroup)$/) {
+		$newgroup = 1;
+	}
+
+	if ($changelet->{type} =~ /^(rmgroup)$/) {
+		$newgroup = 0;
+	}
+
+	if ($changelet->{mod_status} eq 'm') {
+		$moderated = 1;
+	}
 
 #Get the from line for the forging/setting for the from and approved lines
 #should most likely be read from a file, just sticking it here while I decide
@@ -64,16 +81,17 @@ sub makemessage ( $$$ ) {
 	if ($newgroup) {
 		$post = donewgroup($moderated,$from,$vote);
 	} else {
-		# TODO ...  stuff for rmgroup
-		die "rmgroup not defined!";
+		$post = dormgroup($from,$vote);
 	}
 
-	if (!open(FILE, ">$file")) {
-		die "Unable to open $file: $!";
-	}
+	print $post;
 
-	print FILE $post;
-	close(FILE);
+#	if (!open(FILE, ">$file")) {
+#		die "Unable to open $file: $!";
+#	}
+
+#	print FILE $post;
+#	close(FILE);
 }
 
 sub donewgroup {
@@ -118,6 +136,32 @@ CHARTER: $name
 $charter
 END CHARTER.
 
+EOF
+
+	return $post;
+}
+
+sub dormgroup {
+	my $from = shift;
+	my $vote = shift;
+
+	my $name = $vote;		# KLUDGE
+
+	my $control = "rmgroup $name";
+	my $modname;
+
+	my $post = <<"EOF";
+From: $from
+Subject: Cmsg rmgroup $name
+Newsgroups: aus.net.news,$name
+Control: $control
+Approved: $from
+
+
+ausadmin requests removal of group $name as reported in aus.net.news.
+For full information, see:
+
+	http://aus.news-admin.org/cgi-bin/voteinfo?newsgroup=$vote
 EOF
 
 	return $post;
