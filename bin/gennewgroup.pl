@@ -19,7 +19,9 @@ my $votedir = "vote";
 my $vote = $ARGV[0];
 my $now = time;
 
-die "Once only" if (-e "vote/$vote/once");
+# die "Once only" if (-e "vote/$vote/once");
+
+exit(0) if (-e "vote/$vote/once");
 
 {
   local *ONCE;
@@ -46,7 +48,7 @@ sub checkmessage ( $ ) {
   
   while (<FILE>) {
     my ($group,$firstpostdate,$interval,$count)=split /\t/;    
-    makemessage $group,$file;      
+    makemessage($group,$file);      
   }
   
 #  system "mv /tmp/$file vote/$vote/$file";
