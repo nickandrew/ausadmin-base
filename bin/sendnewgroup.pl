@@ -5,7 +5,7 @@
 use strict;
 require "bin/misc.pli";
 
-my $debug='d';
+my $debug=0;
 my $schedule=shift;
 my $filename=shift;
 my $now=time;
