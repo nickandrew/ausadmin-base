@@ -9,4 +9,4 @@ cat > $fn
 HomeDir=/virt/web/ausadmin
 BaseDir=$HomeDir/vote
 
-bin/incoming.pl $fn < $fn | bin/collater.pl
+bin/incoming.pl $fn | bin/collater.pl
