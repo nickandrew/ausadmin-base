@@ -18,6 +18,7 @@ Info="$2"
 # Commonly used variables
 HomeDir=/virt/web/ausadmin
 BaseDir=$HomeDir/vote
+NewsServer=news.zeta.org.au
 
 # make directories if they don't already exist
 gendirs ()
@@ -58,7 +59,7 @@ rm -f $HomeDir/CFV/$Newsgroup
 ln -s $BaseDir/$Newsgroup/conf/posted.cfv $HomeDir/CFV/$Newsgroup
 
 # Post the CFV
-inews -h < $Newsgroup/conf/posted.cfv
+rnews -S $NewsServer < $Newsgroup/conf/posted.cfv
 
 echo `date +%s` > $Newsgroup/conf/posted.cfg
 
