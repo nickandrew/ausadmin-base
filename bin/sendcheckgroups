@@ -15,7 +15,7 @@ if [ $s -ne 0 ] ; then
 	exit 2
 fi
 
-pgp-sign < tmp/grouplist.$$ > tmp/signed-grouplist.$$
+bin/pgp-sign < tmp/grouplist.$$ > tmp/signed-grouplist.$$
 s=$?
 if [ $s -ne 0 ] ; then
 	echo "pgp-sign returned status $s - fatal"
