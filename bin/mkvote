@@ -47,6 +47,7 @@ gendirs $Newsgroup $Newsgroup/conf $Newsgroup/votes
 echo "2 3 10" > $Newsgroup/voterule
 echo "14" > $Newsgroup/voteperiod
 echo `date +%s` > $Newsgroup/posted.cfg
+perl -e 'print $^T' > $Newsgroup/starttime.cfg
 
 # Run the Perl script mkcvf to make the CFV and PGP-sign it then post it away!
 tr -d '\r' < $HomeDir/tmp/info.$$ | mkcfv.pl > $Newsgroup/posted.cfv 2>$HomeDir/tmp/pgp.$$
