@@ -20,6 +20,8 @@ sub endtime {
      open FILE,"<$filename" or die "Unable to open $filename due to $!";
      
      my $endtime=<FILE>;
+     chomp $endtime;
+
      if (time>$endtime and not -e "$path/$vote/result") {
 	  if ($debug) {
 	       warn ("genresult.pl $vote >$path/$vote/result\n");
