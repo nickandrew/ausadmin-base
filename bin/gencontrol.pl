@@ -23,13 +23,16 @@ use Ausadmin;
 sub makemessage ( $$$ );
 
 my $votedir = "vote";
-my $vote = $ARGV[0];
+my $vote = shift @ARGV;
 
 my $ng_dir = "vote/$vote";
 my $control_file = "vote/$vote/control.msg";
 
 die "No directory $ng_dir" if (!-d $ng_dir);
 die "There is already a file $control_file" if (-s $control_file);
+
+# KLUDGE ... This assumes only one change per proposal
+my $change = Ausadmin::read_keyed_file("$ng_dir/change");
 
 # Otherwise make the message...
 my $rc = makemessage($control_file, "post.real", $vote);
@@ -40,12 +43,12 @@ sub makemessage ( $$$ ) {
 	my $file=shift;
 	my $type=shift;
 	my $vote=shift;
-     
+
 # This will be changed to code that works out whether or not I wish to newgroup
 # or rmgroup.
 	my $newgroup=1;
 	my $moderated=0;
-     
+
 #Get the from line for the forging/setting for the from and approved lines
 #should most likely be read from a file, just sticking it here while I decide
 #where it should go.
@@ -74,42 +77,48 @@ sub makemessage ( $$$ ) {
 }
 
 sub donewgroup {
-
-	my ($moderated,$from,$vote) = @_;
+	my $moderated = shift;
+	my $from = shift;
+	my $vote = shift;
 
 	my $name = $vote;		# KLUDGE
-	my $post;
 
-	my $ngline = Ausadmin::read1line("vote/$vote/ngline");
-	my $charter = Ausadmin::readfile("vote/$vote/charter");
+	my $ngline = Ausadmin::read1line("vote/$vote/ngline:$name");
+	my $charter = Ausadmin::readfile("vote/$vote/charter:$name");
+	my $control;
+	my $modname;
 
-	if (not $moderated) {
-	  
-		$post = <<"EOF";
+	if ($moderated) {
+		$control = "newgroup $name m";
+		$modname = "a moderated";
+	} else {
+		$control = "newgroup $name";
+		$modname = "an unmoderated";
+	}
+
+
+	my $post = <<"EOF";
 From: $from
 Subject: Cmsg newgroup $name
 Newsgroups: aus.net.news,$name
-Control: newgroup $name
+Control: $control
 Approved: $from
 
 
-$name is an unmoderated newsgroup which passed its vote for creation
-as reported in aus.net.news.  For full information, see:
+$name is $modname newsgroup which passed its vote for
+creation as reported in aus.net.news.  For full information, see:
 
 	http://aus.news-admin.org/cgi-bin/voteinfo?newsgroup=$vote
-	  
+
 For your newsgroups file:
 $ngline
 
 CHARTER: $name
+
 $charter
 END CHARTER.
 
 EOF
-	} else {
-		# Do stuff for moderated group  
-		die "Unable to write newgroup control msg for moderated group";
-	}
-     
+
 	return $post;
 }
