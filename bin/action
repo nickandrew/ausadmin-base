@@ -361,11 +361,25 @@ sub check_rfd {
 		return 16;	# don't go on with this group
 	}
 
+	my $recip = $v->read_file('proposer');
+	$recip = $recip->[0];
+
+	$recip =~ /<(.*)>/;
+	if (! $1) {
+		die "No parseable recipient address $recip";
+	}
+	$recip = $1;
+	# Unmunge it
+	$recip =~ s/\.\././g;
+	$recip =~ s/ at /\@/g;
+
+	print "Proposer is $recip\n";
+
 	# Otherwise, ask
-	print "(state=$state) Abandon RFD or setup Vote [a,v] ? ";
+	print "(state=$state) Abandon RFD, send mail or setup Vote [a,m,v] ? ";
 	my $answer = <STDIN>;
 	chomp($answer);
-	if ($answer !~ /^[av]$/i) {
+	if ($answer !~ /^[amv]$/i) {
 		die "Aborting\n";
 	}
 
@@ -374,6 +388,21 @@ sub check_rfd {
 
 		print "Okay, I abandoned the RFD.\n";
 		return 16;
+	}
+
+	if ($answer =~ /m/i) {
+		print "Sending message to $recip ...\n";
+
+		my $hr = {
+			NG => $newsgroup,
+			RECIP => $recip,
+		};
+
+		Ausadmin::sendmail_template("$ENV{AUSADMIN_HOME}/config/vote-confirm.template", $hr, $recip);
+
+		print "Message sent! Wait for a reply\n";
+
+		return 8;
 	}
 
 	if ($answer =~ /v/i) {
