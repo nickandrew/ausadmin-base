@@ -49,8 +49,7 @@ sub leftColumn {
 	my @contents;
 
 	push(@contents, <<EOF);
-  <td bgcolor="#ffffe0" width="100" valign="top">
-   <font size="-1">
+  <td class="lhs" bgcolor="#ffffe0" width="100" valign="top">
 EOF
 
 	push(@contents, ausadminHeader());
@@ -61,7 +60,6 @@ EOF
 	push(@contents, newsgroupList());
 
 	push(@contents, <<EOF);
-   </font>
   </td>
 EOF
 
@@ -94,12 +92,12 @@ sub proposalList {
 	push(@contents, <<EOF);
 <!-- start of proposals -->
 <p>
-<b>Proposals:</b><br>
+<b>Proposals:</b><br />
 EOF
 
 	foreach my $v (@proposals) {
 		my $p = $v->getName();
-		my $s = "&nbsp;&nbsp;<a href=\"/proposal.cgi?proposal=$p\">$p</a><br>\n";
+		my $s = "&nbsp;&nbsp;<a href=\"/proposal.cgi?proposal=$p\">$p</a><br />\n";
 		push(@contents, $s);
 	}
 
@@ -123,7 +121,7 @@ sub runningVotesList {
 	push(@contents, <<EOF);
 <!-- start of runningvotes -->
 <p>
-<b>Votes&nbsp;running:</b><br>
+<b>Votes&nbsp;running:</b><br />
 EOF
 
 	my $now = time();
@@ -147,7 +145,7 @@ EOF
 		$ends = "$eh hours" if ($eh > 1);
 		$ends = "$ed days" if ($ed > 1);
 
-		my $s = "&nbsp;&nbsp;<a href=\"/proposal.cgi?proposal=$p\">$p (ends in $ends)</a><br>\n";
+		my $s = "&nbsp;&nbsp;<a href=\"/proposal.cgi?proposal=$p\">$p (ends in $ends)</a><br />\n";
 		push(@contents, $s);
 	}
 
@@ -171,11 +169,11 @@ sub newsgroupList {
 
 	push(@contents, <<EOF);
 <p>
-<b>Newsgroups:</b><br>
+<b>Newsgroups:</b><br />
 EOF
 
 	foreach my $g (@newsgrouplist) {
-		my $s = "&nbsp;&nbsp;<a href=\"groupinfo.cgi/$g/\">$g</a><br>\n";
+		my $s = "&nbsp;&nbsp;<a href=\"groupinfo.cgi/$g/\">$g</a><br />\n";
 		push(@contents, $s);
 	}
 
@@ -208,7 +206,7 @@ sub ausadminHeading {
 	push(@contents, <<EOF);
    <center>
     <h1>
-     <font face=sans-serif>$hier Newsgroup Administration</font>
+     <font face="sans-serif">$hier Newsgroup Administration</font>
     </h1>
    </center>
 EOF
@@ -220,7 +218,7 @@ sub ausadminContents {
 	my $hier = $ENV{AUSADMIN_HIER} || 'aus';
 
 	push(@contents, <<EOF);
-   <table cellpadding=5 cellspacing=0 width=100% border=0>
+   <table cellpadding="5" cellspacing="0" width="100%" border="0">
 EOF
 	push(@contents, ausadminSubHeadingRow("Overview"));
 	push(@contents, Include::html('overview.html'));
@@ -248,7 +246,7 @@ sub ausadminSubHeadingRow {
 
     <tr bgcolor="#000000">
      <td>
-      <font size=+1 color="#66cc66" face=sans-serif><b>$string</b></font>
+      <font size="+1" color="#66cc66" face="sans-serif"><b>$string</b></font>
      </td>
     </tr>
 EOF
