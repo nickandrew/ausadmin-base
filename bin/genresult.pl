@@ -5,7 +5,8 @@
 
 $votedir = "vote";
 
-$vote = $ARGV[0];
+$vote = shift;
+$recount = shift;
 
 $now = time;
 $postaddress = "ausadmin\@aus.news-admin.org";
@@ -187,7 +188,12 @@ foreach $ng (sort (keys %newsgroups)) {
 	print "Organization: aus.* newsgroups administration, see http://aus.news-admin.org/\n";
 	print "X-PGPKey: at http://aus.news-admin.org/ausadmin.asc\n";
 	print "Followup-To: aus.net.news\n";
-	print "Subject: RESULT: $ng $subjstat vote $yes{$ng}:$no{$ng}\n";
+	if ($recount) {
+	  print "Subject: RESULT: $ng $subjstat vote $yes{$ng}:$no{$ng}\n"; 
+	} else {
+	  print "Subject: RECOUNT: $ng $subjstat vote $yes{$ng}:$no{$ng}\n"; 
+
+	}
 	print "\n";
 
 	# Pass or fail?
