@@ -1,8 +1,10 @@
 #!/bin/bash
 #	Run from cron each 5 minutes
 
+export NNTPSERVER='news'
+
 ts=`date '+%Y%m%d%H%M%S'`
-bin/mrtg-newsgroups ~/data/ausgroups > ~/tmp/news-$ts.mrtg
+bin/mrtg-newsgroups ~/data/ausgroups > ~/tmp/news-$ts.mrtg 2> missing-groups
 s=$?
 
 if [ $s -eq 0 ] ; then

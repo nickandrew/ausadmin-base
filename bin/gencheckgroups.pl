@@ -6,15 +6,15 @@
 # $Date$
 
 use lib 'bin';
+
 use Ausadmin;
+use Newsgroup;
 
 my $signcmd = "bin/signcontrol";
+my $head_text = Ausadmin::readfile("data/checkgroups.header");
+my $foot_text = Ausadmin::readfile("data/checkgroups.footer");
 
 select(STDOUT); $| = 1;
-
-if (!-f "data/ausgroups") {
-	die "gencheckgroups.pl: No list of newsgroups\n";
-}
 
 my($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = localtime(time());
 
@@ -41,10 +41,8 @@ my %header = (
         'Date' => "$mday $monthname $year $hour:$min:$sec",
 );
 
-# Open the groups file
-if (!open(C, "<data/ausgroups")) {
-	die "Unable to open data/ausgroups: $!\n";
-}
+# Get a list of all newsgroups which are supposed to exist right now
+my @group_list = Newsgroup::list_newsgroups();
 
 if (!open(P, "|$signcmd")) {
 	die "Unable to open pipe to $signcmd!\n";
@@ -55,10 +53,19 @@ Ausadmin::print_header(\%header);
 
 print P "\n";
 
-while (<C>) {
-	print P $_;
+if (defined $head_text) {
+	print P $head_text;
 }
-close(C);
+
+foreach my $group (@group_list) {
+	my $ng = new Newsgroup(name => $group);
+	my $ngline = $ng->get_attr('ngline');
+	print P "$group\t$ngline";
+}
+
+if (defined $foot_text) {
+	print P $foot_text;
+}
 
 close(P);
 

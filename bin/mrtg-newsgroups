@@ -37,6 +37,7 @@ foreach my $group (@groups) {
 
 	if ($name eq '') {
 		# This group $group does not exist
+		print STDERR "Group $group does not exist on newsserver.\n";
 		$group_err++;
 		next;
 	}

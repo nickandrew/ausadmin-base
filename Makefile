@@ -1,4 +1,4 @@
-#	@(#) $Id$
+#	@(#) $Header$
 #	Copyright (C) 2002, Nick Andrew <nick@nick-andrew.net>
 #	Distributed under the terms of the GNU Public License
 #	See http://www.gnu.org/licenses/gpl.html

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-#	@(#) gen-checkgroups.pl - Creates the "checkgroups.msg" file.
+#	@(#) gen-checkgroups.pl - Creates the "checkgroups.signed" file.
 #	Usage: gen-checkgroups.pl [-d]
 #	Option -d: debug mode, don't overwrite current ones, don't sign.
 #
@@ -18,7 +18,7 @@ getopts('d');
 
 my $grouplist = "data/ausgroups";
 my $signcmd = $opt_d ? '/bin/cat' : 'signcontrol';
-my $checkgroups_file = $opt_d ? 'checkgroups.msg' : 'data/checkgroups.msg';
+my $checkgroups_file = $opt_d ? 'checkgroups' : 'data/checkgroups.signed';
 
 
 my $gl = new Checkgroups(signcmd => $signcmd, grouplist_file => $grouplist);

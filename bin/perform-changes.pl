@@ -9,6 +9,7 @@
 use lib 'bin';
 
 use Ausadmin;
+use GroupList;
 use Vote;
 use Newsgroup;
 
@@ -154,6 +155,16 @@ sub do_control {
 			my $gl = new GroupList();
 			$gl->write("./data/ausgroups.$$", "./data/ausgroups");
 			$v->audit("Recreated data/ausgroups for the new group");
+
+			# Update the checkgroups message
+			print "About to update checkgroups message\n";
+			my $rc = system("gen-checkgroups.pl");
+			$v->audit("Updated data/checkgroups.signed, code $rc");
+
+			# Update the grouplist.signed message
+			print "About to update grouplist.signed message\n";
+			my $rc = system("gen-grouplist.pl");
+			$v->audit("Updated data/grouplist.signed, code $rc");
 		}
 
 	}

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-#	@(#) check-voters.pl vote-name voters-file < message-file
+#	@(#) check-voters.pl vote-name voter-state-file < message-file
 #
 # $Source$
 # $Revision$
@@ -12,13 +12,15 @@ check-voters.pl - Send a test email to all voters in a vote
 
 =head1 SYNOPSIS
 
- check-voters.pl vote-name voters-file < message-file
+ check-voters.pl vote-name voter-state-file < message-file
+
+ e.g. check-voters.pl aus.business data/voter-state < config/voter-check.msg
 
 =head1 DESCRIPTION
 
 This program sends a message to everybody who voted for B<vote-name>
 and who has not been checked recently (180 days) as listed in
-B<voters-file>.
+B<voter-state-file>.
 
 The timestamp of all checked voters is updated to reflect the
 latest time the email address was sent a message. In other words,
@@ -39,13 +41,22 @@ my $voters_file = shift @ARGV || die "No voters file supplied";
 
 die "Invalid newsgroup name <$newsgroup>" if (!Newsgroup::validate($newsgroup));
 
+my $no_check_id = '-OLD-';
+
 my %voter_state;
 
 open(VF, "<$voters_file") or die "Unable to open $voters_file: $!";
 while (<VF>) {
 	chomp;
-	my($email,$state) = split;
-	$voter_state{$email} = $state;
+	my($email,$timestamp,$state) = split;
+
+	# This is protection against me supplying the wrong filename.
+	die "Invalid state: $state (for $email)" if ($state ne 'OK' && $state ne 'FAIL');
+
+	$voter_state{$email} = {
+		timestamp => $timestamp,
+		state => $state,
+	};
 }
 close(VF);
 
@@ -77,34 +88,92 @@ while (<V>) {
 	next if ($status eq 'FORGE' || $status eq 'INVALID');
 
 	# Now check if we checked them before
-	if (exists $voter_state{$email} && $voter_state{$email} =~ /^\d+$/) {
-		# It's ok if last check was recent
-		if ($voter_state{$email} > $check_cutoff_ts) {
-			my $diff = int(($now - $voter_state{$email})/86400);
-			print STDERR "Ignoring $email - checked $diff days ago.\n";
+	if (exists $voter_state{$email}) {
+		my $vs = $voter_state{$email};
+
+		if ($vs->{timestamp} !~ /^\d+$/) {
+			print STDERR "Invalid timestamp $vs->{timestamp} for $email (ignoring)\n";
 			next;
 		}
+
+		if ($vs->{state} eq 'OK') {
+			# Don't recheck OK ones for a long time
+			if ($vs->{timestamp} > $check_cutoff_ts) {
+				my $diff = int(($now - $vs->{timestamp})/86400);
+				print STDERR "Ignoring $email - checked $diff days ago.\n";
+				next;
+			}
+		}
+
 	}
 
 	print STDERR "Checking $email\n";
 
+	my $check_id;
+
+	if (exists $voter_state{$email}) {
+		$check_id = $voter_state{$email}->{check_id};
+	}
+
+	# If none supplied in file, generate a random one
+	if ($check_id eq '' || $check_id eq $no_check_id) {
+		my $random;
+		$check_id = '00000000';
+
+		if (open(R, "</dev/urandom")) {
+			my $buffer;
+			my $bytes_left = 4;
+			while ($bytes_left > 0) {
+				my $b;
+				my $n = sysread(R, $b, $bytes_left);
+				if ($n < 0) {
+					die "Read error on /dev/urandom: $!";
+				}
+				if ($n > 0) {
+					$bytes_left -= $n;
+					$buffer .= $b;
+				}
+			}
+
+			$check_id = unpack("H8", $buffer);
+			close(R);
+		}
+	}
+
 	# Otherwise, need to check them
-	push(@recipients, [$email, $timestamp]);
+	push(@recipients, [$email, $check_id]);
 
 	# And mark they've been checked
 	# KLUDGE ... this is dodgy ... what do we do when they fail a check?
-	# If they fail a check, remove them from the voter_state file...
-	$voter_state{$email} = $now;
+	# If they fail a check, remove them from the voter_state file... ?
+	$voter_state{$email}->{timestamp} = $now;
+	$voter_state{$email}->{state} = 'OK';
+	$voter_state{$email}->{check_id} = $check_id;
 }
 
 close(V);
 
-# Now update the voter_state file
-open(VF, ">$voters_file") or die "Unable to open $voters_file for write: $!";
+# Now update the voter_state file safely
+open(VF, ">$voters_file.$$") or die "Unable to open $voters_file.$$ for write: $!";
 foreach my $email (sort (keys %voter_state)) {
-	print VF "$email $voter_state{$email}\n";
+	my $vs = $voter_state{$email};
+
+	if (!defined $vs->{check_id}) {
+		$vs->{check_id} = $no_check_id;
+	}
+
+	print VF "$email $vs->{timestamp} $vs->{state} $vs->{check_id}\n";
 }
-close(VF);
+
+if (!close(VF)) {
+	die "Unable to write $voters_file.$$: $!";
+}
+
+# Now rename to update and keep history
+rename("$voters_file.-2", "$voters_file.-3");
+rename("$voters_file.-1", "$voters_file.-2");
+rename("$voters_file",    "$voters_file.-1");
+rename("$voters_file.$$", "$voters_file");
 
 # Now read the header and body of the message
 
@@ -113,9 +182,9 @@ my @message = <STDIN>;
 # print each address ...
 foreach my $r (@recipients) {
 	my $email = $r->[0];
-	my $timestamp = $r->[1];
+	my $check_id = $r->[1];
 
-	sendmail($email, \@message, $timestamp);
+	sendmail($email, \@message, $check_id);
 }
 
 exit(0);
@@ -125,23 +194,28 @@ exit(0);
 sub sendmail {
 	my $recipient = shift;
 	my $msg_ref = shift;
-	my $vote_id = shift;
+	my $check_id = shift;
 
 	# Setup our return address for bounces
+	my $verp = $check_id;
+	# $verp =~ s/\@/=/g;
+	# $verp =~ s/[^a-zA-Z0-9-._=]//g;
 
 	$ENV{MAILHOST} = "aus.news-admin.org";
-	$ENV{QMAILUSER} = "vote-return-$vote_id";
+	$ENV{QMAILUSER} = "vote-return-$verp";
 
 	if (!open(MP, "|/usr/sbin/sendmail $recipient")) {
 		die "Open pipe to sendmail failed";
 	}
 
+	print MP "From: ausadmin vote checker <$ENV{QMAILUSER}\@$ENV{MAILHOST}>\n";
 	print MP "To: $recipient\n";
+	print MP "Reply-To: <$ENV{QMAILUSER}\@$ENV{MAILHOST}>\n";
 	print MP @$msg_ref;
 
 	close(MP);
 }
 
 sub usage {
-	die "Usage: check-voters.pl newsgroup-name voters-file < message-file\n";
+	die "Usage: check-voters.pl newsgroup-name voter-state-file < message-file\n";
 }

@@ -1,22 +1,30 @@
 #!/bin/bash
+#	@(#) $Id$
 #	@(#) bin/post-grouplist - Post newsgroup list
 #
-# $Source$
-# $Revision$
-# $Date$
 
-umask 022
-
+umask 027
 
 #----------------------------------------------------------------------------
-#  Post the messages
+#  Post the message
 #----------------------------------------------------------------------------
 
 rc=0
-bin/post.pl < data/grouplist.msg
+
+if [ ! -d data ] ; then
+	echo "post-grouplist: No data directory, fatal"
+	exit 8
+fi
+
+if [ ! -f data/grouplist.signed ] ; then
+	echo "post-grouplist: No data/grouplist.signed file, fatal"
+	exit 8
+fi
+
+bin/post.pl < data/grouplist.signed
 s=$?
 if [ $s -ne 0 ] ; then
-	echo "post.pl submission of data/grouplist.msg returned status $s"
+	echo "post.pl submission of data/grouplist.signed returned status $s"
 	rc=8
 fi
 

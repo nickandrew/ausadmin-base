@@ -1,9 +1,10 @@
 #!/bin/bash
+#	@(#) $Id$
 #
 #	Do this stuff once a day
 
 # Make a new mrtg.cfg file for all aus groups
-bin/make-mrtg-newsgroups.pl data/ausgroups $AUSADMIN_HOME/data/config.head $AUSADMIN_HOME/Mrtg/news-latest.mrtg > $AUSADMIN_HOME/tmp/$$.cfg
+bin/make-mrtg-newsgroups.pl data/ausgroups $AUSADMIN_HOME/config/mrtg.head $AUSADMIN_HOME/Mrtg/news-latest.mrtg > $AUSADMIN_HOME/tmp/$$.cfg
 s=$?
 
 if [ $s -eq 0 ] ; then

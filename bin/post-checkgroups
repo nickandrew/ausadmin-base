@@ -1,11 +1,8 @@
 #!/bin/bash
+#	@(#) $Id$
 #	@(#) bin/post-checkgroups - Post signed checkgroups
-#
-# $Source$
-# $Revision$
-# $Date$
 
-umask 022
+umask 027
 
 #----------------------------------------------------------------------------
 #  Post the message
@@ -13,10 +10,20 @@ umask 022
 
 rc=0
 
-bin/post.pl < data/checkgroups.msg
+if [ ! -d data ] ; then
+	echo "post-checkgroups: No data directory, fatal"
+	exit 8
+fi
+
+if [ ! -f data/checkgroups.signed ] ; then
+	echo "post-checkgroups: No data/checkgroups.signed file, fatal"
+	exit 8
+fi
+
+bin/post.pl < data/checkgroups.signed
 s=$?
 if [ $s -ne 0 ] ; then
-	echo "post.pl submission of data/checkgroups.msg returned status $s"
+	echo "post.pl submission of data/checkgroups.signed returned status $s"
 	rc=8
 fi
 

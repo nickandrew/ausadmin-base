@@ -8,58 +8,45 @@
 umask 022
 
 # Recreate ausgroups first
-bin/gen-ausgroups.pl
+gen-ausgroups.pl
 s=$?
 if [ $s -ne 0 ] ; then
 	echo "bin/gen-ausgroups.pl returned status $s - fatal"
 	exit 2
 fi
 
-bin/gengrouplist.pl > tmp/grouplist.$$
+# Then the human-readable grouplist message
+gen-grouplist.pl
 s=$?
 if [ $s -ne 0 ] ; then
-	echo "bin/gengrouplist.pl returned status $s - fatal"
-	rm -f tmp/grouplist.$$
+	echo "bin/gen-grouplist.pl returned status $s - fatal"
 	exit 2
 fi
 
-bin/pgp-sign < tmp/grouplist.$$ > tmp/signed-grouplist.$$
+# Finally the machine-readable checkgroups message
+gen-checkgroups.pl
 s=$?
 if [ $s -ne 0 ] ; then
-	echo "pgp-sign returned status $s - fatal"
-	rm -f tmp/grouplist.$$ tmp/signed-grouplist.$$
-	exit 4
-fi
-
-rm -f tmp/grouplist.$$
-
-bin/gen-checkgroups.pl
-s=$?
-if [ $s -ne 0 ] ; then
-	echo "bin/gencheckgroups.pl returned status $s - fatal"
+	echo "bin/gen-checkgroups.pl returned status $s - fatal"
 	exit 3
 fi
-
-# Replace the current version with the latest
-
-mv tmp/signed-grouplist.$$ data/grouplist.msg
 
 #----------------------------------------------------------------------------
 #  Post the messages
 #----------------------------------------------------------------------------
 
 rc=0
-bin/post.pl < data/grouplist.msg
+post.pl < data/grouplist.signed
 s=$?
 if [ $s -ne 0 ] ; then
-	echo "post.pl submission of data/grouplist.msg returned status $s"
+	echo "post.pl submission of data/grouplist.signed returned status $s"
 	rc=8
 fi
 
-bin/post.pl < data/checkgroups.msg
+post.pl < data/checkgroups.signed
 s=$?
 if [ $s -ne 0 ] ; then
-	echo "post.pl submission of data/checkgroups.msg returned status $s"
+	echo "post.pl submission of data/checkgroups.signed returned status $s"
 	rc=8
 fi
 

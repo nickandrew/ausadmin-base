@@ -307,6 +307,7 @@ sub pass_msg {
 	push(@body, "\nVOTES RECEIVED:\n");
 	foreach my $voter (sort by_domain_userid @{$vote_info->{voters}}) {
 		$voter =~ s/\@/ at /;
+		$voter =~ s/\./../g;
 		push(@body, "  $voter");;
 	}
 
