@@ -35,6 +35,8 @@ sub parse_string {
 
 	$self->{data} = $string;
 
+	$self->{path} = 'string';
+
 	$self->parse();
 }
 
@@ -55,6 +57,8 @@ sub parse_file {
 	close(F);
 
 	$self->parse_string($string);
+
+	$self->{path} = $path;
 
 	return 1;
 }
@@ -191,51 +195,52 @@ my $freemail_regexes = [
 	'http://www.cubuffs.com',
 ];
 
-my $received_regex = {
-	'\(qmail \d+ invoked from network\);' => [],
-	'\(cpmta \d+ invoked from network\);' => [],
-	'\(qmail \d+ invoked by uid (\d+)\);' => [],
+my $received_regex = [
+	['\(qmail \d+ invoked from network\);', []],
+	['\(cpmta \d+ invoked from network\);', []],
+	['\(qmail \d+ invoked by uid (\d+)\);', []],
 
-	'\(from (\S+)\) by (\S+) \([0-9./]+\)' => [],
-	'by (\S+) \([0-9./]+\)' => [],
-	'by ([a-zA-Z0-9.-]+);' => [],
-	'by (\S+) with Internet Mail Service' => [],
-	'by (\S+) with Microsoft MAPI' => [],
-	'by (\S+) with Microsoft Mail' => [],
-	'by (\S+)\(Lotus SMTP MTA' => [],
-	'by (\S+) \(Postfix, from userid (\d+)\)' => [],
-	'by (\S+) \(Fastmailer' => [],
-	'by (\S+) \([0-9.]+.*SMI' => [],
+	['\(from (\S+)\) by (\S+) \([0-9./]+\)', []],
+	['by (\S+) \([0-9./]+\)', []],
+	['by ([a-zA-Z0-9.-]+);', []],
+	['by (\S+) with Internet Mail Service', []],
+	['by (\S+) with Microsoft MAPI', []],
+	['by (\S+) with Microsoft Mail', []],
+	['by (\S+)\(Lotus SMTP MTA', []],
+	['by (\S+) \(Postfix, from userid (\d+)\)', []],
+	['by (\S+) \(Fastmailer', []],
+	['by (\S+) \([0-9.]+.*SMI', []],
 
-	'from mail pickup service' => [],
-	'from ccMail by (\S+) \(IMA' => [],
+	['from mail pickup service', []],
+	['from ccMail by (\S+) \(IMA', []],
 
-	'from \[(\S+)\] by (\S+) \(SMTPD32' => [],
-	'from \[(\S+)\] by (\S+) \(NTMail' => [],
-	'from \[(\S+)\] by (\S+) with ESMTP' => [],
-	'from  \[(\S+)\] by (\S+) ' => [],
+	['from \[(\S+)\] by (\S+) \(SMTPD32', []],
+	['from \[(\S+)\] by (\S+) \(NTMail', []],
+	['from \[(\S+)\] by (\S+) with ESMTP', []],
+	['from  \[(\S+)\] by (\S+);', ['src-ip', 'dst-hostname']],
+	['from  \[(\S+)\] by (\S+) ', ['src-ip', 'dst-hostname']],
 
-	'from (\S+)\((\S+) (\S+)\) by ([a-zA-Z0-9.-]+) via smap' => [],
-	'from (\S+)\((\S+)\), claiming to be "\S+".* by ([a-zA-Z0-9.-]+),' => [],
-	'from (\S+)\((\S+)\) by ([a-zA-Z0-9.-]+) via smap' => [],
+	['from (\S+)\((\S+) (\S+)\) by ([a-zA-Z0-9.-]+) via smap', []],
+	['from (\S+)\((\S+)\), claiming to be "\S+".* by ([a-zA-Z0-9.-]+),', []],
+	['from (\S+)\((\S+)\) by ([a-zA-Z0-9.-]+) via smap', []],
 
-	'from (\S+)\(([0-9.]+)\) via SMTP by ([a-zA-Z0-9.-]+),' => [],
+	['from (\S+)\(([0-9.]+)\) via SMTP by ([a-zA-Z0-9.-]+),', []],
 
-	'from (\S+) \(\[(.*)\]\) by ([a-zA-Z0-9.-]+)\(' => [],
-	'from (\S+) \[(.*)\] by ([a-zA-Z0-9.-]+) \[(\S+)\] with ' => [],
-	'from (\S+) \[(.*)\] by ([a-zA-Z0-9.-]+) with ' => [],
-	'from (\S+) \[(.*)\] by ([a-zA-Z0-9.-]+) with ' => [],
-	'from (\S+) \[(.*)\] by ([a-zA-Z0-9.-]+) \((.*)\) .*;' => [],
+	['from (\S+) \(\[(.*)\]\) by ([a-zA-Z0-9.-]+)\(', ['src-hostname', 'src-ip', 'dst-hostname']],
+	['from (\S+) \[(.*)\] by ([a-zA-Z0-9.-]+) \[(\S+)\] with ', []],
+	['from (\S+) \[(.*)\] by ([a-zA-Z0-9.-]+) with ', []],
+	['from (\S+) \[(.*)\] by ([a-zA-Z0-9.-]+) with ', []],
+	['from (\S+) \[(.*)\] by ([a-zA-Z0-9.-]+) \((.*)\) .*;', []],
 
-	'from (\S+) by (\S+) for \[(\S+)\]' => [],
-	'from (\S+) by (\S+) \(PMDF' => [],
-	'from (\S+) by ([a-zA-Z0-9.-]+) with ' => [],
-	'from ([a-zA-Z0-9.-]+) \((\S+) \[(\S+)\]\) by ([a-zA-Z0-9.-]+) .*with ' => [],
-	'from ([a-zA-Z0-9.-]+) \((.*)\) by ([a-zA-Z0-9.-]+) .*with ' => [],
-	'from (\S+) \((.*)\) by ([a-zA-Z0-9.-]+) ' => [],
-	'from (.*) by (.*) with ' => [],
-	'from (.*) by (.*) ' => [],
-};
+	['from (\S+) by (\S+) for \[(\S+)\]', []],
+	['from (\S+) by (\S+) \(PMDF', []],
+	['from (\S+) by ([a-zA-Z0-9.-]+) with ', []],
+	['from ([a-zA-Z0-9.-]+) \((\S+) \[(\S+)\]\) by ([a-zA-Z0-9.-]+) .*with ', ['src-hostname', 'src-ip', 'dst-hostname']],
+	['from ([a-zA-Z0-9.-]+) \((.*)\) by ([a-zA-Z0-9.-]+) .*with ', ['src-hostname', 'src-ip', 'dst-hostname']],
+	['from (\S+) \((.*)\) by ([a-zA-Z0-9.-]+) ', []],
+	['from (.*) by (.*) with ', []],
+	['from (.*) by (.*) ', []],
+];
 
 sub check_received {
 	my $self = shift;
@@ -244,13 +249,42 @@ sub check_received {
 	$header =~ s/^Received: //;
 	my $match = 0;
 
-	foreach my $regex (keys %$received_regex) {
+	foreach my $r (@$received_regex) {
+		my $regex = $r->[0];
+		my $hash_map = $r->[1];
+
 		if ($header =~ /$regex/) {
-			print "Match! $1, $2, $3\n";
-			if ($1 eq '') {
-				# Unable to parse any actual data from it
-				print "Header: $header\n";
+			print "Header: $header\n";
+			print "Matched this regex: $regex\n";
+			print "References: $1, $2, $3\n";
+
+			my $data_hr = { };
+
+			# Ok, we got something. Now grab the contents and stick in hashref
+			my @refs = ($1,$2,$3,$4,$5,$6,$7,$8,$9);
+
+			foreach (@$hash_map) {
+				if ($_) {
+					push(@{$data_hr->{$_}}, shift @refs);
+				} else {
+					# This substring match was not required
+					shift @refs;
+				}
 			}
+
+			# Print out the useful data
+			print "The data we got was:\n";
+			foreach my $v (sort (keys %$data_hr)) {
+				printf "\t%-20s :", $v;
+				foreach my $l (@{$data_hr->{$v}}) {
+					print ' ', $l;
+				}
+				print "\n";
+			}
+
+			print "\n";
+
+			# Grab the useful data
 			$match = 1;
 			last;
 		}
