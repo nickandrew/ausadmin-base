@@ -90,9 +90,11 @@ From: $from
 Subject: Cmsg newgroup $name
 Newsgroups: aus.net.news,$name
 Control: newgroup $name
-      
-$name is an unmoderated newsgroup which passed its vote for creation as reported
-in aus.net.news
+Approved: $from
+
+
+$name is an unmoderated newsgroup which passed its vote for creation as 
+reported in aus.net.news
 	  
 For your newsgroups file:
 $ngline
