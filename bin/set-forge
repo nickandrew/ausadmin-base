@@ -1,0 +1,44 @@
+#!/usr/bin/perl
+
+=head1 NAME
+
+set-forge - set a given vote as a forgery
+
+=head1 SYNOPSIS
+
+set-forge newsgroup email-address
+
+=head1 DESCRIPTION
+
+Mark the vote by B<email-address> in the vote for B<newsgroup>
+as a forgery.
+
+=cut
+
+use Tally;
+
+my $ng = shift @ARGV;
+
+die "No email addresses specified" if (!@ARGV);
+
+my $t = new Tally(name => $ng);
+
+print "Updating $ng ...\n";
+
+foreach my $email (@ARGV) {
+	my $count = $t->set_vote($email, "FORGE");
+
+	if ($count > 1) {
+		print " $email done (and changed $count votes!)\n";
+		next;
+	}
+
+	if (!$count) {
+		print " $email has not voted for $ng.\n";
+		next;
+	}
+
+	print " $email done\n";
+}
+
+exit(0);
