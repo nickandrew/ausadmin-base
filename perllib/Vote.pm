@@ -455,9 +455,6 @@ sub write_voterule {
 sub state {
 	my $self = shift;
 
-	my $vote_dir = $self->ng_dir();
-	my $state_file = "$vote_dir/state";
-
 	# Calculate the state
 	my $state = $self->calc_state();
 
