@@ -119,7 +119,10 @@ if (!open(T, "vote/$vote/tally.dat")) {
 
 while (<T>) {
 	($email,$ng,$v,$ts,$path) = split;
-	if (uc($v) ne "YES" && uc($v) ne "NO" && uc($v) ne "ABSTAIN") {
+
+	$v=uc($v);
+
+	if ($v ne "YES" && $v ne "NO" && $v ne "ABSTAIN") {
 		print STDERR "Unknown vote: $v (in $vote)\n";
 		$rc |= 16;
 		next;
