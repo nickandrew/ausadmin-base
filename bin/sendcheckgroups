@@ -34,7 +34,7 @@ if [ $s -ne 0 ] ; then
 	rc=2
 fi
 
-bin/rnews tmp/checkgroups.$$
+rnews tmp/checkgroups.$$
 s=$?
 if [ $s -ne 0 ] ; then
 	echo "rnews returned status $s"
