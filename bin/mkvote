@@ -44,7 +44,7 @@ cd $BaseDir
 # set up control files
 
 gendirs $Newsgroup $Newsgroup/conf $Newsgroup/votes 
-echo "2 3 10" > $Newsgroup/voterule
+echo "2 3 40" > $Newsgroup/voterule
 echo "14" > $Newsgroup/voteperiod
 echo `date +%s` > $Newsgroup/posted.cfg
 perl -e 'print $^T,"\n"' > $Newsgroup/starttime.cfg
