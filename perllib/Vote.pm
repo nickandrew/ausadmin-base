@@ -200,53 +200,62 @@ sub state {
 	my $self = shift;
 
 	my $ng_dir = $self->ng_dir();
-
-	if (!-f "$ng_dir/rfd") {
-		return "new";
-	}
-
-	if (!-f "$ng_dir/voterule") {
-		return "rfd";
-	}
-
-	if (!-f "$ng_dir/endtime.cfg") {
-		return "vote/notsetup";
-	}
-
-	if (!-f "$ng_dir/cfv") {
-		return "vote/nocfv";
-	}
-
-	if (!-f "$ng_dir/posted.cfv") {
-		return "vote/unsignedcfv";
-	}
-
-	if (!-f "$ng_dir/posted.cfg") {
-		return "vote/cfvnotposted";
-	}
+	my $state = "unknown";
 
 	if (-f "$ng_dir/vote_cancel.cfg") {
 		return "cancelled";
 	}
 
-	my $state = "vote/running";
-
-	my $end_time = $self->get_end_time();
-	my $now = time();
-
-	if ($now < $end_time) {
-		return $state;
+	if (-f "$ng_dir/rfd_cancel.cfg") {
+		return "abandoned";
 	}
 
-	# Vote period must be finished.
+	if (-f "$ng_dir/group.creation.date") {
+		return "complete/pass";
+	}
 
-	# note this is testing for presence of file, not absence
 	if (-f "$ng_dir/result") {
 		return "complete/result";
 	}
 
-	# cop-out
-	return "complete/checking";
+	if (-f "$ng_dir/endtime.cfg") {
+
+		my $end_time = $self->get_end_time();
+		my $now = time();
+
+		if (-f "$ng_dir/posted.cfg") {
+			if ($now >= $end_time) {
+				return "vote/checking";
+			}
+			return "vote/running";
+		}
+
+		if (-f "$ng_dir/posted.cfv") {
+			return "vote/cfvnotposted";
+		}
+
+		if (-f "$ng_dir/cfv") {
+			return "vote/cfvnotsigned";
+		}
+
+		if (-f "$ng_dir/voterule") {
+			return "vote/nocfv";
+		}
+
+		# The vote must be incompletely setup
+
+		return "vote/notsetup";
+	}
+
+	if (-f "$ng_dir/voterule") {
+		return "vote/notsetup";
+	}
+
+	if (-f "$ng_dir/rfd") {
+		return "rfd";
+	}
+
+	return "unknown";
 }
 
 1;
