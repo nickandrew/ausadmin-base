@@ -14,6 +14,7 @@ foreach my $server (keys %{$db->{server}}) {
 	my $r = $db->{server}->{$server};
 	my $total_groups = $r->{total_groups};
 	my $score = ($total_groups - $r->{missing} * 3 - $r->{bogus} * 0.5);
+	$score = 0 if ($score < 0);
 	my $tpct = int(1000 * $score / $total_groups);
 	$r->{name} = $server;
 	$r->{score} = $score;
@@ -87,6 +88,7 @@ EOF
 
 foreach my $r (sort { $a->{name} cmp $b->{name} } (values %{$db->{server}})) {
 	next if (!exists $r->{notice});
+	next if ($r->{score} <= 0);
 
 	my $str = sprintf("Report for %s", $r->{name});
 
