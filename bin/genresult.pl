@@ -119,7 +119,7 @@ if (!open(T, "vote/$vote/tally.dat")) {
 
 while (<T>) {
 	($email,$ng,$v,$ts,$path) = split;
-	if ($v ne "YES" && $v ne "NO" && $v ne "ABSTAIN") {
+	if (uc($v) ne "YES" && uc($v) ne "NO" && uc($v) ne "ABSTAIN") {
 		print STDERR "Unknown vote: $v (in $vote)\n";
 		$rc |= 16;
 		next;
@@ -188,7 +188,7 @@ foreach $ng (sort (keys %newsgroups)) {
 	print "Organization: aus.* newsgroups administration, see http://aus.news-admin.org/\n";
 	print "X-PGPKey: at http://aus.news-admin.org/ausadmin.asc\n";
 	print "Followup-To: aus.net.news\n";
-	if ($recount) {
+	if (not $recount) {
 	  print "Subject: RESULT: $ng $subjstat vote $yes{$ng}:$no{$ng}\n"; 
 	} else {
 	  print "Subject: RECOUNT: $ng $subjstat vote $yes{$ng}:$no{$ng}\n"; 
