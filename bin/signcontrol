@@ -59,9 +59,9 @@
 # work to lock against other instances of signcontrol, not all pgp uses.
 # $pgplock is not used if $pgp ends in 'gpg' since GnuPG doesn't need
 # this.
-$pgpsigner = 'INSERT_YOUR_PGP_USERID';
+$pgpsigner = 'ausadmin@aus.news-admin.org';
 $pgppassfile = '';      # file with pass phrase for $pgpsigner
-$pgp = "/usr/local/bin/pgp";
+$pgp = "/usr/bin/gpg";
 $pgpheader = "X-PGP-Sig";
 $pgplock = (getpwuid($<))[7] . '/.pgp/config.txt';
 
@@ -75,11 +75,12 @@ $pgplock = (getpwuid($<))[7] . '/.pgp/config.txt';
 # Newsgroups: is forced to be just the group being added/removed.
 #             (but is taken as-is for checkgroups)
 $force{'Path'} = 'bounce-back';
-$force{'From'} = 'YOUR_ADDRESS_AND_NAME';
-$force{'Approved'} = 'ADDRESS_FOR_Approved_HEADER';
+$force{'From'} = 'aus Newsgroups Administration <ausadmin@aus.news-admin.org>';
+$force{'Approved'} = 'ausadmin@aus.news-admin.org';
 $force{'X-Info'}='ftp://ftp.isc.org/pub/pgpcontrol/README.html'
                . "\n\t"
                . 'ftp://ftp.isc.org/pub/pgpcontrol/README';
+$force{'X-Aussies'} = 'See http://aus.news-admin.org/ for Australian newsgroup information';
 
 # these headers are acceptable in input, or if not present then will be
 # created with the given value.  None are enabled by default, because they
@@ -99,7 +100,7 @@ $force{'X-Info'}='ftp://ftp.isc.org/pub/pgpcontrol/README.html'
 
 # host for message-id; this could be determined automatically based on
 # where it is run, but consistency is the goal here
-$id_host = 'FULL_HOST_NAME';
+$id_host = 'aus.news-admin.org';
 
 # headers to sign.  Sender is included because non-PGP authentication uses
 # it.  The following should always be signed:
@@ -141,7 +142,7 @@ $id_host = 'FULL_HOST_NAME';
 # set to match only hierarchies you will use it on
 # include no '|' for a single hierarchy (eg, "$hierarchies = 'uk';").
 
-$hierarchies = 'HIERARCHIES';
+$hierarchies = 'aus|bne|canb|melb|syd|wa';
 
 # the draft news article format standard says:
 #   "subsequent components SHOULD begin with a letter"
