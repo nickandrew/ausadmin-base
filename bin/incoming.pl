@@ -1,10 +1,13 @@
 #!/usr/bin/perl
 #	@(#) incoming.pl
+#
+# Usage: incoming.pl filename
+
 # $Revision$
 # $Date$
 
 # Processes any incoming mail
-# 1. Read in the message header and obtain the return email address 
+# 1. Read in the message header and obtain the return email address
 #    - otherwise die. Each vote needs a return email address.
 # 2. Grabs vote and group from body - otherwise fail
 # 3. Assign timestamp (time)
@@ -51,10 +54,22 @@ if (not keys %vote) {
 	FailVote ( "no votes" );
 }
 
-for (values %vote) {
-  if (not (/^yes$/i or /^no$/i or /^abstain$/i)) {
-    FailVote ( "invalid vote" );
-  }	
+for (keys %vote) {
+	if ($vote{$_} =~ /^yes$/i) {
+		$vote{$_} = 'YES';
+		next;
+	}
+	if ($vote{$_} =~ /^no$/i) {
+		$vote{$_} = 'NO';
+		next;
+	}
+	if ($vote{$_} =~ /^abstain$/i) {
+		$vote{$_} = 'ABSTAIN';
+		next;
+	}
+
+	# Otherwise ...
+	FailVote ( "invalid vote" );
 }
 
 # Section 3 (see above)
@@ -63,7 +78,7 @@ $CTime = time;
 # Output Results - Section 4 (see above)
 
 for (keys %vote) {
-  print "$EmailAddress $_ ",$vote{$_}," $CTime $ARGV[0]\n";
+	print "$EmailAddress $_ ",$vote{$_}," $CTime $ARGV[0]\n";
 }
 
 
@@ -126,7 +141,7 @@ sub GetAddr {
 	else {
 		# Remove any leading or traling spaces
 		$Address =~ s/\s*([^\s]+).*/$1/;
-	}	
+	}
 
 	return $Address;
 }
