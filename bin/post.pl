@@ -17,6 +17,18 @@ my $hostname = $ARGV[0] || $ENV{NNTPSERVER} || 'news';
 my $port = $ARGV[1] || 119;
 my $debug = $ARGV[2] || 0;
 
+if (exists $ENV{AUSADMIN_NOPOST}) {
+	# do not post, and print the header to stdout, and pretend it posted
+	print "dummy post.pl $hostname $port $debug not posting:\n";
+	while (<STDIN>) {
+		chomp;
+		last if (/^$/);
+		print "    $_\n";
+	}
+	print "\n";
+	exit(0);
+}
+
 if ($port !~ /^\D$/) {
 	$port = getservbyname('tcp', $port) || 119;
 }
