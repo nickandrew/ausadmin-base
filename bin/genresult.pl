@@ -3,6 +3,13 @@
 #	$Revision$
 #	$Date$
 
+use Getopt::Std;
+use vars '$opt_d';
+
+getopts("d");
+
+my $debug=$opt_d;
+
 $votedir = "vote";
 
 $vote = shift;
@@ -89,17 +96,23 @@ $footer =  readfile("vote/conf/results.footer");
 
 ($numer, $denomer, $minyes) = split(/\s+/, $voterule);
 
-($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = gmtime($ts_start);
-$year += 1900; $mon++;
-$vote_start = sprintf "%d-%02d-%02d %02d:%02d:%02d", $year, $mon, $mday, $hour, $min, $sec;
-
-($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = gmtime($ts_end);
-$year += 1900; $mon++;
-$vote_end = sprintf "%d-%02d-%02d %02d:%02d:%02d", $year, $mon, $mday, $hour, $min, $sec;
+{
+     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = gmtime($ts_start);
+     $year += 1900; $mon++;
+     $vote_start = sprintf "%d-%02d-%02d %02d:%02d:%02d", $year, $mon, $mday, $hour, $min, $sec;
+     
+}
+{
+     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = gmtime($ts_end);
+     $year += 1900; $mon++;
+     $vote_end = sprintf "%d-%02d-%02d %02d:%02d:%02d", $year, $mon, $mday, $hour, $min, $sec;
+     
+}
 
 # barf if control files don't exist or other error
-if ($ts_end eq "" || $minyes eq "") {
+if ($ts_end eq "" || $minyes eq "" || $ts_start eq "") {
 	print STDERR "genresult.pl: Vote $vote not properly set up\n";
+	print STDERR "start_date is $ts_start\n";
 	print STDERR "end_date is $ts_end\n";
 	print STDERR "minyes is $minyes\n";
 	exit(4);
@@ -269,7 +282,9 @@ sub setposts {
   my ($groupname,$filename,$firstpostdate,$interval,$count)=@_;
   
   local *POST;
-  
+
+  return if $debug;
+
   if (not open (POST,">>vote/$vote/$filename")) {
     print STDERR "Unable to mark group as passed\n";
     exit(8);
