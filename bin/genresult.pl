@@ -11,8 +11,9 @@ genresult.pl - Create the results file for a vote
 
 =head1 SYNOPSIS
 
-genresult.pl [-d] [-r] $newsgroup > tmp/result.$newsgroup
+genresult.pl [B<-d>] [B<-r>] $newsgroup > tmp/result.$newsgroup
 pgp-sign < tmp/result.$newsgroup > vote/$newsgroup/result
+bin/post.pl < vote/$newsgroup/result
 
 =head1 DESCRIPTION
 
@@ -326,11 +327,12 @@ sub pass_msg() {
 		print "$l\n";
 	}
 
-	makegroup($ng,$ts_end + 5 * 86400);
+	my $now = time();
+	makegroup($ng, $time + 5 * 86400);
 
-	setposts($ng,"post.real",$ts_end + 5 * 86400, 5 * 86400, 3);
-	setposts($ng,"post.fake.phil",$ts_end + 10 * 86400, 5 * 86400, 3);
-	setposts($ng,"post.fake.robert",$ts_end + 15 * 86400, 5 * 86400, 3);
+	setposts($ng, "post.real", $time + 5 * 86400, 5 * 86400, 3);
+	setposts($ng, "post.fake.phil", $time + 10 * 86400, 5 * 86400, 3);
+	setposts($ng, "post.fake.robert", $time + 15 * 86400, 5 * 86400, 3);
 }
 
 sub fail_msg() {

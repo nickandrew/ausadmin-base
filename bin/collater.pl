@@ -115,7 +115,7 @@ while ( <STDIN> ) {
 		die "Error writing to tally file for $Newsgroup";
 	}
 
-	AckVote($EmailAddress, $Vote, $Newsgroup);	
+	AckVote($EmailAddress, $Vote, $Newsgroup, $CTime);	
 }
 # End of main loop
 
@@ -157,8 +157,11 @@ sub AckVote {
 	my $EmailAddress = shift;
 	my $Vote = shift;
 	my $Newsgroup = shift;
+	my $vote_id = shift;
 
-	$ENV{'MAILHOST'}="aus.news-admin.org";
+	$ENV{MAILHOST} = "aus.news-admin.org";
+	$ENV{QMAILUSER} = "vote-return-$vote_id";
+
 	if ( open ( MAILPIPE, "|/usr/sbin/sendmail $EmailAddress" ) ) {
 		print MAILPIPE "From: ausadmin\@aus.news-admin.org (aus Newsgroup Administration)\n";
 		print MAILPIPE "To: $EmailAddress\n";

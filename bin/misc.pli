@@ -9,7 +9,7 @@ sub read1line {
 	my($path) = @_;
 	my($line);
 	if (!open(F, $path)) {
-		return "";
+		die "misc.pli read1line Unable to open $path";
 	}
 	chop($line = <F>);
 	close(F);
@@ -20,7 +20,7 @@ sub readfile {
 	my($path) = @_;
 	my($line);
 	if (!open(F, $path)) {
-		return "";
+		die "misc.pli readfile Unable to open $path";
 	}
 	while (<F>) {
 		$line .= $_;
@@ -53,6 +53,31 @@ sub format_para {
 	}
 
 	return @result;
+}
+
+=head1 @lines = centred_text(@lines)
+
+Centre (assuming a width of 78 characters) the lines of text and return
+the centred lines. Input lines can contain \n at the end; output lines
+will be terminated with \n.
+
+=cut
+
+sub centred_text {
+	my @output;
+	my $width = 78;
+
+	foreach my $line (@_) {
+		chomp($line);
+		if (length $line >= $width) {
+			push(@output, "$line\n");
+		} else {
+			my $c = ($width - length $line)/2;
+			push(@output, sprintf("%*s%s\n", $c, '', $line));
+		}
+	}
+
+	return @output;
 }
 
 1;

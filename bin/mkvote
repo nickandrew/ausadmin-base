@@ -1,6 +1,6 @@
 #!/bin/bash
 #	@(#) mkvote: Setup everything needed to start a new vote.
-#	This script only works for a single newsgroup.
+#	This script only works for a single newsgroup, and interactively
 #
 #  - Create the vote control files
 #  - Create the Call For Votes
@@ -20,17 +20,17 @@ fi
 Newsgroup="$1"
 
 # Commonly used variables
-HomeDir=~ausadmin
-BaseDir=$HomeDir/vote
+BaseDir=./vote
 ng_dir=$BaseDir/$Newsgroup
-
-# set up common environment
-
-cd $HomeDir
 
 # Check that vote directory exists, and other files needed to create a vote
 if [ ! -d $ng_dir ] ; then
 	echo No directory $ng_dir
+	exit 8
+fi
+
+if [ ! -d CFV ] ; then
+	echo No directory CFV, make sure you are in the correct directory
 	exit 8
 fi
 
@@ -53,20 +53,23 @@ if [ -e $ng_dir/endtime.cfg ] ; then
 	exit 8
 fi
 
-~/bin/setup-vote $Newsgroup
-
 # Run the Perl script mkcfv to make the CFV and PGP-sign it then post it away!
-mkcfv.pl $Newsgroup > $ng_dir/posted.cfv 2>$HomeDir/tmp/pgp.$$
+mkcfv.pl $Newsgroup > tmp/cfv-unsigned.$Newsgroup
 s=$?
 if [ $s != 0 ] ; then
 	echo "Unable to make Call For Votes -- code $s - fatal"
-	cat $ng_dir/posted.cfv 2>$HomeDir/tmp/pgp.$$
+	cat tmp/cfv-unsigned.$Newsgroup
 	exit 7
 fi
 
-rm -f $HomeDir/CFV/$Newsgroup
-ln -s $BaseDir/$Newsgroup/posted.cfv $HomeDir/CFV/$Newsgroup
+bin/pgp-sign < tmp/cfv-unsigned.$Newsgroup > $ng_dir/posted.cfv
 
+rm -f CFV/$Newsgroup
+ln -s $BaseDir/$Newsgroup/posted.cfv CFV/$Newsgroup
+
+# Setup the vote - just - before - posting the CFV
+
+~/bin/setup-vote $Newsgroup
 
 # Post the CFV
 echo `date '+%s'` > $ng_dir/posted.cfg

@@ -15,7 +15,7 @@ my $vote = new Vote(name => $newsgroup);
 my $vote_list = $vote->get_tally();
 
 # $vote_list = [$v, $v, $v, ...]
-# $v = { email => email_address, group => newsgroup, vote => YES|NO|ABSTAIN, ts => 987654321 }
+# $v = { email => email_address, group => newsgroup, vote => YES|NO|ABSTAIN|FORGE, ts => 987654321 }
 
 my $ng_dir = $vote->ng_dir();
 
