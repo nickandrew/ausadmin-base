@@ -44,12 +44,12 @@ cd $BaseDir
 # set up control files
 
 gendirs $Newsgroup $Newsgroup/conf $Newsgroup/votes 
-echo "2 3 10" > $Newsgroup/conf/voterule
-echo "14" > $Newsgroup/conf/voteperiod
-echo `date +%s` > $Newsgroup/conf/posted.cfg
+echo "2 3 10" > $Newsgroup/voterule
+echo "14" > $Newsgroup/voteperiod
+echo `date +%s` > $Newsgroup/posted.cfg
 
 # Run the Perl script mkcvf to make the CFV and PGP-sign it then post it away!
-tr -d '\r' < $HomeDir/tmp/info.$$ | mkcfv.pl > $Newsgroup/conf/posted.cfv 2>$HomeDir/tmp/pgp.$$
+tr -d '\r' < $HomeDir/tmp/info.$$ | mkcfv.pl > $Newsgroup/posted.cfv 2>$HomeDir/tmp/pgp.$$
 s=$?
 if [ $s != 0 ] ; then
 	echo "Unable to make Call For Votes -- code $s - fatal"
@@ -57,10 +57,10 @@ if [ $s != 0 ] ; then
 fi
 
 rm -f $HomeDir/CFV/$Newsgroup
-ln -s $BaseDir/$Newsgroup/conf/posted.cfv $HomeDir/CFV/$Newsgroup
+ln -s $BaseDir/$Newsgroup/posted.cfv $HomeDir/CFV/$Newsgroup
 
 # Post the CFV
-inews -h < $Newsgroup/conf/posted.cfv
+inews -h < $Newsgroup/posted.cfv
 
 
 echo Done at `date`

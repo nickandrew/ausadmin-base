@@ -8,14 +8,14 @@ if [ "x$vote" = "x" ] ; then
 	exit 2
 fi
 
-bin/genresult.pl $vote > tmp/result.$$
+bin/genresult.pl $vote > tmp/result.$$ 2> tmp/pgp.$$
 s=$?
 if [ $s -ne 0 ] ; then
-	echo "genresult.pl failed, code $s"
+	echo "genresult.pl failed, code $s - see tmp/result.$$ and tmp/pgp.$$"
 	exit 3
 fi
 
-cp -a tmp/result.$$ vote/$vote/conf/result
+cp -a tmp/result.$$ vote/$vote/result
 echo "Result message now saved"
 
 exit 0

@@ -76,12 +76,12 @@ if (!-d "vote/$vote") {
 }
 
 # Get vote end date and vote pass/fail rule
-$ts_start = read1line("vote/$vote/conf/posted.cfg");
-$ts_end = read1line("vote/$vote/conf/group.cfg");
-$ngline = read1line("vote/$vote/conf/ngline");
-$voterule = read1line("vote/$vote/conf/voterule");
-$rationale = readfile("vote/$vote/conf/rationale");
-$charter = readfile("vote/$vote/conf/charter");
+$ts_start = read1line("vote/$vote/posted.cfg");
+$ts_end = read1line("vote/$vote/group.cfg");
+$ngline = read1line("vote/$vote/ngline");
+$voterule = read1line("vote/$vote/voterule");
+$rationale = readfile("vote/$vote/rationale");
+$charter = readfile("vote/$vote/charter");
 $footer =  readfile("vote/conf/results.footer");
 
 ($numer, $denomer, $minyes) = split(/\s+/, $voterule);

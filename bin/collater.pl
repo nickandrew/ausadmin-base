@@ -19,7 +19,7 @@ while ( <STDIN> ) {
 	($EmailAddress, $Newsgroup, $Vote, $CTime, $fn) = split;
 
 	# Section 1 (see above)
-	if ( open( CONFIGFILE, "$BaseDir/$Newsgroup/conf/group.cfg" ) ) {
+	if ( open( CONFIGFILE, "$BaseDir/$Newsgroup/group.cfg" ) ) {
 		chomp( $_ = <CONFIGFILE> );
 		$VoteTime = $_;
 		close( CONFIGFILE );

@@ -11,11 +11,10 @@ $BaseDir = "$HomeDir/vote";
 
 ReadCharter();
 
-$ConfigFile ="$BaseDir/$Newsgroup/conf/group.cfg";
-chop($VotePeriod = `cat $BaseDir/$Newsgroup/conf/voteperiod`);
+$ConfigFile ="$BaseDir/$Newsgroup/group.cfg";
+chop($VotePeriod = `cat $BaseDir/$Newsgroup/voteperiod`);
 
 # Find the finish date for votes according to the VD (vote duration)
-# Currently set to 21days
 $VD = $VotePeriod * 86400;
 
 ($day, $mon, $mday, $time, $year) = split /\s+/, gmtime( time + $VD );
