@@ -36,7 +36,7 @@ for $fn (<*>) {
 }
 
 # Emit gathered info
-for $key (sort (keys %keys)) {
+for $key (sort {$b cmp $a} (keys %keys)) {
 	print "<li>";
 	if ($link{$key} ne "n") {
 		printf "<a href=\"%s\">", ($link{$key} eq "" ? "/Wip/$fn{$key}" : $link{$key});
