@@ -50,7 +50,7 @@ foreach my $path (<vote/*/tally.dat>) {
 
 	while (<F>) {
 		chomp;
-		my($email,$vote,$choice,$ts,$p) = split(/\s+/);
+		my($email,$vote,$choice,$ts,$p) = split(/\s/);
 
 		my $ts2 = $ts;
 		if (!exists $message_path{$ts}) {

@@ -127,7 +127,7 @@ sub get_distribution {
 
 # my $list_ref = $vote->get_tally()
 # $vote_list = [$v, $v, $v, ...]
-# $v = { email => email_address, group => newsgroup, vote => YES|NO|ABSTAIN, ts => 987654321 }
+# $v = { email => email_address, group => newsgroup, vote => YES|NO|ABSTAIN, ts => 987654321, path => messages/... , status => NEW|FORGE|MULTI-nnnnn }
 
 sub get_tally {
 	my $self = shift;
@@ -143,12 +143,14 @@ sub get_tally {
 
 	foreach (@$ref) {
 		chomp;
-		my($email, $group, $vote, $ts) = split(/\s+/);
+		my($email, $group, $vote, $ts, $p, $status) = split(/\s/);
 		my $r = {
 			email => $email,
 			group => $group,
 			vote => $vote,
-			ts => $ts
+			ts => $ts,
+			path => $p,
+			status => $status
 		};
 
 		push(@list, $r);
