@@ -110,6 +110,11 @@ foreach my $r (@list) {
 			next unless ($hdr =~ /^Received: /);
 			my $data_hash = $m->check_received($hdr);
 
+			# Output to stderr if we couldn't parse it
+			if ($data_hash->{match} == 0) {
+				print STDERR "Unable to parse: $hdr\n";
+			}
+
 			# Interesting data types are: src-ip, src-fw-ip, src-ident
 
 			# Now grab any 'src-ip' types
@@ -149,6 +154,7 @@ foreach my $r (@list) {
 
 ip_report(\%ips);
 mailer_report(\%mailers);
+from_report(\@list);
 
 exit(0);
 
@@ -291,3 +297,25 @@ sub mailer_report {
 
 	print "\nEnd of Mailer Report\n";
 }
+
+# Now report of all From addresses, sorted
+
+sub from_report {
+	my $list_ref = shift;
+	my @from_list;
+
+	print "\nFrom address Report\n";
+
+	foreach my $r (@$list_ref) {
+		my $data_hr = $r->{data_hr};
+		my $m = $r->{message};
+
+		push(@from_list, [$m->{path}, $m->first_header('from')]);
+	}
+
+	foreach my $lr (sort { $a->[1] cmp $b->[1] } @from_list) {
+		print "Message: ", $lr->[0], "\n";
+		print "\t", $lr->[1], "\n";
+	}
+}
+
