@@ -62,7 +62,7 @@ sub sendmessage {
     if ($filename =~ /fake/) {
       system "cat $filename|bin/rnews";
     } else {
-      system "cat $filename|signcontrol|bin/rnews";
+      system "cat $filename|bin/signcontrol|bin/rnews";
     }  
   }
   
