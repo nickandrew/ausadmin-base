@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 #	genresult.pl vote
+#	$Revision$
+#	$Date$
 
 $votedir = "vote";
 
@@ -246,7 +248,7 @@ sub pass_msg() {
 # 60 sec * 60 min * 24 hours * 5 days = 432000
 
 	&setposts($ng,"post.real",$ts_date + 432000,432000,3);
-	&setposts($ng,"post.fake.phill",$ts_date + 864000,432000,3);
+	&setposts($ng,"post.fake.phil",$ts_date + 864000,432000,3);
 	&setposts($ng,"post.fake.robert",$ts_date + 1296000,432000,3);
 }
 
@@ -255,7 +257,7 @@ sub fail_msg() {
 
 sub setposts {
   
-  my ($groupname,$filename,$firstpostdate,$intervil,$count)=@_;
+  my ($groupname,$filename,$firstpostdate,$interval,$count)=@_;
   
   local *POST;
   
@@ -264,7 +266,7 @@ sub setposts {
     exit(8);
   }
     
-  print POST "$groupname\t$firstpostdate\t$intervil\t$count\n";
+  print POST "$groupname\t$firstpostdate\t$interval\t$count\n";
   close POST;
   
 }
