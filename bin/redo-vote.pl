@@ -40,20 +40,10 @@ if (-d $old_dir) {
 }
 
 rename($ng_dir, $old_dir);
-if (!mkdir($ng_dir, 0755)) {
-	die "Unable to make $ng_dir: $!";
-}
-
-# Now copy relevant files from the old one...
-system("cp -a $old_dir/charter $ng_dir/charter");
-system("cp -a $old_dir/distribution $ng_dir/distribution");
-system("cp -a $old_dir/ngline $ng_dir/ngline");
-system("cp -a $old_dir/proposer $ng_dir/proposer");
-system("cp -a $old_dir/rationale $ng_dir/rationale");
 
 # That will do for the moment.
 
-print "Good. Now run 'mkvote newsgroup-name' to setup the vote and\n";
-print "post the CFV.\n";
+print "$ng_dir directory renamed to $old_dir.\n";
+print "Now run 'new-rfd newsgroup-name < rfd-file' to setup the new vote.\n";
 
 exit(0);
