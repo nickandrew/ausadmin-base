@@ -34,9 +34,9 @@ foreach my $vote (@votes) {
 	if (0) {
 	my $ok = 1;
 	foreach my $rfd_file (qw/rfd charter distribution ngline proposer rationale/) {
-		if (!-f "$d/rfd") {
+		if (!-f "$d/$rfd_file") {
 			$ok = 0;
-			print "$vote ... needs an rfd (new-rfd $vote rfd-file)\n";
+			print "$vote ... needs an rfd (new-rfd $vote rfd-file) ... missing $rfd_file\n";
 			next;
 		}
 
