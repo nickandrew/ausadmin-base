@@ -33,7 +33,7 @@ while (1) {
 	chomp;
 	s/\r//;
 
-	my $cmd = $_;
+	my $cmd = lc($_);
 	print LOG "$time < ", $_, "\n";
 
 	if (/mode reader/) {
