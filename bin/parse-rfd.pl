@@ -54,6 +54,7 @@ my @newsgroups = grep { /^[a-z0-9-]+\.([a-z0-9.-]+)$/ } (sort (keys %$g));
 
 die "No proposer" if (!defined $g->{proposer});
 die "No distribution" if (!@{$g->{distribution}});
+die "No rationale" if (!defined $g->{rationale});
 
 
 if (!defined $g->{change}) {
@@ -72,7 +73,6 @@ foreach my $newsgroup (@newsgroups) {
 	my $r = $g->{$newsgroup};
 
 	die "$newsgroup: No newsgroups line" if (!defined $r->{ngline});
-	die "$newsgroup: No rationale" if (!defined $r->{rationale});
 	die "$newsgroup: No charter" if (!defined $r->{charter});
 	if (defined $r->{modinfo}) {
 		die "$newsgroup: No moderator" if (!defined $r->{moderator});
@@ -106,7 +106,7 @@ foreach my $newsgroup (@newsgroups) {
 	close(CHARTER);
 
 	open(RATIONALE, ">$BaseDir/$newsgroup/rationale") or die "Unable to open rationale for write: $!";
-	print RATIONALE $r->{rationale};
+	print RATIONALE $g->{rationale};
 	close(RATIONALE);
 
 	open NGLINE,">$BaseDir/$newsgroup/ngline" or die "Unable to open ngline: $!";
@@ -190,8 +190,6 @@ sub ReadRFD {
 
 		if (/^RATIONALE:\s*(.*)/i ) {
 			$state = 'rationale';
-			die "Rationale line missing group name" if (!defined $1);
-			$groupname = $1;
 			next;
 		}
 
@@ -255,7 +253,7 @@ sub ReadRFD {
 		}
 
 		if ($state eq 'rationale') {
-			$g{$groupname}->{rationale} .= $_ . "\n";
+			$g{rationale} .= $_ . "\n";
 			next;
 		}
 
@@ -303,10 +301,11 @@ sub ReadRFD {
 		cleanup_string($r, 'ngline');
 		cleanup_string($r, 'proposer');
 		cleanup_string($r, 'charter');
-		cleanup_string($r, 'rationale');
 		cleanup_string($r, 'moderator');
 		cleanup_string($r, 'modinfo');
 	}
+
+	cleanup_string(\%g, 'rationale');
 
 	return \%g;
 }
