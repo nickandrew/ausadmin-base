@@ -1,0 +1,79 @@
+Todo ... vote counting for aus.sport.pro-wrestling and aus.sport.golf
+
+1 - rename messages - put filename in tally.dat I think, is easiest,
+after the timestamp. Looks like incoming/incoming.pl/collater.pl is
+already doing this. But it's broken, due to DF's stupid coding
+practices!
+
+	fix-tally-path.pl fixes this
+
+2 - when the vote result is posted, it should be like this:
+
+	valid votes
+
+	  x # domain
+	  ...
+
+	the following votes are believed to have been made by the same
+	person (i.e. multi-voting), so have not been counted in the result:
+
+	  yyyy-mm-dd  ip-addr   from-line(s/@/ # /)
+	  yyyy-mm-dd  ip-addr   from-line(s/@/ # /)
+	  yyyy-mm-dd  ip-addr   from-line(s/@/ # /)
+
+	(blank line between groups)
+
+	  yyyy-mm-dd  ip-addr   from-line(s/@/ # /)
+	  yyyy-mm-dd  ip-addr   from-line(s/@/ # /)
+	  yyyy-mm-dd  ip-addr   from-line(s/@/ # /)
+
+3 - we need a way to mark a vote as valid or invalid without obscuring its
+intent - so the tally file gets another column, containing
+one of:
+
+	OKAY
+	FORGE
+	MULTI-nnnnnnnnn
+	NEW		(means not analysed)
+
+	done - fix-tally-status.pl does this
+
+4 - When analysing received headers, the basic info we pull out is one or
+more of:
+
+	src-ip-address
+	src-helo-name		(i.e. what they said after HELO)
+	src-ident-string	(i.e. the response to an ident query)
+	src-some-hostname	(unknown whether it is from DNS or helo)
+
+Then:
+
+src-ip-address is xrefed against other ip addresses (e.g. in
+X-Sender-IP header).
+
+src-helo-name is xrefed against itself
+
+src-ident-string is xrefed against itself (even if it says "root")
+
+src-some-hostname is xrefed against itself and also hostnames from email
+addresses and any other hostnames in the message
+
+5 - Scoring
+
+We do want to find the messages which are most likely to be fakes first.
+After a set of messages is found which has some common property (e.g. same
+IP address) then all other common properties are found for that same set
+of messages. e.g.
+
+ip: a.b.c.d
+	messages: 1 2 3 4
+
+message set: 1, 2, 3, 4
+	common properties:
+		ip   1, 2, 3, 4
+		sender-domain=XXX 1, 3
+		mailer=YYY 1, 2, 4
+
+	score for this set = 9 ?
+	score for msgs = [3, 2, 2, 2]
+
