@@ -23,11 +23,22 @@ fi
 cp tmp/grouplist.$$ data/grouplist.msg
 cp tmp/checkgroups.$$ data/checkgroups.msg
 
+#----------------------------------------------------------------------------
+#  Post the messages
+#----------------------------------------------------------------------------
+
 inews -h < tmp/grouplist.$$
 s=$?
 if [ $s -ne 0 ] ; then
 	echo "inews returned status $s"
+	rc=2
 fi
 
-# Don't post the checkgroups just yet
-exit 0
+inews -h < tmp/checkgroups.$$
+s=$?
+if [ $s -ne 0 ] ; then
+	echo "inews returned status $s"
+	rc=4
+fi
+
+exit $rc
