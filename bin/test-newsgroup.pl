@@ -8,6 +8,6 @@ my $n = new Newsgroup(name => 'aus.test.tv');
 
 my $charter = "A sample charter.\n";
 
-$n->set_datadir("data/Newsgroups");
+$n->set_datadir("data");
 $n->set_attr('charter', $charter, 'Sample charter');
 exit(0);

@@ -163,7 +163,7 @@ sub newsgroupList {
 	my @contents;
 
 	# Return an array of newsgroup names
-	my @grouplist = Newsgroup::list_newsgroups(datadir => "$ENV{AUSADMIN_DATA}/Newsgroups");
+	my @grouplist = Newsgroup::list_newsgroups(datadir => "$ENV{AUSADMIN_DATA}");
 
 	if (!@grouplist) {
 		return undef;

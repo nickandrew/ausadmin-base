@@ -4,11 +4,13 @@ if (!-d "vote") {
 	die "Need to be in top-level ausadmin directory";
 }
 
+my $datadir = "data";
+
 while (<STDIN>) {
 	chomp;
 	my($n,$d) = ($_ =~ /^(\S+)\s+(.*)/);
 	if($n ne '') {
-		my $d = "data/Newsgroups/$n";
+		my $d = "$datadir/Newsgroups/$n";
 
 		if (!-d $d) {
 			mkdir "$d", 0755;
@@ -26,10 +28,10 @@ while (<STDIN>) {
 		}
 
 		if (!-f "$d/charter") {
-			if (-f "data/Charters/$n") {
-				rename("data/Charters/$n", "data/Newsgroups/$n/charter");
+			if (-f "$datadir/Charters/$n") {
+				rename("$datadir/Charters/$n", "$datadir/Newsgroups/$n/charter");
 			} elsif (-f "root/Charters/$n") {
-				system("cp root/Charters/$n data/Newsgroups/$n/charter");
+				system("cp root/Charters/$n $datadir/Newsgroups/$n/charter");
 			}
 		}
 

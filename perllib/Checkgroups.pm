@@ -8,7 +8,7 @@ Checkgroups - a USENET message which contains the group list.
 
  use Checkgroups;
 
- $gl = new Checkgroups();
+ $gl = new Checkgroups(datadir => $datadir);
 
  $gl->write($file_temp, $file_real);	Writes checkgroup message to file
 
@@ -19,8 +19,8 @@ package Checkgroups;
 use IO::File;
 use IPC::Open2;
 
-use Ausadmin;
-use Newsgroup;
+use Ausadmin qw();
+use Newsgroup qw();
 
 $Checkgroups::DEFAULT_CHECKGROUPS_DIR	= './data';
 
@@ -39,7 +39,7 @@ sub new {
 	return $self;
 }
 
-# Set the data directory from which we obtain data about this newsgroup
+# Set the data directory from which we obtain data about this checkgroups
 
 sub set_datadir {
 	my $self = shift;

@@ -62,7 +62,7 @@ sub relatedVotesList {
 	my $parent = $ng;
 	$parent =~ s/\.[^.]+$//;
 
-	my @newsgroup_list = Newsgroup::list_newsgroups( datadir => "$ENV{AUSADMIN_DATA}/Newsgroups" );
+	my @newsgroup_list = Newsgroup::list_newsgroups( datadir => "$ENV{AUSADMIN_DATA}" );
 	my @siblings;
 
 	foreach my $fn (sort @newsgroup_list) {
@@ -100,7 +100,7 @@ sub rightColumn {
 		return \@contents;
 	}
 
-	my $ngroup = new Newsgroup(name => $ng, datadir => "$ENV{AUSADMIN_DATA}/Newsgroups");
+	my $ngroup = new Newsgroup(name => $ng, datadir => "$ENV{AUSADMIN_DATA}");
 
 	if (!defined $ngroup) {
 		push(@contents, "Uh, cannot initialise $ng");

@@ -20,10 +20,10 @@ getopts('h:sl:', \%opts);
 my($hier_name, $datadir);
 
 if ($opts{'h'}) {
-	$datadir = "$opts{'h'}.data/Newsgroups";
+	$datadir = "$opts{'h'}.data";
 	$hier_name = $opts{'h'};
 } else {
-	$datadir = "data/Newsgroups";
+	$datadir = "data";
 	$hier_name = "aus";
 }
 

@@ -13,6 +13,8 @@ use GroupList;
 use Vote;
 use Newsgroup;
 
+my $datadir = "data";
+
 my $vote = shift @ARGV || usage();
 
 my $v = new Vote(name => $vote);
@@ -86,7 +88,7 @@ sub do_charter {
 
 	if ($new_charter_string ne '') {
 		# Set the new charter
-		my $ng = new Newsgroup(name => $newsgroup, datadir => "data/Newsgroups");
+		my $ng = new Newsgroup(name => $newsgroup, datadir => $datadir);
 		$ng->set_attr('charter', $new_charter_string, "perform-changes.pl replaced charter");
 	}
 }
@@ -126,7 +128,7 @@ sub do_control {
 
 	# Now create a newsgroup directory if required
 	my $newsgroup = $change_hr->{'newsgroup'};
-	my $ng = new Newsgroup(name => $newsgroup, datadir => "data/Newsgroups");
+	my $ng = new Newsgroup(name => $newsgroup, datadir => $datadir);
 
 	if ($change_hr->{'type'} eq 'newgroup') {
 		$ng->create();

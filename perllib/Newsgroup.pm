@@ -17,7 +17,7 @@ Newsgroup - a newsgroup
  $ng->set_server($nntp)
  $flags = $ng->group_flags()  ... return the 'y' or 'm' status of the group
  
- $ng->set_datadir($path)	... Set the path for accessing newsgroup data
+ $ng->set_datadir($path)	... Set the hierarchy top-level directory
  $string = $ng->get_attr('charter') ... Read the charter data, return as string
  $ng->set_attr('charter', $string, 'Update reason') ...
 
@@ -26,7 +26,7 @@ Newsgroup - a newsgroup
  $signed_text = $ng->sign_control($unsigned_text) ... Sign a control msg
 
  my @newsgroup_list = Newsgroup::list_newsgroups(datadir => $datadir);
- 	# returns a list of newsgroups in that directory
+ 	# returns a list of newsgroups in that hierarchy
 
  $ng->create();
 	# Creates the directory for a new newsgroup
@@ -41,7 +41,7 @@ use Carp qw(confess);
 
 use Ausadmin;
 
-$Newsgroup::DEFAULT_NEWSGROUP_DIR	= './data/Newsgroups';
+$Newsgroup::DEFAULT_NEWSGROUP_DIR	= './data';
 
 sub new {
 	my $class = shift;
@@ -169,7 +169,7 @@ sub get_attr {
 	die "Newsgroup: get_attr() needs prior call to set_datadir()\n" if (!exists $self->{datadir});
 
 	# TODO ...
-	my $path = $self->{datadir} . '/' . $self->{name} . '/' . $attr_name;
+	my $path = $self->{datadir} . '/Newsgroups/' . $self->{name} . '/' . $attr_name;
 	return undef if (!-f $path);
 
 	my $fh = new IO::File;
@@ -198,11 +198,11 @@ sub set_attr {
 
 	# TODO ...
 	my $datadir = $self->{datadir};
-	my $path = $datadir . '/' . $self->{name} . '/' . $attr_name;
+	my $path = $datadir . '/Newsgroups/' . $self->{name} . '/' . $attr_name;
 	my $exists;
 	if (-f $path) {
 		$exists = 1;
-		if (!-f "$datadir/$self->{name}/RCS/$attr_name,v") {
+		if (!-f "$datadir/Newsgroups/$self->{name}/RCS/$attr_name,v") {
 			# check it in for the first time
 			my $rc = system("ci -l $path < /dev/null");
 			if ($rc) {
@@ -254,7 +254,7 @@ sub gen_newgroup {
 
 	my $template_path = "config/${control_type}.template";
 	my $template2_path = "config/${hier_name}.control.ctl";
-	my $ngline_path = "$self->{datadir}/$self->{name}/ngline";
+	my $ngline_path = "$self->{datadir}/Newsgroups/$self->{name}/ngline";
 
 	if (! -f $template_path) {
 		confess("$control_type template file does not exist");
@@ -322,14 +322,14 @@ sub list_newsgroups {
 	}
 
 	# Ignore newsgroup names not containing a dot, and . and ..
-	opendir(D, $datadir);
+	opendir(D, "$datadir/Newsgroups");
 	my @files = grep { ! /^\.|^[a-zA-Z0-9-]+$/ } readdir(D);
 	closedir(D);
 
 	my @list;
 
 	foreach my $f (sort @files) {
-		my $path = "$datadir/$f";
+		my $path = "$datadir/Newsgroups/$f";
 		next if (! -d $path);
 		# It is not a newsgroup if there's no "ngline" file
 		# (later) next if (! -f "$path/ngline");
@@ -344,7 +344,7 @@ sub create {
 
 	die "Newsgroup: create() needs prior call to set_datadir()\n" if (!exists $self->{datadir});
 
-	my $dir = "$self->{datadir}/$self->{name}";
+	my $dir = "$self->{datadir}/Newsgroups/$self->{name}";
 
 	if (!-d $dir) {
 		mkdir($dir, 0755);

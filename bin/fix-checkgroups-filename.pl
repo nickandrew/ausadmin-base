@@ -2,35 +2,35 @@
 #	@(#) $Id$
 #	fix-checkgroups-filename.pl - Run once, to rename checkgroups.msg
 
-my $data_dir = "./data";
+my $datadir = "./data";
 
-if (!-d $data_dir) {
-	die "No directory $data_dir -- cd?\n";
+if (!-d $datadir) {
+	die "No directory $datadir -- cd?\n";
 }
 
-if (-f "$data_dir/checkgroups.signed") {
+if (-f "$datadir/checkgroups.signed") {
 	die "There is already a file data/checkgroups.signed - nothing to do.\n";
 }
 
-if (-f "$data_dir/RCS/checkgroups.signed,v") {
+if (-f "$datadir/RCS/checkgroups.signed,v") {
 	die "There is already a data/RCS/checkgroups.signed,v file\n";
 }
 
-if (!-f "$data_dir/checkgroups.msg") {
-	die "No file $data_dir/checkgroups.msg";
+if (!-f "$datadir/checkgroups.msg") {
+	die "No file $datadir/checkgroups.msg";
 }
 
-my $rc = rename("$data_dir/checkgroups.msg", "$data_dir/checkgroups.signed");
+my $rc = rename("$datadir/checkgroups.msg", "$datadir/checkgroups.signed");
 if (! $rc) {
-	print STDERR "rename $data_dir/checkgroups.msg failed: $!\n";
+	print STDERR "rename $datadir/checkgroups.msg failed: $!\n";
 }
 
-mkdir("$data_dir/RCS", 0750);
+mkdir("$datadir/RCS", 0750);
 
-$rc = rename("$data_dir/RCS/checkgroups.msg,v", "$data_dir/RCS/checkgroups.signed,v");
+$rc = rename("$datadir/RCS/checkgroups.msg,v", "$datadir/RCS/checkgroups.signed,v");
 
 if (! $rc) {
-	print STDERR "rename $data_dir/RCS/checkgroups.msg,v failed: $!\n";
+	print STDERR "rename $datadir/RCS/checkgroups.msg,v failed: $!\n";
 }
 
 

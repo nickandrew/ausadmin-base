@@ -110,7 +110,7 @@ sub import_checkgroups {
 	mkdir("$hier_name.data", 0755);
 	mkdir("$hier_name.data/Newsgroups", 0755);
 
-	my $data_dir = "$hier_name.data/Newsgroups";
+	my $datadir = "$hier_name.data";
 
 	foreach (@$line_lr) {
 
@@ -128,9 +128,9 @@ sub import_checkgroups {
 				next;
 			}
 
-			my $n = new Newsgroup(name => $name, datadir => $data_dir);
+			my $n = new Newsgroup(name => $name, datadir => $datadir);
 
-			if (! -e "$data_dir/$name") {
+			if (! -e "$datadir/$name") {
 				print "Creating newsgroup: $name\n";
 				$n->create();
 			}
