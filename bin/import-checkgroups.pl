@@ -11,7 +11,7 @@ use Newsgroup qw();
 
 my $hier_name = shift @ARGV || die "Usage: import-checkgroups.pl hierarchy-short-name < checkgroups-file\n";
 
-my $datadir = "$hier_name.data";
+my $datadir = Newsgroup::datadir($hier_name);
 
 foreach my $subdir ('', '/Html', '/Newsgroups', '/RCS') {
 	mkdir("$datadir$subdir", 0755);
@@ -33,7 +33,7 @@ while (<STDIN>) {
 			next;
 		}
 
-		my $n = new Newsgroup(name => $name, datadir => $datadir);
+		my $n = new Newsgroup(name => $name, hier => $hier_name);
 
 		if (! -e "$datadir/$name") {
 			print "Creating newsgroup: $name\n";

@@ -334,8 +334,8 @@ signit
   # finish getting the signature
   $/ = "\n";
   $_ = <FH>;
-  die "$0: didn't find PGP Version line where expected\n"
-    unless /^Version: (\S+)$/;
+  die "$0: didn't find PGP Version line where expected ($_)\n"
+    unless /^Version: (.+)$/;
   $header{$pgpheader} = "$1 $signheaders";
 
   do {                # skip other pgp headers like "charset:" until empty line

@@ -20,19 +20,17 @@ getopts('h:sl:', \%opts);
 my($hier_name, $datadir);
 
 if ($opts{'h'}) {
-	$datadir = "$opts{'h'}.data";
 	$hier_name = $opts{'h'};
 } else {
-	$datadir = "data";
 	$hier_name = "aus";
 }
 
-my @groups = Newsgroup::list_newsgroups(datadir => $datadir);
+my @groups = Newsgroup::list_newsgroups(hier => $hier_name);
 
 my $limit = $opts{'l'} || 99999;
 
 foreach my $group (sort @groups) {
-	my $ng = new Newsgroup(hier_name => $hier_name, name => $group, datadir => $datadir);
+	my $ng = new Newsgroup(hier => $hier_name, name => $group);
 	if (!defined $ng) {
 		print STDERR "Unable to instantiate Newsgroup(name => $group)";
 	}

@@ -3,11 +3,17 @@
 #
 # $Id$
 #
-# Usage:	gen-initial-newsgroups.pl data/checkgroups
+# Usage:	gen-initial-newsgroups.pl [-h hierarchy] data/checkgroups
 
 use lib 'bin';
 
-use Newsgroup;
+use Getopt::Std qw(getopts);
+use Newsgroup qw();
+
+use vars qw($opt_h);
+getopts('h:');
+
+$opt_h ||= Newsgroup::defaultHierarchy();
 
 my $newsgroups_file = shift @ARGV || usage();
 
@@ -22,7 +28,7 @@ while (<F>) {
 		next;
 	}
 
-	my $ng = new Newsgroup(name => $group);
+	my $ng = new Newsgroup(name => $group, hier => $opt_h);
 	$ng->create();
 	$ng->set_attr('ngline', "$description\n");
 }
@@ -32,5 +38,5 @@ close(F);
 exit(0);
 
 sub usage {
-	die "Usage: gen-initial-newsgroups.pl data/checkgroups\n";
+	die "Usage: gen-initial-newsgroups.pl [-h hierarchy] data/checkgroups\n";
 }

@@ -9,7 +9,7 @@
 
 my $file = shift @ARGV || die "Usage: tree-height.pl filename";
 
-open(F, "<$file") or die "Unable to open $f for input: $!";
+open(F, "<$file") or die "Unable to open $file for input: $!";
 
 my %groups;
 my $group_count = 0;

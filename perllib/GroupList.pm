@@ -51,7 +51,7 @@ sub write {
 		push(@nglines, [$newsgroup, $ngline]);
 	}
 
-	my $datadir = Newsgroups::datadir($self->{hier});
+	my $datadir = Newsgroup::datadir($self->{hier});
 	my $fh = new IO::File;
 	if (!open($fh, ">$datadir/$file_temp")) {
 		die "Unable to open $datadir/$file_temp for writing: $!";

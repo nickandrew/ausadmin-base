@@ -165,7 +165,7 @@ sub do_control {
 
 			# Update the grouplist.signed message
 			print "About to update grouplist.signed message\n";
-			my $rc = system("gen-grouplist.pl");
+			$rc = system("gen-grouplist.pl");
 			$v->audit("Updated data/grouplist.signed, code $rc");
 		}
 

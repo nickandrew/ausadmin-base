@@ -2,7 +2,7 @@
 #	@(#) $Id$
 #	fix-checkgroups-filename.pl - Run once, to rename checkgroups.msg
 
-my $datadir = "./data";
+my $datadir = "./data/aus.data";
 
 if (!-d $datadir) {
 	die "No directory $datadir -- cd?\n";

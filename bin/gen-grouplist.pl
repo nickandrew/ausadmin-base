@@ -18,12 +18,13 @@ getopts('dh:');
 
 my $grouplist = 'grouplist';
 my $signcmd = 'pgp-sign';
-my $hier = $opt_h || 'aus';
-my $datadir = "$hier.data";
+my $hier = $opt_h || Newsgroup::defaultHierarchy();
+my $datadir = Newsgroup::datadir($hier);
 my $grouplist_file = "$datadir/grouplist.signed";
 
 my $gl = new GroupList(hier => $hier);
-$gl->write("$datadir/grouplist.$$", "$datadir/grouplist");
+print "Writing to $datadir/grouplist\n";
+$gl->write("grouplist.$$", "grouplist");
 
 
 my $glm = new GroupListMessage(hier => $hier, signcmd => $signcmd);

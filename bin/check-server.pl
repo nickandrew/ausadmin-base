@@ -202,8 +202,9 @@ sub read_hierarchy {
 	if ($hier !~ /^(.*)\.\*$/) {
 		die "Invalid hierarchy name: $hier";
 	}
+	my $shier = $1;
 
-	my $dirname = "$ENV{AUSADMIN_HOME}/$1.data";
+	my $dirname = Newsgroup::datadir($shier);
 
 	if (! -d $dirname) {
 		warn "Not a managed hierarchy: $hier ($dirname)\n";

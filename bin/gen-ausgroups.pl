@@ -6,18 +6,26 @@
 # $Date$
 
 use lib 'bin';
-use Ausadmin;
-use GroupList;
+use Getopt::Std qw(getopts);
+use Ausadmin qw();
+use Newsgroup qw();
+use GroupList qw();
 
-my $grouplist_file = "data/checkgroups";
+use vars qw($opt_h);
+
+getopts('h:');
+
+$opt_h ||= Newsgroup::defaultHierarchy();
 
 die "No data subdirectory" if (!-d './data');
 
-my $gl = new GroupList();
+my $gl = new GroupList(hier => $opt_h);
 
-$gl->write("checkgroups.$$", $grouplist_file);
+$gl->write("checkgroups.$$", "checkgroups");
+
+my $datadir = Newsgroup::datadir($opt_h);
 
 # Check it in
-system("ci -l -t- $grouplist_file < /dev/null");
+system("ci -l -t- $datadir/checkgroups < /dev/null");
 
 exit(0);
