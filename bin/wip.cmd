@@ -20,7 +20,7 @@ for $fn (<*>) {
 	if ($data{Updated} ne "") {
 		$key = "$data{Updated} $fn";
 	}
-	print "Key is $key\n";
+#	print "Key is $key\n";
 
 	$keys{$key} = 1;
 	if ($data{Name} ne "") {
@@ -45,7 +45,10 @@ for $key (sort (keys %keys)) {
 	if ($link{$key} ne "n") {
 		printf "</a>";
 	}
-	if ($updated{$key} ne "") {
+	if ($status{$key} ne "") {
+		print " Status: $status{$key}";
+	}
+	if ($link{$key} ne "n" && $updated{$key} ne "") {
 		print " Updated: $updated{$key}";
 	}
 	print "\n";
