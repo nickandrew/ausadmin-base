@@ -1,4 +1,5 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
+#	@(#) mkvote.pl - Create directory for a new vote
 #
 # $Source$
 # $Revision$
@@ -10,12 +11,12 @@ $HomeDir="/virt/web/ausadmin";
 $BaseDir="$HomeDir/vote";
 
 if (not @ARGV) {
-  die "Usage: $0 RFD\n";
+	die "Usage: $0 RFD\n";
 }
 
 @RFD=<>;
 
-@newsgrouplines=grep {/^newsgrougroup line:/i../^$|^RATIONALE:/i} @RFD;
+@newsgrouplines=grep {/^newsgroup line:/i../^$|^RATIONALE:/i} @RFD;
 
 @groups=grep {s/^(aus\.[^\s]+)/$1/} @newsgrouplines;
 
@@ -25,30 +26,32 @@ print RFD @groups;
 
 close RFD;
 
-gendirs("$BaseDir/$Newsgroup","$BaseDir/$Newsgroup/conf",
-	"$BaseDir/$Newsgroup/votes");
+foreach my $Newsgroup (@groups) {
 
-system ("echo \"2 3 10\" > $Newsgroup/voterule");
-system ("echo \"14\" > $Newsgroup/voteperiod");
-system ("echo \`date +\%s\` > $Newsgroup/posted.cfg");
+	gendirs("$BaseDir/$Newsgroup", "$BaseDir/$Newsgroup/conf", "$BaseDir/$Newsgroup/votes");
 
-open (CFV,"|mkcfv.pl > $Newsgroup/posted.cfv 2>$HomeDir/tmp/pgp.$$") or die "Unable to fork for Call For Votes $!\n";
+	system ("echo \"2 3 10\" > $Newsgroup/voterule");
+	system ("echo \"14\" > $Newsgroup/voteperiod");
+	system ("echo \`date +\%s\` > $Newsgroup/posted.cfg");
 
-print CFV @RFD;
+	open (CFV,"|mkcfv.pl > $Newsgroup/posted.cfv 2>$HomeDir/tmp/pgp.$$") or die "mkvote.pl unable to fork for Call For Votes $!\n";
 
-close CFV or die "Unable to make Call For Votes $!\n";
+	print CFV @RFD;
 
-unlink "$HomeDir/CFV/$Newsgroup";
-symlink "$BaseDir/$Newsgroup/posted.cfv","$HomeDir/CFV/$Newsgroup";
+	close CFV or die "Unable to make Call For Votes $!\n";
 
-print "Done at `date`\n";
+	unlink "$HomeDir/CFV/$Newsgroup";
+	symlink "$BaseDir/$Newsgroup/posted.cfv","$HomeDir/CFV/$Newsgroup";
+}
+
+print "mkvote.pl done at `date`\n";
+exit(0);
 
 # make directories if they don't already exist
-sub gendirs 
-{
-  for $dir (@_) {
-    if (not -d $dir) {
-      mkdir $dir,'0777';
-    }
-  }
+sub gendirs {
+	foreach my $dir (@_) {
+		if (! -d $dir) {
+			mkdir($dir,0755);
+		}
+	}
 }
