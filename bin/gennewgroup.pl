@@ -105,7 +105,7 @@ EOT
 	  local *GLIST;
 	  open GLIST,">>data/ausgroups" or die "Can't open ausgroups.";
 	  print GLIST $ngline;
-	  close GLIST
+	  close GLIST;
 
 	  return $post;
      } else {
