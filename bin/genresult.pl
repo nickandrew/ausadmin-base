@@ -145,6 +145,14 @@ foreach my $vline (@$tally_lr) {
 
 	$vote_info->{total}++;
 
+	if ($status eq 'OK' or $status eq 'NEW') {
+		# It's a valid vote, so add to the valid_tally etc...
+		$vote_info->{valid_tally}->{$v}++;
+		$vote_info->{valid_count}++;
+		push(@{$vote_info->{voters}}, "$email");
+		next;
+	}
+
 	if ($status =~ /^MULTI/i) {
 		$vote_info->{multi_count}++;
 		$vote_info->{invalid_count}++;
@@ -160,11 +168,14 @@ foreach my $vline (@$tally_lr) {
 		next;
 	}
 
-	# It's a valid vote, so add to the valid_tally etc...
+	if ($status =~ /^BOUNCE/i) {
+		$vote_info->{invalid_count}++;
+		push(@{$vote_info->{voters}}, "$email BOUNCED");
+		$vote_info->{invalid_tally}->{$v}++;
+		next;
+	}
 
-	$vote_info->{valid_tally}->{$v}++;
-	$vote_info->{valid_count}++;
-	push(@{$vote_info->{voters}}, "$email");
+	die "Unknown status: $status";
 }
 
 # Quick access ...
