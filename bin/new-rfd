@@ -1,6 +1,8 @@
 #!/bin/sh
-#	@(#) new-rfd: Setup directories for newsgroup proposals
-#	Usage: new-rfd newsgroup-name rfd-file
+#	@(#) new-rfd: Accept a proposal and setup directory/control files
+#	Usage: new-rfd proposal-name source-file
+#
+# The source-file must be in the format outlined in root/Faq/RFD-template.txt
 #
 # The idea is that the ausadmin-approved RFD message is fed into this
 # program and it will create needed directories and generate a new,
@@ -13,7 +15,7 @@
 
 if [ $# -lt 2 ]
 then
-	echo Usage: $0 newsgroup-name rfd-file >&2
+	echo Usage: $0 proposal-name source-file >&2
 	exit 1
 fi
 
@@ -29,6 +31,11 @@ if [ ! -d $BaseDir ] ; then
 	exit 4
 fi
 
+if [ ! -f "$Info" ] ; then
+	echo "new-rfd: $Info does not exist." >&2
+	exit 4
+fi
+
 # Parse the RFD and create appropriate files:
 #	- newsgroup directory
 #	- $newsgroup/proposer, /distribution, /charter, /rationale, /ngline,
@@ -39,7 +46,7 @@ fn=RFD/$ts.rfd
 
 mkdir -p RFD
 
-echo Parsing $fn ...
+echo "Copying $Info into $fn ..."
 
 tr -d '\r' < $Info > $fn
 s=$?
@@ -62,6 +69,10 @@ if [ $s != 0 ] ; then
 	echo "Unable to parse rfd $fn -- code $s - fatal"
 	exit 6
 fi
+
+# leave early here because bin/action does the rest
+echo "Good. Now do bin/action $Newsgroup"
+exit 0
 
 bin/make-rfd.pl $Newsgroup | bin/pgp-sign > $BaseDir/$Newsgroup/rfd
 s=$?
