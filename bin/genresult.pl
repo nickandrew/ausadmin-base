@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 #	genresult.pl vote
 #	$Revision$
 #	$Date$
@@ -11,12 +11,12 @@ getopts("d");
 my $debug=$opt_d;
 
 $votedir = "vote";
+$postaddress = "aus group admin <ausadmin\@aus.news-admin.org>";
 
 $vote = shift;
 $recount = shift;
 
 $now = time;
-$postaddress = "ausadmin\@aus.news-admin.org";
 if (-f "/usr/bin/pgps") {
 	$pgpcmd = "pgps -fat";
 } else {
@@ -29,7 +29,7 @@ sub read1line {
 	my($path) = @_;
 	my($line);
 	if (!open(F, $path)) {
-		return "";
+		die "Can't open $path";
 	}
 	chop($line = <F>);
 	close(F);
@@ -40,7 +40,7 @@ sub readfile {
 	my($path) = @_;
 	my($line);
 	if (!open(F, $path)) {
-		return "";
+		die "Can't open $path";
 	}
 	while (<F>) {
 		$line .= $_;
@@ -90,14 +90,16 @@ $ts_start = read1line("vote/$vote/starttime.cfg");
 $ts_end = read1line("vote/$vote/endtime.cfg");
 $ngline = read1line("vote/$vote/ngline");
 $voterule = read1line("vote/$vote/voterule");
-$rationale = readfile("vote/$vote/rationale");
+#$rationale = readfile("vote/$vote/rationale");
 $charter = readfile("vote/$vote/charter");
 $footer =  readfile("vote/conf/results.footer");
 
 ($numer, $denomer, $minyes) = split(/\s+/, $voterule);
 
 {
-     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = gmtime($ts_start);
+     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$isdst) = gmtime($ts_start) 
+	  or die "Can't get start date.";
+
      $year += 1900; $mon++;
      $vote_start = sprintf "%d-%02d-%02d %02d:%02d:%02d", $year, $mon, $mday, $hour, $min, $sec;
      
@@ -110,7 +112,7 @@ $footer =  readfile("vote/conf/results.footer");
 }
 
 # barf if control files don't exist or other error
-if ($ts_end eq "" || $minyes eq "" || $ts_start eq "") {
+if (not ($ts_end && $minyes && $ts_start)) {
 	print STDERR "genresult.pl: Vote $vote not properly set up\n";
 	print STDERR "start_date is $ts_start\n";
 	print STDERR "end_date is $ts_end\n";
@@ -135,9 +137,9 @@ while (<T>) {
 
 	$v=uc($v);
 
-	if ($v ne "YES" && $v ne "NO" && $v ne "ABSTAIN") {
+	if ($v ne "YES" && $v ne "NO" && $v ne "ABSTAIN" && $v ne "FORGE") {
 		print STDERR "Unknown vote: $v (in $vote)\n";
-		$rc |= 16;
+#		$rc |= 16;
 		next;
 	}
 
@@ -164,6 +166,12 @@ while (<T>) {
 		$abstain{$ng}++;
 		$newsgroups{$ng} = 1;
 	}
+
+	if ($v eq "FORGE") {
+		$forge{$ng}++;
+		$newsgroups{$ng} = 1;
+	}
+
 }
 
 close(T);
@@ -197,10 +205,17 @@ foreach $ng (sort (keys %newsgroups)) {
 		$abstentions = "abstentions";
 	}
 
+	if ($forge{$ng} == 1) {
+	  $forgeries = "forged email";
+	} else {
+	  $forgeries = "forgeries";
+	}
+
+
 	# This stuff goes into the header
 
 	print "Newsgroups: aus.general,aus.net.news\n";
-	print "From: aus group admin <ausadmin\@aus.news-admin.org>\n";
+	print "From: $postaddress\n";
 	print "Organization: aus.* newsgroups administration, see http://aus.news-admin.org/\n";
 	print "X-PGPKey: at http://aus.news-admin.org/ausadmin.asc\n";
 	print "Followup-To: aus.net.news\n";
@@ -224,7 +239,7 @@ foreach $ng (sort (keys %newsgroups)) {
 
 sub pass_msg() {
 	# Formatted line
-	$line = "The newsgroup $ng has passed its vote by $yes{$ng} YES $yvotes to $no{$ng} NO $nvotes. There were $abstain{$ng} $abstentions.";
+	$line = "The newsgroup $ng has passed its vote by $yes{$ng} YES $yvotes to $no{$ng} NO $nvotes. There were $abstain{$ng} $abstentions and $forge{$ng} $forgeries detected.";
 	push(@body, format_para($line));
 	push(@body, "");
 
@@ -245,7 +260,7 @@ sub pass_msg() {
 	}
 
 	if ($charter ne "") {
-		push(@body, "\nCHARTER:");
+		push(@body, "\nCHARTER from CFV:");
 		push(@body, $charter);
 	}
 
