@@ -8,7 +8,7 @@ use Net::NNTP qw();
 use LWP::UserAgent qw();
 
 my $cfg = {
-	news_server => 'freenews.iinet.net.au',
+	news_server => $ENV{NNTPSERVER} || 'news.example.com',
 	my_email => 'you@example.com',
 	email_to => 'ausadmin@aus.news-admin.org',
 	hier_url => 'http://aus.news-admin.org/data/monitor.txt',
