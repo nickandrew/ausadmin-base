@@ -116,14 +116,7 @@ EOT
   if ($name =~ /forged/) {
     $post .= "\nThis control message has been forged as \"$from\" for the benefit of those\nsites still honouring his posts.  If you are one of those sites please see \<URL:http://aus.news-admin.org/\>.";
   }
-  local *NEWS;
-  if (not open (NEWS,"|pgpverify")) {
-    die "Unable to fork for pgpverify due to $!\n";
-  }
   
-  print NEWS $post;
+  print $post;
 
-  if (not close NEWS) {
-    die "Unable to run pgpverify due to $!\n";
-  } 
 }
