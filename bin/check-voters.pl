@@ -12,9 +12,9 @@ check-voters.pl - Send a test email to all voters in a vote
 
 =head1 SYNOPSIS
 
- check-voters.pl vote-name voter-state-file < message-file
+ check-voters.pl vote-name < message-file
 
- e.g. check-voters.pl aus.business data/voter-state < config/voter-check.msg
+ e.g. check-voters.pl aus.business < config/voter-check.msg
 
 =head1 DESCRIPTION
 
@@ -38,7 +38,6 @@ use VoterState qw();
 use Newsgroup qw();
 
 my $newsgroup = shift @ARGV || die "No newsgroup name supplied";
-my $voters_file = shift @ARGV || die "No voters file supplied";
 
 die "Invalid newsgroup name <$newsgroup>" if (!Newsgroup::validate($newsgroup));
 
@@ -51,18 +50,32 @@ my $ng_dir = $vote->ng_dir();
 
 # Read the list of voters
 my $tally_path = "$ng_dir/tally.dat";
+my $new_tally_path = "$ng_dir/tally.dat.$$";
 
 if (!open(V, "<$tally_path")) {
 	die "Unable to open $tally_path: $!\n";
 }
 
+my @tally;
 my @recipients;
 my $now = time();
 my $check_cutoff_ts = $now - 86400 * 180;
+my $nobounce_ts = $now - 86400 * 3;
 
 while (<V>) {
 	chomp;
 	my($email,$group,$vote,$timestamp,$path,$status) = split(/\s/);
+
+	my $r = {
+		email => $email,
+		group => $group,
+		vote => $vote,
+		timestamp => $timestamp,
+		path => $path,
+		status => $status,
+	};
+
+	push(@tally, $r);
 
 	# vote is yes/no/abstain/forge (mostly uppercase)
 	# only yes and no votes affect the result.
@@ -74,45 +87,43 @@ while (<V>) {
 	next if ($status eq 'FORGE' || $status eq 'INVALID');
 
 	# Now check if we checked them before
-	my $vs = $vstate->checkEmail($email);
-	my $check_id;
-	if (defined $vs) {
-		if ($vs->{timestamp} !~ /^\d+$/) {
-			print STDERR "Invalid timestamp $vs->{timestamp} for $email (ignoring)\n";
-			next;
-		}
+	my $vs = $vstate->getCheckRef($email);
 
-		if ($vs->{state} eq 'OK') {
-			# Don't recheck OK ones for a long time
-			if ($vs->{timestamp} > $check_cutoff_ts) {
-				my $diff = int(($now - $vs->{timestamp})/86400);
-				print STDERR "Ignoring $email - checked $diff days ago.\n";
-				next;
-			}
-		}
-
-		$check_id = $vs->{check_id};
+	if (!defined $vs) {
+		die "That isn't supposed to happen: $email";
 	}
 
-	print STDERR "Checking $email ($check_id)\n";
-
-
-
-	# If none supplied in file, generate a random one
-	if ($check_id eq '' || $check_id eq $no_check_id) {
-		$check_id = VoteState::randomCheckID();
+	if ($vs->{timestamp} !~ /^\d+$/) {
+		print STDERR "Invalid timestamp $vs->{timestamp} for $email (ignoring)\n";
+		next;
 	}
 
-	# Otherwise, need to check them
-	push(@recipients, [$email, $check_id]);
+	# If no bounce after 3 days, NEW -> OK
+	if ($vs->{state} eq 'NEW' && $vs->{timestamp} < $nobounce_ts) {
+		$vstate->set($email, 'state', 'OK');
+	}
 
-	# And mark they've been checked
-	# KLUDGE ... this is dodgy ... what do we do when they fail a check?
-	# If they fail a check, remove them from the voter_state file... ?
-	$vs->{timestamp} = $now;
-	$vs->{state} = 'OK';
-	$vs->{check_id} = $check_id;
-	$vstate->{updated} = 1;
+	# If the state is NEW and the timestamp is recent ( <3 days ago)
+	# then they have already been sent a message
+
+
+	if ($vs->{state} eq 'OK' && $vs->{timestamp} < $check_cutoff_ts) {
+		# This is a stale OK
+		print "Check for $email is stale\n";
+		$vstate->set($email, 'state', 'NEW');
+		push(@recipients, $vs);
+	}
+
+	if ($vs->{state} eq 'OK' && $status eq 'NEW') {
+		print "Status of $email set to OK\n";
+		$r->{status} = $status = 'OK';
+	}
+
+	if ($vs->{state} eq 'BOUNCE' && $status eq 'NEW') {
+		print "$email status to INVALID\n";
+		$r->{status} = $status = 'INVALID';
+	}
+
 }
 
 close(V);
@@ -120,20 +131,38 @@ close(V);
 # Save the updated voters file
 $vstate->save();
 
-# Now rename to update and keep history
-rename("$voters_file.$$", "$voters_file");
-system("ci -l '-mUpdated by check-voters.pl' $voters_file");
+# Save the updated tally file
+open(NV, ">$new_tally_path");
+foreach my $r (@tally) {
+	print NV join(' ',
+		$r->{email},
+		$r->{group},
+		$r->{vote},
+		$r->{timestamp},
+		$r->{path},
+		$r->{status},
+	), "\n";
+}
+close(NV);
 
-# Now read the header and body of the message
+system("ci -l '-mOriginal tally path' $tally_path");
+rename($new_tally_path, $tally_path);
+system("ci -l '-mAfter check-voters' $tally_path");
 
-my @message = <STDIN>;
+# Send any check messages
+if (@recipients) {
+	die "Not sending any messages";
+	# Now read the header and body of the message
+	my @message = <STDIN>;
 
-# print each address ...
-foreach my $r (@recipients) {
-	my $email = $r->[0];
-	my $check_id = $r->[1];
+	# print each address ...
+	foreach my $vs (@recipients) {
+		my $email = $vs->{email};
+		my $check_id = $vs->{check_id};
+		print STDERR "Sending to $email ($check_id)\n";
 
-	sendmail($email, \@message, $check_id);
+		sendmail($email, \@message, $check_id);
+	}
 }
 
 exit(0);
