@@ -7,42 +7,112 @@
 # Usage: check-server.pl < filename.xml
 
 use XML::Simple qw();
+use Date::Format qw(time2str);
 use Data::Dumper qw(Dumper);
+use Fcntl qw(:flock);
 
 my $xml = join('', <STDIN>);
 
 my $svr = XML::Simple::XMLin($xml, forcearray => 1);
 my $hierarchies = { };
 
-print "Report for ", $svr->{news_server}, "\n";
+my $lock_file = "$ENV{AUSADMIN_HOME}/check-server";
+open(LOCK, ">$lock_file") || die "Unable to open $lock_file for write: $!";
+flock(LOCK, LOCK_EX());
 
-if (ref $svr->{hier}) {
+# Read our database of prior server reports
+my $db_path = "$ENV{AUSADMIN_HOME}/server_reports.xml";
+my $db = { };
+if (-f $db_path) {
+	$db = XML::Simple::XMLin($db_path, forcearray => 1);
+}
+
+# print Dumper($db);
+
+process_server_report($svr);
+
+# print "Result after modifications:\n";
+# print Dumper($db);
+
+my $str = XML::Simple::XMLout($db);
+if (open(XMLOUT, ">$db_path")) {
+	print XMLOUT $str;
+	close(XMLOUT);
+}
+
+
+exit(0);
+
+sub process_server_report {
+	my $svr = shift;
+
+	my $news_server = $svr->{news_server};
+
+	printf "Report for %s by %s on %s\n",
+		$news_server,
+		$svr->{my_email},
+		time2str('%Y-%m-%d %H:%M', $svr->{now});
+
+	my $db_svr = $db->{server}->{$news_server};
+	if ($db_svr) {
+		if ($db_svr->{last_report} >= $svr->{now}) {
+			my $last_report = $db_svr->{last_report};
+			my $last_email = $db_svr->{last_email};
+
+			printf " Ignoring, most recent report was %s by %s\n",
+				time2str('%Y-%m-%d %H:%M', $last_report),
+				$last_email;
+			return;
+		} else {
+			printf " Update report from %s\n",
+				$svr->{my_email};
+		}
+	} else {
+		printf " New report from %s\n", $svr->{my_email};
+	}
+
+	if (!ref $svr->{hier}) {
+		print " Error - no hierarchies\n";
+		return;
+	}
+
+	# Now check it hierarchy by hierarchy
+
+	my $result = $db->{server}->{$news_server} = {
+		errors => 0,
+		total_groups => 0,
+		ok => 0,
+	};
+
 	foreach my $hier (sort (keys %{$svr->{hier}})) {
+		my $svr_hier = $svr->{hier}->{$hier};
 		my $hr = read_hierarchy($hier);
 		if (!defined $hr) {
 			next;
 		}
 
-		check_existing_groups($hier, $svr->{hier}->{$hier}, $hr);
-		check_bogus_groups($hier, $svr->{hier}->{$hier}, $hr);
+		check_existing_groups($hier, $svr_hier, $hr, $result);
+		check_bogus_groups($hier, $svr_hier, $hr, $result);
 	}
 
-	# check it
+	$result->{last_report} = $svr->{now};
+	$result->{last_email} = $svr->{my_email};
 }
 
-exit(0);
-
 sub check_existing_groups {
-	my($hier, $sh_ref, $hr) = @_;
+	my($hier, $sh_ref, $hr, $result) = @_;
 
 	if (!ref $sh_ref->{group}) {
-		print "No groups in hierarchy $hier\n";
+		$result->{errors} ++;
+		$result->{notice}->{$hier} = { msg => "No groups in hierarchy" };
+		print " No groups in hierarchy $hier\n";
 		return;
 	}
 
 	my $ghr = $sh_ref->{group};
 
-	if (exists $ghr->{name}) {
+	# This code should be obsolete with XML::Simple forcearray
+	if (0 && exists $ghr->{name}) {
 		# Turn it into a hashref like we would see with multi groups
 		my $r = {
 			description => $ghr->{description},
@@ -58,8 +128,14 @@ sub check_existing_groups {
 	}
 
 	foreach my $group (sort (keys %$hr)) {
+		# $result->{hier}->{$hier}->{total_groups} ++;
+		$result->{total_groups} ++;
 		if (!exists $ghr->{$group}) {
 			print "  Group $group needs to be created\n";
+			$result->{errors} ++;
+			$result->{notice}->{$group} = { msg => sprintf("Group should be created: %s", $hr->{$group}->{description}) };
+		} else {
+			$result->{ok} ++;
 		}
 	}
 }
@@ -69,7 +145,7 @@ sub check_existing_groups {
 # ---------------------------------------------------------------------------
 
 sub check_bogus_groups {
-	my($hier, $sh_ref, $hr) = @_;
+	my($hier, $sh_ref, $hr, $result) = @_;
 
 	# Ignore groups shown here which are not in the hierarchy
 	my $hier_regex = $hier;
@@ -87,14 +163,23 @@ sub check_bogus_groups {
 		my $group = $ghr->{name};
 		if (!exists $hr->{$group}) {
 			print "  Group $group is bogus\n";
+			$result->{errors} ++;
+			$result->{notice}->{$group} = { msg => "Group should be deleted" };
 		}
 
 		return;
 	}
 
 	foreach my $group (sort (keys %$ghr)) {
+		if ($group !~ /^$hier_regex/) {
+			print " Group $group is not part of $hier\n";
+			next;
+		}
+
 		if (!exists $hr->{$group}) {
 			print "  Group $group is bogus\n";
+			$result->{errors} ++;
+			$result->{notice}->{$group} = { msg => "Group should be deleted" };
 		}
 	}
 }
@@ -134,4 +219,3 @@ sub read_hierarchy {
 
 	return $groups;
 }
-
