@@ -63,7 +63,7 @@ $CTime = time;
 # Output Results - Section 4 (see above)
 
 for (keys %vote) {
-  print "$EmailAddress $Newsgroup $Vote $CTime $ARGV[0]\n";
+  print "$EmailAddress $_ ",$vote{$_}," $CTime $ARGV[0]\n";
 }
 
 
