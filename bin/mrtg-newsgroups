@@ -10,7 +10,7 @@ use Fcntl qw(:flock);
 my $newsserver = $ENV{NNTPSERVER} || 'news';
 
 my $nglist_file = shift @ARGV;
-my $config_file = shift @ARGV || "mtrg-newsgroups-config.xml";
+my $config_file = shift @ARGV || "mrtg-newsgroups-config.xml";
 my $arrival_file = shift @ARGV || "news-arrival.log";
 my $now = time();
 
