@@ -9,7 +9,7 @@ use LWP::UserAgent qw();
 
 my $cfg = {
 	news_server => $ENV{NNTPSERVER} || 'news.example.com',
-	my_email => 'you@example.com',
+	my_email => $ENV{MAIL_FROM} || 'you@example.com',
 	email_to => 'ausadmin@aus.news-admin.org',
 	hier_url => 'http://aus.news-admin.org/data/monitor.txt',
 	now => time(),
@@ -58,7 +58,7 @@ foreach my $hier (@hiers) {
 
 	foreach my $ng (sort (keys %gl)) {
 		my $r = $gl{$ng};
-		my $desc = $r->{description};
+		my $desc = $r->{description} || '';
 		$desc =~ s/%/%25/g;
 		$desc =~ s/&/%26/g;
 		$desc =~ s/"/%22/g;
