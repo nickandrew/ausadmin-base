@@ -34,9 +34,17 @@ my $s = qq~<grouplist $config >\n~;
 foreach my $hier (@hiers) {
 	my %gl;
 
+	# Change the fileglob type hier name (aus.*)
+	# into a proper regex (aus\..*)
+	my $hier_regex = $hier;
+	$hier_regex =~ s/\./\\./g;
+	$hier_regex =~ s/\*/.*/g;
+
 	my $active = $svr->active($hier);
+
 	if ($active) {
 		foreach my $ng (keys %$active) {
+			next unless ($ng =~ /^$hier_regex$/);
 			my $r = $active->{$ng};
 			$gl{$ng}->{'last'} = $r->[0];
 			$gl{$ng}->{first} = $r->[1];
@@ -47,6 +55,7 @@ foreach my $hier (@hiers) {
 	my $ngs = $svr->newsgroups($hier);
 	if ($ngs) {
 		foreach my $ng (keys %$ngs) {
+			next unless (exists $gl{$ng});
 			$gl{$ng}->{description} = $ngs->{$ng};
 		}
 	}
