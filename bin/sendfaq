@@ -1,15 +1,18 @@
-#!/bin/sh
-#	Post the aus.* group creation FAQ to aus.net.news
+#!/bin/bash
+#	@(#) sendfaq - Post the aus.* group creation FAQ to aus.net.news
 #
 # $Source$
 # $Revision$
 # $Date$
 
-if ! [ -f "data/faq.header" -a -f "root/Faq/aus_faq" ] ; then
-	echo "No header files"
+HDR="data/faq.header"
+CONTENTS="root/Faq/aus_faq"
+
+if ! [ -f $HDR -a -f $CONTENTS ] ; then
+	echo "$HEADER or $CONTENTS does not exist"
 	exit 3
 fi
 
-( cat data/faq.header ; echo "" ; cat root/Faq/aus_faq ) | inews -h
+( cat $HDR ; echo "" ; cat $CONTENTS ) | post.pl
 
 exit 0
