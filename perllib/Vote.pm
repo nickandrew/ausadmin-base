@@ -15,6 +15,7 @@ my $vote = new Vote(name => 'aus.history');
 package Vote;
 
 use IO::File;
+use Newsgroup;
 
 sub new {
 	my $class = shift;
@@ -55,7 +56,17 @@ sub _read_file {
 
 	my @lines = <$fh>;
 
+	$fh->close();
+
 	return \@lines;
+}
+
+sub ng_dir {
+	my $self = shift;
+
+	my $ng_dir = "$self->{vote_dir}/$self->{name}";
+
+	return $ng_dir;
 }
 
 sub get_start_time {
@@ -77,6 +88,47 @@ sub read_file {
 	my $self = shift;
 	my $filename = shift;
 	return $self->_read_file($filename);
+}
+
+# my $list_ref = $vote->get_distribution();
+
+sub get_distribution {
+	my $self = shift;
+
+	# returns a ref to an array of unchomped lines
+	my $ref = $self->read_file('distribution');
+
+	my @g = grep { chomp; Newsgroup::validate($_) } @$ref;
+
+	return \@g;
+}
+
+# my $list_ref = $vote->get_tally()
+# $vote_list = [$v, $v, $v, ...]
+# $v = { email => email_address, group => newsgroup, vote => YES|NO|ABSTAIN, ts => 987654321 }
+
+sub get_tally {
+	my $self = shift;
+
+	# returns a ref to an array of unchomped lines
+	my $ref = $self->read_file('tally.dat');
+
+	my @list;
+
+	foreach (@$ref) {
+		chomp;
+		my($email, $group, $vote, $ts) = split(/\s+/);
+		my $r = {
+			email => $email,
+			group => $group,
+			vote => $vote,
+			ts => $ts
+		};
+
+		push(@list, $r);
+	}
+
+	return \@list;
 }
 
 1;
