@@ -8,7 +8,7 @@ Checkgroups - a USENET message which contains the group list.
 
  use Checkgroups;
 
- $gl = new Checkgroups(datadir => $datadir);
+ $gl = new Checkgroups(hier => $hier);
 
  $gl->write($file_temp, $file_real);	Writes checkgroup message to file
 
@@ -22,35 +22,29 @@ use IPC::Open2;
 use Ausadmin qw();
 use Newsgroup qw();
 
-$Checkgroups::DEFAULT_CHECKGROUPS_DIR	= './data';
+# ---------------------------------------------------------------------------
+# Constructor
+# ---------------------------------------------------------------------------
 
 sub new {
 	my $class = shift;
 	my $self = { @_ };
 	bless $self, $class;
 
-	$self->{'datadir'} ||= $Checkgroups::DEFAULT_CHECKGROUPS_DIR;
+	$self->{hier} ||= Newsgroup::defaultHierarchy();
 
 	$self->{'signcmd'} ||= 'signcontrol';
-	$self->{'grouplist_file'} ||= 'data/checkgroups';
-	$self->{'head_text'} ||= Ausadmin::readfile('config/checkgroups.header');
-	$self->{'foot_text'} ||= Ausadmin::readfile('config/checkgroups.footer');
+	my $datadir = Newsgroup::datadir($self->{hier});
+	$self->{'grouplist_file'} ||= "$datadir/checkgroups";
+	$self->{'head_text'} ||= Ausadmin::readfile("$datadir/config/checkgroups.header");
+	$self->{'foot_text'} ||= Ausadmin::readfile("$datadir/config/checkgroups.footer");
 
 	return $self;
 }
 
-# Set the data directory from which we obtain data about this checkgroups
-
-sub set_datadir {
-	my $self = shift;
-	my $datadir = shift;
-
-	die "No such directory: $datadir" if (!-d $datadir);
-
-	$self->{datadir} = $datadir;
-
-	return $datadir;
-}
+# ---------------------------------------------------------------------------
+# Write the whole checkgroups out to a file.
+# ---------------------------------------------------------------------------
 
 sub write {
 	my $self = shift;
@@ -68,9 +62,10 @@ sub write {
 
 
 	# Generate the message, header first
+	my $hier = $self->{hier};
 
 	my %header = (
-		'Subject' => "checkgroups for aus.* groups on $today",
+		'Subject' => "checkgroups for $hier.* groups on $today",
 		'Newsgroups' => 'aus.net.news',
 		'Control' => 'checkgroups',
 		'Approved' => 'ausadmin@aus.news-admin.org',

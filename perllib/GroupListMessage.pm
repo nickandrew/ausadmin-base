@@ -20,38 +20,23 @@ package GroupListMessage;
 use IO::File;
 use IPC::Open2;
 
-use Ausadmin;
-use Newsgroup;
+use Ausadmin qw();
+use Newsgroup qw();
 
 sub new {
 	my $class = shift;
 	my $self = { @_ };
 	bless $self, $class;
 
-	$self->{hier} ||= 'aus';
-	my $datadir = $self->{'datadir'} ||= "$self->{hier}.data";
+	$self->{hier} ||= Newsgroup::defaultHierarchy();
+	my $datadir = Newsgroup::datadir($self->{hier});
 
 	$self->{'signcmd'} ||= 'pgp-sign';
 	$self->{'grouplist_file'} ||= 'grouplist';
-	$self->{'head_text'} ||= Ausadmin::readfile("$datadir/grouplist.header");
-	$self->{'foot_text'} ||= Ausadmin::readfile("$datadir/grouplist.footer");
+	$self->{'head_text'} ||= Ausadmin::readfile("$datadir/config/grouplist.header");
+	$self->{'foot_text'} ||= Ausadmin::readfile("$datadir/config/grouplist.footer");
 
 	return $self;
-}
-
-# ---------------------------------------------------------------------------
-# Set the data directory from which we obtain data about this newsgroup
-# ---------------------------------------------------------------------------
-
-sub set_datadir {
-	my $self = shift;
-	my $datadir = shift;
-
-	die "No such directory: $datadir" if (!-d $datadir);
-
-	$self->{datadir} = $datadir;
-
-	return $datadir;
 }
 
 sub write {
@@ -78,7 +63,8 @@ sub write {
 		'Followup-To' => '',
 	);
 
-	my $grouplist = Ausadmin::readfile("$self->{datadir}/$self->{grouplist_file}");
+	my $datadir = Newsgroup::datadir($self->{hier});
+	my $grouplist = Ausadmin::readfile("$datadir/$self->{grouplist_file}");
 
 	my $fh = new IO::File();
 	my $signcmd = $self->{'signcmd'};

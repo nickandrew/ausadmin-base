@@ -8,7 +8,7 @@ GroupList - a canonical list of currently existing newsgroups
 
  use GroupList;
 
- $gl = new GroupList();
+ $gl = new GroupList(hier => $hier);
 
  $gl->write($file_temp, $file_real);	Writes new group list to file
 
@@ -19,32 +19,17 @@ package GroupList;
 use IO::File;
 use IPC::Open2;
 
-use Ausadmin;
-use Newsgroup;
+use Ausadmin qw();
+use Newsgroup qw();
 
 sub new {
 	my $class = shift;
 	my $self = { @_ };
 	bless $self, $class;
 
-	if ($self->{hier}) {
-		$self->{datadir} = "$self->{hier}.data";
-	}
+	$self->{hier} ||= Newsgroup::defaultHierarchy();
 
 	return $self;
-}
-
-# Set the data directory from which we obtain data about this newsgroup
-
-sub set_datadir {
-	my $self = shift;
-	my $datadir = shift;
-
-	die "No such directory: $datadir" if (!-d $datadir);
-
-	$self->{datadir} = $datadir;
-
-	return $datadir;
 }
 
 sub write {
@@ -66,9 +51,10 @@ sub write {
 		push(@nglines, [$newsgroup, $ngline]);
 	}
 
+	my $datadir = Newsgroups::datadir($self->{hier});
 	my $fh = new IO::File;
-	if (!open($fh, ">$file_temp")) {
-		die "Unable to open $file_temp for writing: $!";
+	if (!open($fh, ">$datadir/$file_temp")) {
+		die "Unable to open $datadir/$file_temp for writing: $!";
 	}
 
 	foreach (@nglines) {
@@ -81,13 +67,13 @@ sub write {
 	}
 
 	if (!close($fh)) {
-		unlink($file_temp);
-		die "Unable to write $file_temp (unlinked): $!";
+		unlink("$datadir/$file_temp");
+		die "Unable to write $datadir/$file_temp (unlinked): $!";
 	}
 
 	# Now rename from the temp file to the real file
-	if (!rename($file_temp, $file_real)) {
-		die "Unable to rename from $file_temp to $file_real : $!";
+	if (!rename("$datadir/$file_temp", "$datadir/$file_real")) {
+		die "Unable to rename from $datadir/$file_temp to $datadir/$file_real : $!";
 	}
 }
 

@@ -10,14 +10,13 @@ Newsgroup - a newsgroup
 
  $nntp = new Net::NNTP(...)
 
- $ng = new Newsgroup(name => 'aus.history', [nntp_server=>$nntp]);
+ $ng = new Newsgroup(name => 'aus.history', [nntp_server=>$nntp], hier => $hier);
  $bool = Newsgroup::valid_name('aus.history');
  $bool = Newsgroup::validate('aus.history');
 
  $ng->set_server($nntp)
  $flags = $ng->group_flags()  ... return the 'y' or 'm' status of the group
  
- $ng->set_datadir($path)	... Set the hierarchy top-level directory
  $string = $ng->get_attr('charter') ... Read the charter data, return as string
  $ng->set_attr('charter', $string, 'Update reason') ...
 
@@ -25,7 +24,7 @@ Newsgroup - a newsgroup
 
  $signed_text = $ng->sign_control($unsigned_text) ... Sign a control msg
 
- my @newsgroup_list = Newsgroup::list_newsgroups(datadir => $datadir);
+ my @newsgroup_list = Newsgroup::list_newsgroups(hier => $hier);
  	# returns a list of newsgroups in that hierarchy
 
  $ng->create();
@@ -35,6 +34,8 @@ Newsgroup - a newsgroup
 
 package Newsgroup;
 
+use strict;
+
 use IO::File;
 use IPC::Open2;
 use Carp qw(confess);
@@ -43,6 +44,10 @@ use Ausadmin;
 
 $Newsgroup::DEFAULT_HIERARCHY	= 'aus';
 
+# ---------------------------------------------------------------------------
+# Constructor
+# ---------------------------------------------------------------------------
+
 sub new {
 	my $class = shift;
 	my $self = { @_ };
@@ -50,10 +55,19 @@ sub new {
 
 	die "No name" if (!exists $self->{name});
 
-	$self->{hier} ||= 'aus';
-	$self->{datadir} ||= "$self->{hier}.data";
+	$self->{hier} ||= $Newsgroup::DEFAULT_HIERARCHY;
 
 	return $self;
+}
+
+# ---------------------------------------------------------------------------
+# Return the data directory for a hierarchy
+# ---------------------------------------------------------------------------
+
+sub datadir {
+	my $hier = shift;
+
+	return "$ENV{AUSADMIN_HOME}/data/$hier.data";
 }
 
 # ---------------------------------------------------------------------------
@@ -94,20 +108,9 @@ sub set_server {
 	return $conn;
 }
 
-# Set the data directory from which we obtain data about this newsgroup
-
-sub set_datadir {
-	my $self = shift;
-	my $datadir = shift;
-
-	die "No such directory: $datadir" if (!-d $datadir);
-
-	$self->{datadir} = $datadir;
-
-	return $datadir;
-}
-
+# ---------------------------------------------------------------------------
 # Get newsgroup info. Return a hash ref: art_high, art_low, flags
+# ---------------------------------------------------------------------------
 
 sub group_info {
 	my $self = shift;
@@ -131,7 +134,9 @@ sub group_info {
 	return $ref->{$self->{name}};
 }
 
+# ---------------------------------------------------------------------------
 # return 'y' for unmoderated, or 'm' for moderated group
+# ---------------------------------------------------------------------------
 
 sub group_flags {
 	my $self = shift;
@@ -143,7 +148,9 @@ sub group_flags {
 	return $self->{group_info}->{flags};
 }
 
+# ---------------------------------------------------------------------------
 # temp procedure
+# ---------------------------------------------------------------------------
 
 sub debug_it {
 	my $ref = shift;
@@ -159,7 +166,9 @@ sub debug_it {
 	print "\n";
 }
 
+# ---------------------------------------------------------------------------
 # Read data from a file, store it in a string and this object's attributes
+# ---------------------------------------------------------------------------
 
 sub get_attr {
 	my $self = shift;
@@ -167,10 +176,8 @@ sub get_attr {
 
 	return $self->{$attr_name} if (exists $self->{$attr_name});
 
-	die "Newsgroup: get_attr() needs prior call to set_datadir()\n" if (!exists $self->{datadir});
-
-	# TODO ...
-	my $path = $self->{datadir} . '/Newsgroups/' . $self->{name} . '/' . $attr_name;
+	my $datadir = datadir($self->{hier});
+	my $path = "$datadir/Newsgroups/$self->{name}/$attr_name";
 	return undef if (!-f $path);
 
 	my $fh = new IO::File;
@@ -195,11 +202,9 @@ sub set_attr {
 	my $string = shift;
 	my $reason = shift;
 
-	die "Newsgroup: set_attr() needs prior call to set_datadir()\n" if (!exists $self->{datadir});
+	my $datadir = datadir($self->{hier});
+	my $path = "$datadir/Newsgroups/$self->{name}/$attr_name";
 
-	# TODO ...
-	my $datadir = $self->{datadir};
-	my $path = $datadir . '/Newsgroups/' . $self->{name} . '/' . $attr_name;
 	my $exists;
 	if (-f $path) {
 		$exists = 1;
@@ -242,7 +247,9 @@ sub set_attr {
 	return 0;
 }
 
+# ---------------------------------------------------------------------------
 # gen_newgroup() ... Generate a newgroup message for this group
+# ---------------------------------------------------------------------------
 
 sub gen_newgroup {
 	my $self = shift;
@@ -255,7 +262,8 @@ sub gen_newgroup {
 
 	my $template_path = "config/${control_type}.template";
 	my $template2_path = "config/${hier_name}.control.ctl";
-	my $ngline_path = "$self->{datadir}/Newsgroups/$self->{name}/ngline";
+	my $datadir = datadir($self->{hier});
+	my $ngline_path = "$datadir/Newsgroups/$self->{name}/ngline";
 
 	if (! -f $template_path) {
 		confess("$control_type template file does not exist");
@@ -311,16 +319,15 @@ sub sign_control {
 	return join('', @return);
 }
 
+# ---------------------------------------------------------------------------
 # Return a list of all newsgroups in the directory
-#
+# ---------------------------------------------------------------------------
+
 sub list_newsgroups {
 	my $args = { @_ };
 
 	$args->{hier} ||= $Newsgroup::DEFAULT_HIERARCHY;
-	my $datadir = $args->{datadir};
-	if (!$datadir) {
-		$datadir = "$ENV{AUSADMIN_HOME}/data/$args->{hier}.data";
-	}
+	my $datadir = datadir($args->{hier});
 
 	if (! $datadir) {
 		confess "No datadir";
@@ -347,9 +354,9 @@ sub list_newsgroups {
 sub create {
 	my $self = shift;
 
-	die "Newsgroup: create() needs prior call to set_datadir()\n" if (!exists $self->{datadir});
+	my $datadir = datadir($self->{hier});
 
-	my $dir = "$self->{datadir}/Newsgroups/$self->{name}";
+	my $dir = "$datadir/Newsgroups/$self->{name}";
 
 	if (!-d $dir) {
 		mkdir($dir, 0755);
@@ -358,7 +365,10 @@ sub create {
 	if (!-d "$dir/RCS") {
 		mkdir("$dir/RCS", 0755);
 	}
+}
 
+sub defaultHierarchy {
+	return $Newsgroup::DEFAULT_HIERARCHY;
 }
 
 1;

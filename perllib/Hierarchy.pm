@@ -31,7 +31,8 @@ sub list {
 	my $args = { @_ };
 
 	# Ignore newsgroup names not containing a dot, and . and ..
-	opendir(D, '.');
+	my $top_directory = "$ENV{AUSADMIN_HOME}/data";
+	opendir(D, $top_directory);
 	my @files = grep { /^.*\.data$/ } readdir(D);
 	closedir(D);
 
@@ -57,11 +58,11 @@ sub list {
 sub create {
 	my $args = { @_ };
 
-	die "Need hier_name" if (! $args->{hier_name});
+	die "Need hier" if (! $args->{hier});
 
-	my $hier_name = $args->{hier_name};
+	my $hier = $args->{hier};
 
-	my $data_dir = "$hier_name.data";
+	my $data_dir = Newsgroup::datadir($hier);
 
 	if (-e $data_dir) {
 		die "$data_dir exists already!";
