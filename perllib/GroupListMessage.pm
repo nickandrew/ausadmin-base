@@ -29,17 +29,19 @@ sub new {
 	bless $self, $class;
 
 	$self->{hier} ||= 'aus';
-	$self->{'datadir'} ||= "$self->{hier}.data";
+	my $datadir = $self->{'datadir'} ||= "$self->{hier}.data";
 
 	$self->{'signcmd'} ||= 'pgp-sign';
 	$self->{'grouplist_file'} ||= 'grouplist';
-	$self->{'head_text'} ||= Ausadmin::readfile('config/grouplist.header');
-	$self->{'foot_text'} ||= Ausadmin::readfile('config/grouplist.footer');
+	$self->{'head_text'} ||= Ausadmin::readfile("$datadir/grouplist.header");
+	$self->{'foot_text'} ||= Ausadmin::readfile("$datadir/grouplist.footer");
 
 	return $self;
 }
 
+# ---------------------------------------------------------------------------
 # Set the data directory from which we obtain data about this newsgroup
+# ---------------------------------------------------------------------------
 
 sub set_datadir {
 	my $self = shift;
