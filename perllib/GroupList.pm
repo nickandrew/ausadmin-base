@@ -22,14 +22,14 @@ use IPC::Open2;
 use Ausadmin;
 use Newsgroup;
 
-$GroupList::DEFAULT_GROUPLIST_DIR	= './data';
-
 sub new {
 	my $class = shift;
 	my $self = { @_ };
 	bless $self, $class;
 
-	$self->{datadir} ||= $GroupList::DEFAULT_GROUPLIST_DIR;
+	if ($self->{hier}) {
+		$self->{datadir} = "$self->{hier}.data";
+	}
 
 	return $self;
 }
@@ -52,11 +52,12 @@ sub write {
 	my $file_temp = shift;
 	my $file_real = shift;
 
-	my @ng_list = Newsgroup::list_newsgroups();
+	my $hier = $self->{hier};
+	my @ng_list = Newsgroup::list_newsgroups(hier => $hier);
 	my @nglines;
 
 	foreach my $newsgroup (@ng_list) {
-		my $ng = new Newsgroup(name => $newsgroup);
+		my $ng = new Newsgroup(name => $newsgroup, hier => $hier);
 		if (!defined $ng) {
 			die "Unable to get info for $newsgroup\n";
 		}

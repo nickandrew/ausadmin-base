@@ -9,7 +9,7 @@ GroupListMessage - a USENET message which contains the group list.
 
  use GroupListMessage;
 
- $gl = new GroupListMessage();
+ $gl = new GroupListMessage(hier => ...);
 
  $gl->write($file_temp, $file_real);	Writes grouplist message to file
 
@@ -23,17 +23,16 @@ use IPC::Open2;
 use Ausadmin;
 use Newsgroup;
 
-$GroupListMessage::DEFAULT_GROUPLISTMESSAGE_DIR	= './data';
-
 sub new {
 	my $class = shift;
 	my $self = { @_ };
 	bless $self, $class;
 
-	$self->{'datadir'} ||= $GroupListMessage::DEFAULT_GROUPLISTMESSAGE_DIR;
+	$self->{hier} ||= 'aus';
+	$self->{'datadir'} ||= "$self->{hier}.data";
 
 	$self->{'signcmd'} ||= 'pgp-sign';
-	$self->{'grouplist_file'} ||= 'data/checkgroups';
+	$self->{'grouplist_file'} ||= 'grouplist';
 	$self->{'head_text'} ||= Ausadmin::readfile('config/grouplist.header');
 	$self->{'foot_text'} ||= Ausadmin::readfile('config/grouplist.footer');
 
@@ -69,16 +68,17 @@ sub write {
 
 
 	# Generate the message, header first
+	my $hier = $self->{hier};
 
 	my %header = (
-		'Subject' => "List of aus.* newsgroups at $now",
+		'Subject' => "List of $hier.* newsgroups at $now",
 		'Newsgroups' => 'aus.net.news,news.admin.hierarchies',
 		'Followup-To' => '',
 	);
 
-	my $grouplist = Ausadmin::readfile($self->{'grouplist_file'});
+	my $grouplist = Ausadmin::readfile("$self->{datadir}/$self->{grouplist_file}");
 
-	my $fh = new IO::File;
+	my $fh = new IO::File();
 	my $signcmd = $self->{'signcmd'};
 
 	if (!open($fh, "|$signcmd > $file_temp")) {

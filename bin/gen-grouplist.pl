@@ -1,32 +1,37 @@
 #!/usr/bin/perl -w
 #	@(#) $Id$
 #	@(#) gen-grouplist.pl - Creates the "grouplist.signed" file.
-#	Usage: gen-grouplist.pl [-d]
+#	Usage: gen-grouplist.pl [-d] [-h hier]
 #	Option -d: debug mode, don't overwrite current ones, don't sign.
 #
 
 use strict;
 use lib 'bin';
-use GroupListMessage;
+use GroupList qw();
+use GroupListMessage qw();
 use Getopt::Std;
 
-use vars qw($opt_d);
+use vars qw($opt_d $opt_h);
 
-getopts('d');
-
-
-my $grouplist = "data/checkgroups";
-my $signcmd = $opt_d ? '/bin/cat' : 'pgp-sign';
-my $grouplist_file = $opt_d ? 'data/grouplist' : 'data/grouplist.signed';
+getopts('dh:');
 
 
-my $gl = new GroupListMessage(signcmd => $signcmd, grouplist_file => $grouplist);
+my $grouplist = 'grouplist';
+my $signcmd = 'pgp-sign';
+my $hier = $opt_h || 'aus';
+my $datadir = "$hier.data";
+my $grouplist_file = "$datadir/grouplist.signed";
 
-$gl->write("grouplist.$$", $grouplist_file);
+my $gl = new GroupList(hier => $hier);
+$gl->write("$datadir/grouplist.$$", "$datadir/grouplist");
 
-if ($opt_d) {
-	# Check it in
-	system("ci -l -t- $grouplist_file < /dev/null");
-}
+
+my $glm = new GroupListMessage(hier => $hier, signcmd => $signcmd);
+
+$glm->write("grouplist.$$", $grouplist_file);
+
+# Check it in
+mkdir("$datadir/RCS", 0755);
+system("ci -l -t- $datadir/grouplist < /dev/null");
 
 exit(0);

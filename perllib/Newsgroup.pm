@@ -41,7 +41,7 @@ use Carp qw(confess);
 
 use Ausadmin;
 
-$Newsgroup::DEFAULT_NEWSGROUP_DIR	= './data';
+$Newsgroup::DEFAULT_HIERARCHY	= 'aus';
 
 sub new {
 	my $class = shift;
@@ -50,7 +50,8 @@ sub new {
 
 	die "No name" if (!exists $self->{name});
 
-	$self->{datadir} ||= $Newsgroup::DEFAULT_NEWSGROUP_DIR;
+	$self->{hier} ||= 'aus';
+	$self->{datadir} ||= "$self->{hier}.data";
 
 	return $self;
 }
@@ -315,7 +316,8 @@ sub sign_control {
 sub list_newsgroups {
 	my $args = { @_ };
 
-	my $datadir = $args->{datadir} || $Newsgroup::DEFAULT_NEWSGROUP_DIR;
+	$args->{hier} ||= $Newsgroup::DEFAULT_HIERARCHY;
+	my $datadir = "$args->{hier}.data";
 
 	if (! $datadir) {
 		confess "No datadir";
