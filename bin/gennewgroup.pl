@@ -71,8 +71,9 @@ sub makemessage ( $$ ) {
      if ($name =~ /forged/) {
 	  $post .= "\nThis control message has been forged as \"$from\" for the benefit of those\nsites still honouring his posts.  If you are one of those sites please see \<URL:http://aus.news-admin.org/\>.";
      }
-     
-     print $post;
+
+     open FILE,">$name" or die "Yipe Yipe Yipe unable to open $name because $!\n";
+     print FILE $post;
      
 }
 
