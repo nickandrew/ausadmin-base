@@ -128,7 +128,7 @@ $charter
       </blockquote>
      <h3>Activity graph of $ng (articles posted per hour)</h3>
      <center>
-      <img src="/article_rate_png.php?newsgroup=$ng" alt="Article posting rate graph for $ng">
+      <img src="/article_rate_png.cgi?newsgroup=$ng" alt="Article posting rate graph for $ng">
      </center>
 
 EOF
