@@ -11,7 +11,7 @@ for $fn (<*>) {
 		chop;
 		last if (/^$/);
 		($key, $value) = ($_ =~ /([^:]*):\s+(.*)/);
-		print "key: $key, value: /$value/\n";
+#		print "key: $key, value: /$value/\n";
 		$data{$key} = $value;
 	}
 
@@ -20,6 +20,7 @@ for $fn (<*>) {
 	if ($data{Updated} ne "") {
 		$key = "$data{Updated} $fn";
 	}
+	print "Key is $key\n";
 
 	$keys{$key} = 1;
 	if ($data{Name} ne "") {
@@ -35,7 +36,7 @@ for $fn (<*>) {
 }
 
 # Emit gathered info
-for $i (sort (keys %keys)) {
+for $key (sort (keys %keys)) {
 	print "<li>";
 	if ($link{$key} ne "n") {
 		printf "<a href=\"%s\">", ($link{$key} eq "" ? "/Wip/$fn{$key}" : $link{$key});
