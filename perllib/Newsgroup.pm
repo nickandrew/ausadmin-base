@@ -16,6 +16,9 @@ Newsgroup - a newsgroup
  $ng->set_server($nntp)
  $flags = $ng->group_flags()  ... return the 'y' or 'm' status of the group
  
+ $ng->set_datadir($path)	... Set the path for accessing newsgroup data
+ $string = $ng->get_attr('charter') ... Read the charter data, return as string
+ $ng->set_attr('charter', $string, 'Update reason') ...
 
 =cut
 
@@ -40,6 +43,8 @@ sub validate {
 	return 0;
 }
 
+# Set the open connection to an NNTP server
+
 sub set_server {
 	my $self = shift;
 	my $conn = shift;
@@ -49,6 +54,19 @@ sub set_server {
 	$self->{nntp_server} = $conn;
 
 	return $conn;
+}
+
+# Set the data directory from which we obtain data about this newsgroup
+
+sub set_datadir {
+	my $self = shift;
+	my $datadir = shift;
+
+	die "No such directory: $datadir" if (!-d $datadir);
+
+	$self->{datadir} = $datadir;
+
+	return $datadir;
 }
 
 # Get newsgroup info. Return a hash ref: art_high, art_low, flags
@@ -102,5 +120,80 @@ sub debug_it {
 	}
 	print "\n";
 }
+
+# Read data from a file, store it in a string and this object's attributes
+
+sub get_attr {
+	my $self = shift;
+	my $attr_name = shift;
+
+	return $self->{$attr_name} if (exists $self->{$attr_name});
+
+	die "Newsgroup: get_attr() needs prior call to set_datadir()\n" if (!exists $self->{datadir});
+
+	# TODO ...
+	my $path = $self->{datadir} . '/' . $self->{name} . '/' . $attr_name;
+	return undef if (!-f $path);
+
+	my $fh = new IO::File;
+	if (!open($fh, "<$path")) {
+		die "Unable to open $path: $!\n";
+	}
+
+	my $s;
+
+	while (<$fh>) {
+		$s .= $_;
+	}
+
+	close($fh);
+
+	return $s;
+}
+
+sub set_attr {
+	my $self = shift;
+	my $attr_name = shift;
+	my $string = shift;
+	my $reason = shift;
+
+	die "Newsgroup: set_attr() needs prior call to set_datadir()\n" if (!exists $self->{datadir});
+
+	# TODO ...
+	my $datadir = $self->{datadir};
+	my $path = $datadir . '/' . $self->{name} . '/' . $attr_name;
+	my $exists;
+	if (-f $path) {
+		$exists = 1;
+		if (!-f "$path/RCS/$attr_name") {
+			# check it in for the first time
+			system("ci -l $path < /dev/null");
+		}
+	} else {
+		$exists = 0;
+	}
+
+	my $fh = new IO::File;
+	if (!open($fh, ">$path")) {
+		die "Unable to open $path for write: $!\n";
+	}
+
+	print $fh $string;
+	
+	close($fh);
+
+	if ($exists) {
+		# Check in an update, with that message
+		system("ci", "-l", "-m$reason", $path);
+	} else {
+		# Check in initial version, use -t-string
+		system("ci", "-l", "-t-$reason", $path);
+	}
+
+	# Now write an audit log that we did it ... TODO
+
+	return 0;
+}
+
 
 1;
