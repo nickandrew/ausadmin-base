@@ -35,15 +35,13 @@ while (<STDIN>) {
 	if (/list active( (.*))?/) {
 		my $regex = $2;
 		if ($regex) {
+			out("215 listing active matching $regex\n");
+
 			# Turn a fileglob into a proper regex:
 			#	. becomes \.
 			#	* becomes .*
 			$regex =~ s/\./\\./g;
 			$regex =~ s/\*/.*/g;
-		}
-
-		if ($regex) {
-			out("215 listing active matching $regex\n");
 		} else {
 			out("215 listing active\n");
 		}
@@ -58,15 +56,12 @@ while (<STDIN>) {
 	if (/list newsgroups( (.*))?/) {
 		my $regex = $2;
 		if ($regex) {
+			out("215 listing newsgroups matching $regex\n");
 			# Turn a fileglob into a proper regex:
 			#	. becomes \.
 			#	* becomes .*
 			$regex =~ s/\./\\./g;
 			$regex =~ s/\*/.*/g;
-		}
-
-		if ($regex) {
-			out("215 listing newsgroups matching $regex\n");
 		} else {
 			out("215 listing newsgroups\n");
 		}
