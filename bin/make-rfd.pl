@@ -16,8 +16,8 @@ make-rfd.pl newsgroup-name
 =head1 DESCRIPTION
 
 This program concatenates the various control files in a newsgroup's
-directory to create an RFD for that newsgroup. Used mostly to recreate
-the RFDs for very old newsgroups.
+directory to create an RFD for that newsgroup. Used to create an RFD
+ready-for-posting.
 
 The following files from the B<vote/$newsgroup> directory are used:
 
@@ -29,12 +29,11 @@ B<distribution>,
 
 Also the following template files from the B<config> directory are used:
 
-B<rfd-head.txt>,
 B<rfd-procedure.txt>
 
 =cut
 
-use lib '.', 'bin';
+use lib './bin';
 use Ausadmin;
 
 my $newsgroup = shift @ARGV;

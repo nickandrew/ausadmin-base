@@ -28,6 +28,8 @@ my %action_states = (
 	'complete/pass' => '',
 	'complete/result' => 'Do something with the result - pass or fail?',
 	'cancelled' => '',
+	'rfd/unposted' => 'Use action to post the RFD',
+	'rfd/posted' => 'In discussion, wait until ',
 );
 
 if (!-d "./vote") {
@@ -55,6 +57,16 @@ foreach my $vote (@votes) {
 	}
 
 	my $a = $action_states{$state};
+
+	if ($state eq 'rfd/posted') {
+		my $config_path = $v->ng_dir("rfd_posted.cfg");
+		open(F, "<$config_path");
+		my $date = <F>;
+		chomp($date);
+		close(F);
+		$a .= $date;
+	}
+
 	if ($a ne '') {
 		print "$vote ... $a ($state)\n";
 	}
