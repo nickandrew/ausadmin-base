@@ -226,8 +226,8 @@ sub ReadRFD {
 				$c->{submission_email} = $words[3] if ($words[3]);
 				$c->{request_email} = $words[4] if ($words[4]);
 
-				# Charters now default to HTML format
-				$c->{charter} = 'html';
+				# Charters now default to text format
+				$c->{charter} = 'text';
 
 				$g{change} = $c;
 				next;
