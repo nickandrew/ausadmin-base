@@ -43,6 +43,7 @@ if (!open(C, "<$cond_file")) {
 my $state = 'hier';
 my $hierarchy_name = '';
 my $satisfied = 0;
+my $rc = 4;
 
 while (<C>) {
 	chomp;
@@ -63,6 +64,7 @@ while (<C>) {
 			# Import the file
 			import_checkgroups($hierarchy_name, \@lines);
 			print "Imported.\n";
+			$rc = 0;
 			last;
 		}
 
@@ -94,7 +96,7 @@ while (<C>) {
 	}
 }
 
-exit(0);
+exit($rc);
 
 # Now import ...
 #

@@ -33,7 +33,7 @@ print "$newsgroup articles from $low_art to $high_art\n";
 
 while ($art <= $high_art) {
 	print "\tFetching header of $art\n";
-	my $header_lr = $nntp->header($art);
+	my $header_lr = $nntp->head($art);
 
 	if (!defined $header_lr) {
 		# Article does not exist, skip it
@@ -83,9 +83,9 @@ while ($art <= $high_art) {
 			print "\tProcessing $fn\n";
 			my $rc = system("bin/parse-checkgroups.pl data/checkgroups.ctl < $fn");
 			if ($rc == 0) {
-				unlink($fn);
+				#unlink($fn);
 			} else {
-				print "Processing failed, leaving $fn\n";
+				print "\tProcessing failed, leaving $fn\n";
 			}
 
 		} else {
