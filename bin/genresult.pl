@@ -12,7 +12,6 @@ getopts("d");
 
 my $debug=$opt_d;
 
-$votedir = "vote";
 $postaddress = "aus group admin <ausadmin\@aus.news-admin.org>";
 
 $vote = shift;
@@ -90,10 +89,14 @@ if (!-d "vote/$vote") {
 # Get vote end date and vote pass/fail rule
 $ts_start = read1line("vote/$vote/starttime.cfg");
 $ts_end = read1line("vote/$vote/endtime.cfg");
-$ngline = read1line("vote/$vote/ngline");
 $voterule = read1line("vote/$vote/voterule");
+
+# These are the files written at CFV time
+$ngline = read1line("vote/$vote/ngline");
 #$rationale = readfile("vote/$vote/rationale");
 $charter = readfile("vote/$vote/charter");
+
+# General config files
 $footer =  readfile("vote/conf/results.footer");
 
 ($numer, $denomer, $minyes) = split(/\s+/, $voterule);
@@ -129,13 +132,13 @@ if ($now < $ts_end) {
 }
 
 # Open the tally file and munch it
-if (!open(T, "vote/$vote/tally.dat")) {
+if (!open(T, "<vote/$vote/tally.dat")) {
 	print STDERR "genresult.pl: Vote $vote has no tally file.\n";
 	exit(6);
 }
 
 while (<T>) {
-	($email,$ng,$v,$ts,$path) = split;
+	my($email,$ng,$v,$ts,$path) = split;
 
 	$v=uc($v);
 
@@ -171,10 +174,9 @@ while (<T>) {
 		$forge{$ng}++;
 		$newsgroups{$ng} = 1;
 		push(@{$voters{$ng}}, "$email *");
-
-	      } else {
+	} else {
 		push(@{$voters{$ng}}, "$email");
-	      }
+	}
 
 }
 
@@ -224,21 +226,19 @@ foreach $ng (sort (keys %newsgroups)) {
 	print "X-PGPKey: at http://aus.news-admin.org/ausadmin.asc\n";
 	print "Followup-To: aus.net.news\n";
 	if (not $recount) {
-	  print "Subject: RESULT: $ng $subjstat vote $yes{$ng}:$no{$ng}\n"; 
+		print "Subject: RESULT: $ng $subjstat vote $yes{$ng}:$no{$ng}\n"; 
 	} else {
-	  print "Subject: RECOUNT: $ng $subjstat vote $yes{$ng}:$no{$ng}\n"; 
-
+		print "Subject: RECOUNT: $ng $subjstat vote $yes{$ng}:$no{$ng}\n"; 
 	}
 	print "\n";
 
 	# Pass or fail?
 	if ($status eq "pass") {
 		pass_msg();
-		exit(0);
 	} else {
 		fail_msg();
-		exit(0);
 	}
+	exit(0);
 }
 
 sub pass_msg() {
@@ -290,13 +290,11 @@ sub pass_msg() {
 
 	close(P);
 
-# 60 sec * 60 min * 24 hours * 5 days = 432000
+	makegroup($ng,$ts_end + 5 * 86400);
 
-	&makegroup($ng,$ts_end + 432000);
-
-	&setposts($ng,"post.real",$ts_end + 432000,432000,3);
-	&setposts($ng,"post.fake.phil",$ts_end + 864000,432000,3);
-	&setposts($ng,"post.fake.robert",$ts_end + 1296000,432000,3);
+	setposts($ng,"post.real",$ts_end + 5 * 86400, 5 * 86400, 3);
+	setposts($ng,"post.fake.phil",$ts_end + 10 * 86400, 5 * 86400, 3);
+	setposts($ng,"post.fake.robert",$ts_end + 15 * 86400, 5 * 86400, 3);
 }
 
 sub fail_msg() {
@@ -330,21 +328,19 @@ sub fail_msg() {
 }
 
 sub setposts {
+	my ($groupname,$filename,$firstpostdate,$interval,$count)=@_;
   
-  my ($groupname,$filename,$firstpostdate,$interval,$count)=@_;
-  
-  local *POST;
+	local *POST;
 
-  return if $debug;
+	return if $debug;
 
-  if (not open (POST,">>vote/$vote/$filename")) {
-    print STDERR "Unable to mark group as passed\n";
-    exit(8);
-  }
+	if (not open (POST,">>vote/$vote/$filename")) {
+		print STDERR "Unable to mark group as passed\n";
+		exit(8);
+	}
     
-  print POST "$groupname\t$firstpostdate\t$interval\t$count\n";
-  close POST;
-  
+	print POST "$groupname\t$firstpostdate\t$interval\t$count\n";
+	close POST;
 }
 
 sub makegroup {
