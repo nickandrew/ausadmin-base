@@ -13,10 +13,15 @@ setup-vote - Create the control files for running a vote
 
 =head1 SYNOPSIS
 
+cd ~asadmin
+setup-vote newsgroup-name ...
+
+=head1 DESCRIPTION
+
 A vote is started if certain control files exist in the vote/newsgroup
 directory. These control files are:
 
-	start_vote.cfg (contains the timestamp of the vote start time)
+	vote_start.cfg (contains the timestamp of the vote start time)
 	endtime.cfg (contains the timestamp of the vote cutoff time)
 	posted.cfv ?
 
@@ -37,7 +42,6 @@ knows they can vote.
 
 
 my $BaseDir = "./vote";
-my $default_voteperiod = 21;		# days
 
 my $VotePeriod;
 my $count = 0;
@@ -52,6 +56,7 @@ foreach my $newsgroup (@newsgroups) {
 	print "\nNewsgroup $newsgroup ...\n";
 
 	my $ConfigFile ="$BaseDir/$newsgroup/endtime.cfg";
+	my $start_file ="$BaseDir/$newsgroup/vote_start.cfg";
 
 	if (-f $ConfigFile) {
 		print "\tAlready has an endtime.cfg, skipping.\n";
@@ -62,7 +67,7 @@ foreach my $newsgroup (@newsgroups) {
 
 	my $vp_file = "$BaseDir/$newsgroup/voteperiod";
 	if (!-f $vp_file) {
-		$vp_file = "$HomeDir/config/voteperiod";
+		$vp_file = "./config/voteperiod";
 	}
 
 	if (open(VP, "<$vp_file")) {
@@ -75,9 +80,10 @@ foreach my $newsgroup (@newsgroups) {
 
 	# Find the finish date for votes according to the VD (vote duration)
 	my $VD = $VotePeriod * 86400;
+	my $start_time = time();
 
 	# Find the gmt end time
-	my($sec,$min,$hour,$mday,$mon,$year) = gmtime(time() + $VD);
+	my($sec,$min,$hour,$mday,$mon,$year) = gmtime($start_time + $VD);
 
 	# Extend it to nearly midnight
 	($hour,$min,$sec) = (23,59,59);
@@ -90,6 +96,10 @@ foreach my $newsgroup (@newsgroups) {
 	# And write to control file
 	open(T, ">$ConfigFile");
 	print T $then + 1, "\n";
+	close(T);
+
+	open(T, ">$start_file");
+	print T $start_time, "\n";
 	close(T);
 }
 

@@ -13,12 +13,9 @@ use Time::Local;
 use IO::Handle;
 
 # Info Needed to run the script
-my $VoteAddress = "vote\@aus.news-admin.org";
 my $HomeDir = "/virt/web/ausadmin";
 my $BaseDir = "$HomeDir/vote";
-my $default_voteperiod = 21;		# days
 
-my $VotePeriod = $default_voteperiod;
 
 my $g = ReadRFD();
 
