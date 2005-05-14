@@ -14,7 +14,7 @@ test-message.pl [-h] filename ...
 =cut
 
 use Getopt::Std;
-use lib 'bin';
+use lib 'perllib';
 use Message;
 
 my %opts;

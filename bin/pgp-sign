@@ -24,7 +24,7 @@ to stdout and the body part is filtered through the "pgp" program.
 
 use Carp;
 
-use lib 'bin';
+use lib 'perllib';
 use Ausadmin;
 
 my $header = 1;

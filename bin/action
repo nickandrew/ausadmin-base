@@ -23,7 +23,7 @@ TODO
 =cut
 
 use Time::Local;
-use lib 'bin';
+use lib 'perllib';
 use Ausadmin qw();
 use DateFunc qw();
 use Vote qw();

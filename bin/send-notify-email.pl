@@ -4,7 +4,7 @@
 #
 # $Id$
 
-use lib '.', 'bin';
+use lib '.', 'perllib';
 use Vote;
 use Newsgroup;
 

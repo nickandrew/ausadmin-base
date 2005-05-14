@@ -86,7 +86,7 @@ be added to this command which will change the default actions.
 use Getopt::Std;
 use IO::File;
 
-use lib '.', 'bin';
+use lib '.', 'perllib';
 use Vote;
 use Newsgroup qw();
 

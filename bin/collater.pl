@@ -38,7 +38,7 @@ directory in the format:
 
 =cut
 
-use lib 'bin';
+use lib 'perllib';
 
 use FileHandle;
 use IO::File;

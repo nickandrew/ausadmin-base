@@ -5,7 +5,7 @@
 # $Date$
 
 use strict;
-use lib 'bin';
+use lib 'perllib';
 use Ausadmin;
 
 my $debug=0;

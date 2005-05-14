@@ -32,7 +32,7 @@ checked the first time they vote.
 
 =cut
 
-use lib 'bin';
+use lib 'perllib';
 use Vote qw();
 use VoterState qw();
 use Newsgroup qw();

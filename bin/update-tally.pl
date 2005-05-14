@@ -5,7 +5,7 @@
 #
 # Usage: update-tally.pl tally-path new-tally-path
 
-use lib 'bin';
+use lib 'perllib';
 use VoterState qw();
 
 my $tally_path = shift @ARGV;

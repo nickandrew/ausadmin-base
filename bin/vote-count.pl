@@ -3,7 +3,7 @@
 #
 #	Display an up-to-the-moment summary of voting
 
-use lib 'bin';
+use lib 'perllib';
 
 use Vote qw();
 

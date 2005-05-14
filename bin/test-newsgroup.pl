@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-use lib 'bin';
+use lib 'perllib';
 
 use Newsgroup;
 

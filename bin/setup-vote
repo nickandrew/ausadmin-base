@@ -42,7 +42,7 @@ knows they can vote.
 =cut
 
 use Time::Local;
-use lib 'bin';
+use lib 'perllib';
 use Vote;
 
 die "This script is deprecated";

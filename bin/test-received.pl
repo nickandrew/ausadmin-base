@@ -11,7 +11,7 @@
 
 =cut
 
-use lib 'bin';
+use lib 'perllib';
 use Message;
 
 foreach my $path (@ARGV) {

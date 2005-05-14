@@ -19,7 +19,7 @@ No files are changed or created by this program.
 
 =cut
 
-use lib 'bin';
+use lib 'perllib';
 use Ausadmin;
 use Vote;
 use DateFunc;

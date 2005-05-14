@@ -4,7 +4,7 @@
 #	Be a small NNTP server for syncing group lists
 #	Intended to be run from tcpserver, so uses stdin/stdout
 
-use lib '/home/ausadmin/bin';
+use lib '/home/ausadmin/perllib';
 
 use Ausadmin qw();
 
