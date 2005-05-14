@@ -83,6 +83,7 @@ sub write {
 	my $fh = new IO::File;
 	my $signcmd = $self->{'signcmd'};
 
+	print "PIPING to $signcmd > $file_temp\n";
 	if (!open($fh, "|$signcmd > $file_temp")) {
 		die "Unable to open pipe to $signcmd or $file_temp for writing: $!";
 	}

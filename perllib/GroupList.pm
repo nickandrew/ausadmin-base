@@ -19,6 +19,7 @@ package GroupList;
 use IO::File;
 use IPC::Open2;
 
+use Carp qw(carp confess);
 use Ausadmin qw();
 use Newsgroup qw();
 
@@ -54,7 +55,7 @@ sub write {
 	my $datadir = Newsgroup::datadir($self->{hier});
 	my $fh = new IO::File;
 	if (!open($fh, ">$datadir/$file_temp")) {
-		die "Unable to open $datadir/$file_temp for writing: $!";
+		confess "Unable to open ($datadir)/$file_temp for writing: $!";
 	}
 
 	foreach (@nglines) {

@@ -2,6 +2,13 @@
 #	@(#) $Id$
 #	@(#) bin/post-checkgroups - Post signed checkgroups
 
+HIER="$1"
+
+if [ -z $HIER ] ; then
+	echo "Usage: bin/post-checkgroups aus"
+	exit 8
+fi
+
 umask 027
 
 #----------------------------------------------------------------------------
@@ -10,20 +17,22 @@ umask 027
 
 rc=0
 
-if [ ! -d data ] ; then
-	echo "post-checkgroups: No data directory, fatal"
+D="data/$HIER.data";
+
+if [ ! -d $D ] ; then
+	echo "post-checkgroups: No $D directory, fatal"
 	exit 8
 fi
 
-if [ ! -f data/checkgroups.signed ] ; then
-	echo "post-checkgroups: No data/checkgroups.signed file, fatal"
+if [ ! -f $D/checkgroups.signed ] ; then
+	echo "post-checkgroups: No $D/checkgroups.signed file, fatal"
 	exit 8
 fi
 
-post.pl < data/checkgroups.signed
+post.pl < $D/checkgroups.signed
 s=$?
 if [ $s -ne 0 ] ; then
-	echo "post.pl submission of data/checkgroups.signed returned status $s"
+	echo "post.pl submission of $D/checkgroups.signed returned status $s"
 	rc=8
 fi
 

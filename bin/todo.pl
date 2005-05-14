@@ -28,7 +28,7 @@ use Date::Format qw(time2str);
 my %action_states = (
 	'abandoned' => '',
 	'complete/fail' => '',
-	'complete/result-wait' => 'Wait for end of result discussion period',
+	'complete/result-wait' => 'Wait for end of result discussion period (5 days)',
 	'complete/resultnotposted' => 'Use action to post the result',
 	'complete/resultnotsigned' => 'Use action to sign and post the result',
 	'complete/pass/unprocessed' => 'You need to create the control message. Try action',

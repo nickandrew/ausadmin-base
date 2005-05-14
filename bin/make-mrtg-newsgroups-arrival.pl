@@ -1,6 +1,6 @@
 #!/usr/bin/perl
-#	@(#) make-mrtg-newsgroups.pl - Create a mrtg.cfg file for all groups
-#  Usage: make-mrtg-newsgroups.pl nglist_file head_file data_path > mrtg.cfg
+#	@(#) $Header$
+#  Usage: make-mrtg-newsgroups-arrval.pl nglist_file head_file data_path > mrtg.cfg
 
 my $nglist_file = shift @ARGV;
 my $head_file = shift @ARGV;

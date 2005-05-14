@@ -381,7 +381,7 @@ readbody
       $die .= "$0: bad group name \"$group\"\n" if $group !~ /^$grouppat$/;
       $die .= "$0: tab in description\n"        if $description =~ /\t/;
       s/ \(Moderated\)$//;
-      $die .= "$0: $group line too long\n"      if length(expand($_)) > 80;
+      $die .= "$0: $group line too long\n"      if length(expand($_)) > 90;
     }
   }
 }

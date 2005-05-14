@@ -83,16 +83,22 @@ close(TMP) || warn "$0: close > $tmp: $!\n";
 
 $ENV{'LANGUAGE'} = 'en';        # force English for pgp messages
 $ok = 2;                        # unknown signature result is default
+system("cp $tmp pgpverify-input-file");
 open(PGP,"$pgp -f < $tmp 2>&1 >/dev/null |") ||
   &fail("$0: failed to execute pgp: $!\n");
 
 $/ = "\n";
 while (<PGP>) {
+  print STDERR $_;
   # MIT PGP 2.6.2:
   #   Good signature from user "Robert Braver <rbraver@ohww.norman.ok.us>".
   # ViaCrypt PGP 4.0:
   #   Good signature from user:  Robert Braver <rbraver@ohww.norman.ok.us>
-  if (/^Good signature from user(:  (.*)| "(.*)"\.)$/) {
+  if (/^Good signature from "(\S+\@\S+)"/) {
+    $ok = 0;
+    $signer = $1;
+  }
+  elsif (/^Good signature from user(:  (.*)| "(.*)"\.)$/) {
     $ok = 0;
     $signer = $+;
   } elsif (/^Bad signature /) {
@@ -100,7 +106,7 @@ while (<PGP>) {
   }
 }
 close(PGP) || warn "$0: closing pgp pipe returned status $?\n";
-unlink("$tmp") || warn "$0: unlink $tmp: $!\n";
+#unlink("$tmp") || warn "$0: unlink $tmp: $!\n";
 
 print "$signer\n" if $signer;
 exit $ok;

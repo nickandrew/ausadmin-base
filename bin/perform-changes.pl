@@ -155,7 +155,7 @@ sub do_control {
 
 			# Recreate the checkgroups file
 			my $gl = new GroupList();
-			$gl->write("./data/checkgroups.$$", "./data/checkgroups");
+			$gl->write("checkgroups.$$", "checkgroups");
 			$v->audit("Recreated data/checkgroups for the new group");
 
 			# Update the checkgroups message
