@@ -26,6 +26,8 @@ Ausadmin - misc functions class
 
  $sign_email = Ausadmin::pgp_signer()
 
+ $value = Ausadmin::config($keyname);
+
 =head1 DESCRIPTION
 
 This package provides some useful file I/O functions
@@ -86,6 +88,10 @@ package Ausadmin;
 );
 
 $Ausadmin::pgp_signer_default = 'ausadmin@aus.news-admin.org';
+
+my $config_statics = {
+	cookie_domain => '127.0.0.1',
+};
 
 sub read1line {
 	my $path = shift;
@@ -340,6 +346,21 @@ sub sendmail_template {
 	open(SM, "|/usr/sbin/sendmail $recip") || die "Unable to open pipe to sendmail: $!";
 	print SM $text;
 	close(SM);
+}
+
+# ---------------------------------------------------------------------------
+# Return the value of a named configuration parameter
+# ---------------------------------------------------------------------------
+
+sub config {
+	my $keyname = shift;
+
+	my $value = $config_statics->{$keyname};
+	if (defined $value) {
+		return $value;
+	}
+
+	return undef;
 }
 
 1;

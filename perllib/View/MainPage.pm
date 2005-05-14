@@ -1,9 +1,10 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 #	@(#) $Header$
 
 package View::MainPage;
 
 use strict;
+use warnings;
 
 use VoteList qw();
 use Include qw();
@@ -52,6 +53,7 @@ sub leftColumn {
   <td class="lhs" bgcolor="#ffffe0" width="100" valign="top">
 EOF
 
+	push(@contents, loginBox());
 	push(@contents, ausadminHeader());
 
 	my $votelist = new VoteList(vote_dir => "$ENV{AUSADMIN_HOME}/vote");
@@ -65,6 +67,47 @@ EOF
 
 	return \@contents;
 }
+
+# ---------------------------------------------------------------------------
+# Return a 'username/password/register' box
+# ---------------------------------------------------------------------------
+
+sub loginBox {
+	# FIXME ... how to detect logged-in ?
+	return q{
+<form method="POST">
+<input type="hidden" name="action" value="login">
+<table border="1" cellpadding="1" cellspacing="0">
+<tr>
+ <td colspan="3">Not logged in</td>
+</tr>
+
+<tr>
+ <td>Username</td>
+ <td colspan="2"><input name="username" maxlength="16"></td>
+</tr>
+
+<tr>
+ <td>Password</td>
+ <td><input name="password" type="password" size="10" maxlength="16"></td>
+ <td><input type="submit" value="Go"></td>
+</tr>
+
+<tr>
+ <td colspan="3" align="center" >
+  <a href="register.cgi">Register</a> /
+  <a href="lostpass.cgi">Lost Password</a>
+</tr>
+
+</table>
+</form>
+}
+
+};
+
+# ---------------------------------------------------------------------------
+# ??
+# ---------------------------------------------------------------------------
 
 sub template {
 	my @contents;
