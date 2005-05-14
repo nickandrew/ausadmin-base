@@ -9,6 +9,7 @@ use View::MainPage qw();
 use Newsgroup qw();
 
 sub insideBody {
+	my $cookies = shift;
 	my $ng = shift;
 
 	my @contents;
@@ -18,8 +19,8 @@ sub insideBody {
    <tr>
 EOF
 
-	push(@contents, leftColumn($ng));
-	push(@contents, rightColumn($ng));
+	push(@contents, leftColumn($cookies, $ng));
+	push(@contents, rightColumn($cookies, $ng));
 
 	push(@contents, <<EOF);
    </tr>
@@ -30,6 +31,7 @@ EOF
 }
 
 sub leftColumn {
+	my $cookies = shift;
 	my $ng = shift;
 
 	my @contents;
@@ -38,6 +40,7 @@ sub leftColumn {
     <td class="lhs" width="080" valign="top">
 EOF
 
+	push(@contents, View::MainPage::loginBox($cookies));
 	push(@contents, View::MainPage::ausadminHeader());
 
 	my $votelist = new VoteList(vote_dir => "$ENV{AUSADMIN_HOME}/vote");
@@ -86,15 +89,13 @@ EOF
 }
 
 sub rightColumn {
+	my $cookies = shift;
 	my $ng = shift;
 
 	my @contents;
 
 	if (!defined $ng) {
-		push(@contents, "Uh, no group name");
-		foreach (keys %ENV) {
-			push(@contents, "<br />$_ ... $ENV{$_}");
-		}
+		push(@contents, "Uh, no group name was specified.");
 		return \@contents;
 	}
 

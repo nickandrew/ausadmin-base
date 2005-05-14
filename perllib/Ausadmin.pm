@@ -74,10 +74,17 @@ each paragraph's parsed contents.
 Return the string (usually an email address) which identifies
 the GPG key to use for signing articles.
 
+=head2 Ausadmin::sqldb()
+
+Return a reference to an instance of SQLdb (same instance every
+time)
+
 =cut
 
 
 package Ausadmin;
+
+use SQLdb qw();
 
 %Ausadmin::ph_defaults = (
 	'Newsgroups' => 'aus.general,aus.net.news',
@@ -89,9 +96,36 @@ package Ausadmin;
 
 $Ausadmin::pgp_signer_default = 'ausadmin@aus.news-admin.org';
 
+my $sqldb;
+
 my $config_statics = {
 	cookie_domain => '127.0.0.1',
+	uri_prefix => '/ausadmin',
+	db_name => 'ausadmin',
+	db_user => 'ausadmin',
+	db_password => undef,
 };
+
+# ---------------------------------------------------------------------------
+# Return a reference to our database
+# ---------------------------------------------------------------------------
+
+sub sqldb {
+	if (! $sqldb) {
+		$sqldb = SQLdb->new(
+			database => $config_statics->{db_name},
+			user => $config_statics->{db_user},
+			password => $config_statics->{db_password},
+		);
+	}
+
+	return $sqldb;
+}
+
+
+# ---------------------------------------------------------------------------
+# Read 1 line from a file
+# ---------------------------------------------------------------------------
 
 sub read1line {
 	my $path = shift;

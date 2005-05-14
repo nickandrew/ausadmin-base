@@ -28,6 +28,8 @@ sub output {
 }
 
 sub insideBody {
+	my $cookies = shift;
+
 	my @contents;
 
 	push(@contents, <<EOF);
@@ -35,8 +37,8 @@ sub insideBody {
  <tr>
 EOF
 
-	push(@contents, leftColumn());
-	push(@contents, rightColumn());
+	push(@contents, leftColumn($cookies));
+	push(@contents, rightColumn($cookies));
 
 	push(@contents, <<EOF);
  </tr>
@@ -47,14 +49,16 @@ EOF
 }
 
 sub leftColumn {
+	my $cookies = shift;
+
 	my @contents;
 
 	push(@contents, <<EOF);
   <td class="lhs" bgcolor="#ffffe0" width="100" valign="top">
 EOF
 
-	push(@contents, loginBox());
-	push(@contents, ausadminHeader());
+	push(@contents, loginBox($cookies));
+	push(@contents, ausadminHeader($cookies));
 
 	my $votelist = new VoteList(vote_dir => "$ENV{AUSADMIN_HOME}/vote");
 	push(@contents, proposalList($votelist));
@@ -73,13 +77,36 @@ EOF
 # ---------------------------------------------------------------------------
 
 sub loginBox {
-	# FIXME ... how to detect logged-in ?
-	return q{
+	my $cookies = shift;
+
+	my $uri_prefix = Ausadmin::config('uri_prefix');
+	my $username = $cookies->getUserName();
+
+	if ($username) {
+		return qq{
+<form method="POST">
+<input type="hidden" name="action" value="logout" />
+<table border="1" cellpadding="1" cellspacing="0">
+<tr>
+ <td>Logged in as $username</td>
+</tr>
+
+<tr>
+ <td><input type="submit" value="Logout" /></td>
+</tr>
+</table>
+</form>
+};
+	}
+
+	# They are not logged in.
+
+	return qq{
 <form method="POST">
 <input type="hidden" name="action" value="login">
 <table border="1" cellpadding="1" cellspacing="0">
 <tr>
- <td colspan="3">Not logged in</td>
+ <td colspan="3">Please login or register</td>
 </tr>
 
 <tr>
@@ -95,13 +122,13 @@ sub loginBox {
 
 <tr>
  <td colspan="3" align="center" >
-  <a href="register.cgi">Register</a> /
-  <a href="lostpass.cgi">Lost Password</a>
+  <a href="$uri_prefix/register.cgi">Register</a> /
+  <a href="$uri_prefix/lostpass.cgi">Lost Password</a>
 </tr>
 
 </table>
 </form>
-}
+};
 
 };
 
