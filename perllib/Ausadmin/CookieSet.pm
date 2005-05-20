@@ -96,9 +96,10 @@ sub getIDToken {
 
 	# Make up a random one and assign it, next execution
 	$id_token = randomValue(16);
+	my $lifetime = 3650;
 
 	my $now = time2str('%Y-%m-%d %T', time());
-	my $future = time2str('%Y-%m-%d %T', time() + 3 * 60);
+	my $future = time2str('%Y-%m-%d %T', time() + $lifetime * 86400);
 
 	$self->{sqldb}->insert('ident',
 		id_token => $id_token,
@@ -112,7 +113,7 @@ sub getIDToken {
 	my $cookie = $cgi->cookie(
 		-name => $id_cookie_name,
 		-value => $id_token,
-		-expires => '+3m',
+		-expires => "+${lifetime}d",
 		-path => '/',
 		-domain => Ausadmin::config('cookie_domain'),
 		-secure => 1,
