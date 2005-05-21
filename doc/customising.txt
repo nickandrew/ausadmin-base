@@ -1,0 +1,4 @@
+We would want to customise the ausadmin system on a per-hierarchy basis,
+so one ausadmin instance could serve multiple hierarchies.
+
+Hierarchies are directories $ENV{AUSADMIN_DATA}/*.data
