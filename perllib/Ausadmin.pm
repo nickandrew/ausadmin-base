@@ -86,7 +86,7 @@ package Ausadmin;
 
 use SQLdb qw();
 
-%Ausadmin::ph_defaults = (
+my %ph_defaults = (
 	'Newsgroups' => 'aus.general,aus.net.news',
 	'From' => 'ausadmin <ausadmin@aus.news-admin.org>',
 	'Organization' => 'aus.* newsgroups administration, see http://aus.news-admin.org/',
@@ -94,16 +94,17 @@ use SQLdb qw();
 	'Followup-To' => 'aus.net.news'
 );
 
-$Ausadmin::pgp_signer_default = 'ausadmin@aus.news-admin.org';
-
 my $sqldb;
 
 my $config_statics = {
 	cookie_domain => '127.0.0.1',
-	uri_prefix => '/ausadmin',
 	db_name => 'ausadmin',
-	db_user => 'ausadmin',
 	db_password => undef,
+	db_user => 'ausadmin',
+	mail_from => 'ausadmin@aus.news-admin.org',
+	pgp_signer => 'ausadmin@aus.news-admin.org',
+	smtp_server => '127.0.0.1',
+	uri_prefix => '/ausadmin',
 };
 
 # ---------------------------------------------------------------------------
@@ -111,6 +112,7 @@ my $config_statics = {
 # ---------------------------------------------------------------------------
 
 sub sqldb {
+	# Uses package global variable $sqldb
 	if (! $sqldb) {
 		$sqldb = SQLdb->new(
 			database => $config_statics->{db_name},
@@ -297,9 +299,9 @@ sub make_header {
 	my($hashref) = @_;
 	my %headers = %$hashref;
 
-	foreach my $header (keys %Ausadmin::ph_defaults) {
+	foreach my $header (keys %ph_defaults) {
 		if (!exists $headers{$header}) {
-			$headers{$header} = $Ausadmin::ph_defaults{$header};
+			$headers{$header} = $ph_defaults{$header};
 		}
 	}
 
@@ -321,9 +323,9 @@ sub print_header {
 	my $fh = shift;
 
 	if (defined $fh) {
-		print $fh Ausadmin::make_header($header_hr);
+		print $fh make_header($header_hr);
 	} else {
-		print Ausadmin::make_header($header_hr);
+		print make_header($header_hr);
 	}
 }
 
@@ -351,7 +353,7 @@ sub email_obscure {
 }
 
 sub pgp_signer {
-	return $Ausadmin::pgp_signer_default;
+	return config('pgp_signer');
 }
 
 sub resolve_template {
@@ -395,6 +397,41 @@ sub config {
 	}
 
 	return undef;
+}
+
+# ---------------------------------------------------------------------------
+# Override our hierarchy
+# ---------------------------------------------------------------------------
+
+sub setHierarchy {
+	my $new_hier = shift;
+
+	$hierarchy = $new_hier;
+}
+
+# ---------------------------------------------------------------------------
+# The data path depends on which hierarchy we are. Hierarchy
+# depends on package global var hierarchy, env HTTP_HOST.
+# ---------------------------------------------------------------------------
+
+sub dataPath {
+	my $hier;
+	if ($hierarchy) {
+		$hier = $hierarchy;
+	}
+	elsif ($ENV{HTTP_HOST} && $ENV_HTTP_HOST =~ /^(.*)\.news-admin.org/) {
+		$hier = $1;
+	}
+
+	if ($ENV{AUSADMIN_DATA} && $hier) {
+		return "$ENV{AUSADMIN_DATA}/$hier.data";
+	}
+
+	return $ENV{AUSADMIN_DATA} || '/home/ausadmin/data';
+}
+
+sub codePath {
+	return $ENV{AUSADMIN_WEB} || '/var/www/aus.news-admin.org';
 }
 
 1;
