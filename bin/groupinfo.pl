@@ -22,7 +22,7 @@ my $rc = 0;
 foreach my $group (@ARGV) {
 	my($art_n,$art_low,$art_high,$name) = $s->group($group);
 
-	if ($name eq '') {
+	if (! $name) {
 		print "Problem: No such group: $group\n";
 		$rc |= 2;
 		next;
