@@ -1,0 +1,23 @@
+Standard potential objections to a proposal
+-------------------------------------------
+
+There can be problems with:
+ - the name
+ - the topic
+ - the proposal (formatting, etc)
+ - other
+
+Name problems:
+- Group name does not fit namespace plan
+
+Topic problems:
+- Group topic already covered elsewhere
+- Topic poorly defined
+
+Proposal problems:
+- Nonsense proposal
+- Spelling errors and/or typos in proposal
+- Group not justified - rationale insufficient
+
+- Group will be abused by spammers
+- Group will be abused by trolls / net.idiots
