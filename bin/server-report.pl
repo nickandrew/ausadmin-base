@@ -3,10 +3,12 @@
 #
 #	Read a consolidated server_report.xml and write a text report
 
+use strict;
+
 use XML::Simple qw();
 use Date::Format qw(time2str);
 
-my $min_age = time() - 86400 * 6;		# Require fresh data
+my $min_age = time() - 86400 * 30;		# Require fresh data
 my $path = "$ENV{AUSADMIN_HOME}/server_reports.xml";
 my $db = XML::Simple::XMLin($path, forcearray => 1);
 
