@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 #	@(#) $Header$
 #
 #	Read an XML file which is a server report, and compare that
@@ -6,11 +6,15 @@
 #
 # Usage: check-server.pl < filename.xml
 
+use strict;
+
 use Getopt::Std qw(getopts);
 use XML::Simple qw();
 use Date::Format qw(time2str);
 use Data::Dumper qw(Dumper);
 use Fcntl qw(:flock);
+
+use Newsgroup qw();
 
 use vars qw($opt_d);
 
