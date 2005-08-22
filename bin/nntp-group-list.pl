@@ -4,6 +4,8 @@
 #	Connect to a newsserver and get some group lists. Email back to me.
 #	Released under GPL
 
+use strict;
+
 use Net::NNTP qw();
 use LWP::UserAgent qw();
 use Net::SMTP qw();
@@ -12,7 +14,7 @@ my $cfg = {
 	news_server => $ENV{NNTPSERVER} || 'news.example.com',
 	my_email => $ENV{MAIL_FROM} || 'you@example.com',
 	email_mode => 'smtp',		# sendmail or smtp
-	mail_server => $ENV{MAILSERVER} || die 'MAILSERVER must be set to smtp server hostname',
+	mail_server => $ENV{MAILSERVER} || die('MAILSERVER must be set to smtp server hostname'),
 	email_to => 'ausadmin@aus.news-admin.org',
 	hier_url => 'http://aus.news-admin.org/data/monitor.txt',
 	now => time(),
