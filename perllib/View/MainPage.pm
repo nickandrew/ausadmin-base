@@ -28,7 +28,7 @@ sub output {
 }
 
 sub insideBody {
-	my $cookies = shift;
+	my ($cookies, $filename) = @_;
 
 	my @contents;
 
@@ -38,7 +38,7 @@ sub insideBody {
 EOF
 
 	push(@contents, leftColumn($cookies));
-	push(@contents, rightColumn($cookies));
+	push(@contents, rightColumn($cookies, $filename));
 
 	push(@contents, <<EOF);
  </tr>
@@ -254,13 +254,15 @@ EOF
 }
 
 sub rightColumn {
+	my ($cookies, $filename) = @_;
+
 	my @contents;
 	push(@contents, <<EOF);
   <!-- Next column -->
   <td valign="top">
 EOF
 	push(@contents, ausadminHeading());
-	push(@contents, ausadminContents());
+	push(@contents, ausadminContents($filename));
 
 	push(@contents, <<EOF);
   </td>
@@ -284,27 +286,12 @@ EOF
 }
 
 sub ausadminContents {
-	my @contents;
-	my $hier = $ENV{AUSADMIN_HIER} || 'aus';
+	my $filename = shift;
 
-	push(@contents, <<EOF);
-   <table cellpadding="5" cellspacing="0" width="100%" border="0">
-EOF
-	push(@contents, ausadminSubHeadingRow("Overview"));
-	push(@contents, Include::html('overview.html'));
-	push(@contents, ausadminSubHeadingRow("ausadmin Role"));
-	push(@contents, Include::html('role.html'));
-	push(@contents, ausadminSubHeadingRow("$hier structure planning"));
-	push(@contents, Include::html('structure.html'));
-	push(@contents, ausadminSubHeadingRow("ausadmin Policy"));
-	push(@contents, Include::html('policy.html'));
-	push(@contents, ausadminSubHeadingRow("Links"));
-	push(@contents, Include::html('links.html'));
-	push(@contents, ausadminSubHeadingRow("Newsgroup Creation Proposals"));
-	push(@contents, Include::html('proposals.html'));
-	push(@contents, <<EOF);
-   </table>
-EOF
+	my @contents;
+
+	my $inc = new Include();
+	push(@contents, $inc->resolveFile($filename));
 	return \@contents;
 }
 
