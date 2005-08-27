@@ -7,6 +7,7 @@
 
 package Ausadmin::CookieSet;
 
+use Carp qw(confess);
 use Date::Format qw(time2str);
 use Date::Parse qw(str2time);
 use IO::File qw();
@@ -178,7 +179,7 @@ sub getUserName {
 		my $expires_ts = str2time($expires_on);
 		if ($expires_ts < time() + 360 * 86400) {
 			# Time to refresh the expiry date on the cookie
-			my $cookie = _loginCookie($login_token, 365);
+			my $cookie = _loginCookie($self, $login_token, 365);
 			addCookie($self, $cookie);
 		}
 
@@ -275,7 +276,12 @@ sub doLogin {
 sub _loginCookie {
 	my ($self, $login_token, $lifetime) = @_;
 
-	my $cookie = $self->{cgi}->cookie(
+	my $cgi = $self->{cgi};
+	if (! $cgi) {
+		confess "No CGI";
+	}
+
+	my $cookie = $cgi->cookie(
 		-name => $login_cookie_name,
 		-value => $login_token,
 		-expires => "+${lifetime}d",
