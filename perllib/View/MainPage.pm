@@ -9,6 +9,14 @@ use warnings;
 use VoteList qw();
 use Include qw();
 
+sub new {
+	my $class = shift;
+	my $self = { @_ };
+
+	bless $self, $class;
+	return $self;
+}
+
 sub output {
 	my $lr = shift;
 
@@ -26,6 +34,10 @@ sub output {
 		}
 	}
 }
+
+# ---------------------------------------------------------------------------
+# The contents of just inside the body
+# ---------------------------------------------------------------------------
 
 sub insideBody {
 	my ($cookies, $filename) = @_;
@@ -47,6 +59,10 @@ EOF
 
 	return \@contents;
 }
+
+# ---------------------------------------------------------------------------
+# The left column (the narrow one)
+# ---------------------------------------------------------------------------
 
 sub leftColumn {
 	my $cookies = shift;
@@ -250,7 +266,7 @@ EOF
 	push(@contents, <<EOF);
 </p>
 EOF
-	return \@contents;
+	return join('', @contents);
 }
 
 sub rightColumn {
@@ -308,6 +324,43 @@ sub ausadminSubHeadingRow {
     </tr>
 EOF
 	return \@contents;
+}
+
+# ---------------------------------------------------------------------------
+# Callback function for the use of the template engine
+# ---------------------------------------------------------------------------
+
+sub viewFunction {
+	my ($self, $include, $function_name, @args) = @_;
+
+	if ($function_name eq 'loginBox') {
+		my @contents;
+		push(@contents, loginBox($self->{cookies}));
+		return join('', @contents);
+	}
+	elsif ($function_name eq 'proposalList') {
+		my @contents;
+		my $votelist = new VoteList(vote_dir => "$ENV{AUSADMIN_HOME}/vote");
+		push(@contents, proposalList($votelist));
+		return join('', @contents);
+	}
+	elsif ($function_name eq 'runningVotesList') {
+		my @contents;
+		my $votelist = new VoteList(vote_dir => "$ENV{AUSADMIN_HOME}/vote");
+		push(@contents, runningVotesList($votelist));
+		return join('', @contents);
+	}
+	elsif ($function_name eq 'newsgroupList') {
+		my @contents;
+		push(@contents, newsgroupList());
+		return join('', @contents);
+	}
+	elsif ($function_name eq 'contentFile') {
+		my $string = $include->resolveFile($self->{content});
+		return $string;
+	}
+
+	return "<b>Unable to do function: $function_name</b>";
 }
 
 1;
