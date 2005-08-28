@@ -11,6 +11,18 @@ use strict;
 use Carp qw(confess);
 use IO::File qw(O_RDONLY O_WRONLY O_APPEND O_CREAT O_EXCL);
 
+sub new {
+	my $class = shift;
+
+	my $self = { @_ };
+	bless $self, $class;
+	return $self;
+}
+
+# ---------------------------------------------------------------------------
+# This function is obsolete. Should be only used internally to this module.
+# ---------------------------------------------------------------------------
+
 sub html {
 	my $file = shift;
 
@@ -32,14 +44,6 @@ sub html {
 	$fh->close();
 
 	return \@lines;
-}
-
-sub new {
-	my $class = shift;
-
-	my $self = { @_ };
-	bless $self, $class;
-	return $self;
 }
 
 # ---------------------------------------------------------------------------
@@ -96,6 +100,17 @@ sub resolveMarker {
 	elsif ($command eq 'A') {
 		# A|filename|description
 		return qq{<a href="c.cgi/$args[0]">$args[1]</a>};
+	}
+	elsif ($command eq 'VAR') {
+		# VAR|variable-name
+		my $value = $self->{vars}->{$args[0]};
+		$value = '' if (!defined $value);
+		return $value;
+	}
+	elsif ($command eq 'VIEW') {
+		# VIEW|function-name|args
+		my $view = $self->{view};
+		return $view->viewFunction($self, @args);
 	}
 	else {
 		return "<b>Unresolved marker: $command</b>";
