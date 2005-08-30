@@ -172,7 +172,7 @@ sub proposalList {
 	my @proposals = $votelist->voteList('activeProposals');
 
 	if (! @proposals) {
-		return undef;
+		return '';
 	}
 
 	push(@contents, <<EOF);
@@ -191,7 +191,7 @@ EOF
 </p>
 <!-- end of proposals -->
 EOF
-	return \@contents;
+	return join('', @contents);
 }
 
 sub runningVotesList {
@@ -201,7 +201,7 @@ sub runningVotesList {
 	my @runningvotes = $votelist->voteList('runningVotes');
 
 	if (! @runningvotes) {
-		return undef;
+		return '';
 	}
 
 	push(@contents, <<EOF);
@@ -240,7 +240,7 @@ EOF
 <!-- end of runningvotes -->
 EOF
 
-	return \@contents;
+	return join('', @contents);
 }
 
 sub newsgroupList {
@@ -357,6 +357,9 @@ sub viewFunction {
 	}
 	elsif ($function_name eq 'contentFile') {
 		my $string = $include->resolveFile($self->{content});
+		if (!defined $string) {
+			return "<b>No file $self->{content}</b>";
+		}
 		return $string;
 	}
 
