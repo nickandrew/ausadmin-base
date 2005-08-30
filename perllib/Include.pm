@@ -54,6 +54,10 @@ sub html {
 sub resolveFile {
 	my ($self, $filename) = @_;
 
+	if (! $self) {
+		confess "Need self";
+	}
+
 	# Grab the contents
 	my $lines = html($filename);
 	if (! $lines) {
@@ -61,6 +65,10 @@ sub resolveFile {
 	}
 
 	my $string = join('', @$lines);
+
+	if (!defined $string) {
+		confess "String is undefined";
+	}
 
 	# Identify and resolve markers in those lines
 	# Each marker looks like {{COMMAND|data|data,...}}
@@ -99,7 +107,7 @@ sub resolveMarker {
 	}
 	elsif ($command eq 'A') {
 		# A|filename|description
-		return qq{<a href="c.cgi/$args[0]">$args[1]</a>};
+		return qq{<a href="$ENV{SCRIPT_NAME}/$args[0]">$args[1]</a>};
 	}
 	elsif ($command eq 'VAR') {
 		# VAR|variable-name
@@ -110,7 +118,15 @@ sub resolveMarker {
 	elsif ($command eq 'VIEW') {
 		# VIEW|function-name|args
 		my $view = $self->{view};
-		return $view->viewFunction($self, @args);
+		my $value = $view->viewFunction($self, @args);
+		if (!defined $value) {
+			return "<b>Nothing back from VIEW @args</b>";
+		}
+		return $value;
+	}
+	elsif ($command eq 'COMMENT') {
+		# COMMENT|whatever
+		return '';
 	}
 	else {
 		return "<b>Unresolved marker: $command</b>";
