@@ -326,6 +326,16 @@ EOF
 	return \@contents;
 }
 
+sub proposalContents {
+	my $self = shift;
+
+	my $vote = $self->{vote};
+
+	my $rfd_text = $vote->read_file("rfd");
+
+	return qq{<pre>@$rfd_text</pre>};
+}
+
 # ---------------------------------------------------------------------------
 # Callback function for the use of the template engine
 # ---------------------------------------------------------------------------
@@ -360,6 +370,10 @@ sub viewFunction {
 		if (!defined $string) {
 			return "<b>No file $self->{content}</b>";
 		}
+		return $string;
+	}
+	elsif ($function_name eq 'proposalContents') {
+		my $string = $self->proposalContents();
 		return $string;
 	}
 
