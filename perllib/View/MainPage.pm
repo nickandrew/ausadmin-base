@@ -36,59 +36,6 @@ sub output {
 }
 
 # ---------------------------------------------------------------------------
-# The contents of just inside the body
-# ---------------------------------------------------------------------------
-
-sub insideBody {
-	my ($cookies, $filename) = @_;
-
-	my @contents;
-
-	push(@contents, <<EOF);
-<table width="600" cellpadding="0" cellspacing="0" border="0">
- <tr>
-EOF
-
-	push(@contents, leftColumn($cookies));
-	push(@contents, rightColumn($cookies, $filename));
-
-	push(@contents, <<EOF);
- </tr>
-</table>
-EOF
-
-	return \@contents;
-}
-
-# ---------------------------------------------------------------------------
-# The left column (the narrow one)
-# ---------------------------------------------------------------------------
-
-sub leftColumn {
-	my $cookies = shift;
-
-	my @contents;
-
-	push(@contents, <<EOF);
-  <td class="lhs" bgcolor="#ffffe0" width="100" valign="top">
-EOF
-
-	push(@contents, loginBox($cookies));
-	push(@contents, ausadminHeader($cookies));
-
-	my $votelist = new VoteList(vote_dir => "$ENV{AUSADMIN_HOME}/vote");
-	push(@contents, proposalList($votelist));
-	push(@contents, runningVotesList($votelist));
-	push(@contents, newsgroupList());
-
-	push(@contents, <<EOF);
-  </td>
-EOF
-
-	return \@contents;
-}
-
-# ---------------------------------------------------------------------------
 # Return a 'username/password/register' box
 # ---------------------------------------------------------------------------
 
@@ -148,24 +95,8 @@ sub loginBox {
 
 };
 
-# ---------------------------------------------------------------------------
-# ??
-# ---------------------------------------------------------------------------
-
-sub template {
-	my @contents;
-	push(@contents, <<EOF);
-EOF
-	push(@contents, <<EOF);
-EOF
-	return \@contents;
-}
-
-sub ausadminHeader {
-	return Include::html('header-links.html');
-}
-
 sub proposalList {
+	my $self = shift;
 	my $votelist = shift;
 	my @contents;
 
@@ -175,6 +106,8 @@ sub proposalList {
 		return '';
 	}
 
+	my $uri_prefix = $self->{vars}->{URI_PREFIX};
+
 	push(@contents, <<EOF);
 <!-- start of proposals -->
 <p>
@@ -183,7 +116,7 @@ EOF
 
 	foreach my $v (@proposals) {
 		my $p = $v->getName();
-		my $s = "&nbsp;&nbsp;<a href=\"/proposal.cgi?proposal=$p\">$p</a><br />\n";
+		my $s = "&nbsp;&nbsp;<a href=\"$uri_prefix/proposal.cgi?proposal=$p\">$p</a><br />\n";
 		push(@contents, $s);
 	}
 
@@ -244,14 +177,18 @@ EOF
 }
 
 sub newsgroupList {
+	my $self = shift;
+
 	my @contents;
 
 	# Return an array of newsgroup names
 	my @newsgrouplist = Newsgroup::list_newsgroups(datadir => "$ENV{AUSADMIN_DATA}");
 
 	if (!@newsgrouplist) {
-		return undef;
+		return '';
 	}
+
+	my $uri_prefix = $self->{vars}->{URI_PREFIX};
 
 	push(@contents, <<EOF);
 <p>
@@ -259,7 +196,7 @@ sub newsgroupList {
 EOF
 
 	foreach my $g (@newsgrouplist) {
-		my $s = "&nbsp;&nbsp;<a href=\"groupinfo.cgi/$g/\">$g</a><br />\n";
+		my $s = qq{&nbsp;&nbsp;<a href="$uri_prefix/groupinfo.cgi/$g">$g</a><br />\n};
 		push(@contents, $s);
 	}
 
@@ -267,63 +204,6 @@ EOF
 </p>
 EOF
 	return join('', @contents);
-}
-
-sub rightColumn {
-	my ($cookies, $filename) = @_;
-
-	my @contents;
-	push(@contents, <<EOF);
-  <!-- Next column -->
-  <td valign="top">
-EOF
-	push(@contents, ausadminHeading());
-	push(@contents, ausadminContents($filename));
-
-	push(@contents, <<EOF);
-  </td>
-  <!-- end of right column -->
-EOF
-	return \@contents;
-}
-
-sub ausadminHeading {
-	my @contents;
-	my $hier = $ENV{AUSADMIN_HIER} || 'aus';
-
-	push(@contents, <<EOF);
-   <center>
-    <h1>
-     <font face="sans-serif">$hier Newsgroup Administration</font>
-    </h1>
-   </center>
-EOF
-	return \@contents;
-}
-
-sub ausadminContents {
-	my $filename = shift;
-
-	my @contents;
-
-	my $inc = new Include();
-	push(@contents, $inc->resolveFile($filename));
-	return \@contents;
-}
-
-sub ausadminSubHeadingRow {
-	my $string = shift;
-
-	my @contents;
-	push(@contents, <<EOF);
-
-    <tr bgcolor="#000000">
-     <td>
-      <font size="+1" color="#66cc66" face="sans-serif"><b>$string</b></font>
-     </td>
-    </tr>
-EOF
-	return \@contents;
 }
 
 sub proposalContents {
@@ -334,6 +214,16 @@ sub proposalContents {
 	my $rfd_text = $vote->read_file("rfd");
 
 	return qq{<pre>@$rfd_text</pre>};
+}
+
+# ---------------------------------------------------------------------------
+# News items
+# ---------------------------------------------------------------------------
+
+sub news {
+	my $self = shift;
+
+	return "<b>No news today</b>\n";
 }
 
 # ---------------------------------------------------------------------------
@@ -351,7 +241,7 @@ sub viewFunction {
 	elsif ($function_name eq 'proposalList') {
 		my @contents;
 		my $votelist = new VoteList(vote_dir => "$ENV{AUSADMIN_HOME}/vote");
-		push(@contents, proposalList($votelist));
+		push(@contents, $self->proposalList($votelist));
 		return join('', @contents);
 	}
 	elsif ($function_name eq 'runningVotesList') {
@@ -362,7 +252,7 @@ sub viewFunction {
 	}
 	elsif ($function_name eq 'newsgroupList') {
 		my @contents;
-		push(@contents, newsgroupList());
+		push(@contents, $self->newsgroupList());
 		return join('', @contents);
 	}
 	elsif ($function_name eq 'contentFile') {
@@ -374,6 +264,10 @@ sub viewFunction {
 	}
 	elsif ($function_name eq 'proposalContents') {
 		my $string = $self->proposalContents();
+		return $string;
+	}
+	elsif ($function_name eq 'news') {
+		my $string = $self->news();
 		return $string;
 	}
 
