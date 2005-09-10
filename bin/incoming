@@ -5,6 +5,7 @@
 cd ~ausadmin
 
 export PATH=$HOME/bin:$PATH
+export PERLLIB=$HOME/perllib
 
 ts=`date '+%Y%m%d-%H%M%S'`
 suffix=`printf "%05d" $$`
