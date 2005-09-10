@@ -5,7 +5,6 @@
 #
 # Usage:	set-charter.pl newsgroup_name charter_file
 
-use lib 'perllib';
 
 use Ausadmin;
 use Newsgroup;

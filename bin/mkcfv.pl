@@ -45,7 +45,6 @@ use POSIX qw(:time_h);
 use Time::Local;
 use IO::Handle;
 
-use lib 'perllib';
 use Ausadmin;
 
 # Info Needed to run the script

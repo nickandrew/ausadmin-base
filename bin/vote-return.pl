@@ -3,7 +3,6 @@
 #
 # Email handler for returned vote acks (vote-return-xxxxxxxxxx address)
 
-use lib 'perllib';
 use VoterState qw();
 
 my $returned_votes = 'mail/returned-votes.new';

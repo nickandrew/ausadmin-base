@@ -6,7 +6,6 @@
 #	specified in the 'change' file in the vote's directory, including
 #	creating a newsgroup, removing it, or changing the charter.
 
-use lib 'perllib';
 
 use Ausadmin;
 use GroupList;

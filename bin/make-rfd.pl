@@ -41,7 +41,6 @@ a bit to cater for that. Not implemented yet!
 =cut
 
 use Getopt::Std;
-use lib './perllib';
 use Ausadmin;
 
 my %opts;

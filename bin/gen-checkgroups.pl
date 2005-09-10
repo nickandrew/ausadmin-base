@@ -6,7 +6,6 @@
 #	Option -d: debug mode, don't overwrite current ones, don't sign.
 #
 
-use lib 'perllib';
 use Newsgroup qw();
 use Checkgroups qw();
 use Getopt::Std;

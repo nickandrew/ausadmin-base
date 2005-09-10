@@ -19,7 +19,6 @@ No files are changed or created by this program.
 
 =cut
 
-use lib 'perllib';
 use Vote;
 
 if (!-d "./vote") {

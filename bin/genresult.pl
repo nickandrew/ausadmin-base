@@ -32,7 +32,6 @@ B<-r> notes this result as a recount.
 
 use Getopt::Std;
 use POSIX qw(:time_h);
-use lib 'perllib';
 use Ausadmin;
 use Vote;
 use Message;

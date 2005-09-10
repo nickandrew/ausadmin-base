@@ -3,7 +3,6 @@
 #
 #	Display an up-to-the-moment summary of voting
 
-use lib 'perllib';
 
 use Vote qw();
 

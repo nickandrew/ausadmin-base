@@ -18,7 +18,6 @@ received for the specified vote.
 =cut
 
 use Getopt::Std;
-use lib 'perllib';
 use Message;
 use Vote;
 

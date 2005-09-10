@@ -29,7 +29,6 @@ Received: headers to its IP cross-reference.
 use Getopt::Std;
 use Socket;
 
-use lib 'perllib';
 use Message;
 use Vote;
 

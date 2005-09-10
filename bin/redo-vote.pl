@@ -27,7 +27,6 @@ same name. This program doesn't cater for that, yet.
 
 =cut
 
-use lib 'perllib';
 use Newsgroup;
 
 my $newsgroup = shift @ARGV || usage();

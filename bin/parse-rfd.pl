@@ -50,7 +50,6 @@ use Time::Local;
 use IO::Handle;
 use Getopt::Std;
 
-use lib 'perllib';
 use Newsgroup;
 
 # Info Needed to run the script

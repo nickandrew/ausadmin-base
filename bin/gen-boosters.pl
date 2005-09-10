@@ -9,7 +9,6 @@
 
 use Getopt::Std;
 
-use lib 'perllib';
 
 use Newsgroup;
 

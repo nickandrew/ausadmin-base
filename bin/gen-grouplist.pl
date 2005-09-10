@@ -6,7 +6,6 @@
 #
 
 use strict;
-use lib 'perllib';
 use GroupList qw();
 use GroupListMessage qw();
 use Getopt::Std;

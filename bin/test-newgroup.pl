@@ -1,7 +1,6 @@
 #!/usr/bin/perl
 #	@(#) test-newgroup.pl - Create a newgroup control message
 
-use lib 'perllib';
 
 use Newsgroup;
 

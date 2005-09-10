@@ -5,7 +5,6 @@
 # $Revision$
 # $Date$
 
-use lib 'perllib';
 use Getopt::Std qw(getopts);
 use Ausadmin qw();
 use Newsgroup qw();

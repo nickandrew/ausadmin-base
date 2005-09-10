@@ -5,7 +5,6 @@
 #
 # Usage:	gen-initial-newsgroups.pl [-h hierarchy] data/checkgroups
 
-use lib 'perllib';
 
 use Getopt::Std qw(getopts);
 use Newsgroup qw();
