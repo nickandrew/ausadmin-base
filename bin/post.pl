@@ -11,11 +11,17 @@
 
 use Socket;
 use IO::Handle;
+use Getopt::Std qw(getopts);
+
+use vars qw($opt_d);
+
+getopts('d');
+
 sub catch_alarm;
 
+my $debug = $opt_d || 0;
 my $hostname = $ARGV[0] || $ENV{NNTPSERVER} || 'news';
 my $port = $ARGV[1] || 119;
-my $debug = $ARGV[2] || 0;
 
 if (exists $ENV{AUSADMIN_NOPOST}) {
 	# do not post, and print the header to stdout, and pretend it posted
