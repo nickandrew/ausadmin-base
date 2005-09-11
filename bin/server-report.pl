@@ -18,7 +18,7 @@ foreach my $server (keys %{$db->{server}}) {
 	my $total_groups = $r->{total_groups};
 	my $score = ($total_groups - $r->{missing} * 3 - $r->{bogus} * 0.5);
 	$score = 0 if ($score < 0);
-	my $tpct = int(1000 * $score / $total_groups);
+	my $tpct = $total_groups ? int(1000 * $score / $total_groups) : 0;
 	$r->{name} = $server;
 	$r->{score} = $score;
 	$r->{tpct} = $tpct;
