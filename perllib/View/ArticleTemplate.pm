@@ -11,41 +11,6 @@ use strict;
 use base 'Contained';
 use Carp qw(carp confess);
 
-sub xnew {
-	my $class = shift;
-	my $self = { };
-	bless $self, $class;
-	return $self;
-}
-
-sub xsetVars {
-	my ($self, $hr) = @_;
-
-	my $vars = $self->{vars} = { };
-	foreach my $k (keys %$hr) {
-		$vars->{$k} = $hr->{$k};
-	}
-}
-
-sub xresolveVar {
-	my ($self, $name) = @_;
-
-	my $value = $self->{vars}->{$name};
-
-	if ($name eq 'article_subject') {
-		return ucfirst($value);
-	}
-	elsif ($name eq 'article_contents') {
-		$value =~ s/^/> /mg;
-	}
-
-	if (!defined $value) {
-		return '';
-	}
-
-	return $value;
-}
-
 sub preview {
 	my $self = shift;
 
@@ -69,8 +34,34 @@ $contents
 sub form {
 	my $self = shift;
 
+	my $action = $self->{vars}->{action} || '';
+
+	if ($action eq 'Submit') {
+		submitArticle($self);
+		return 'Thanks, I submitted it';
+	}
+
 	my $include = $self->{container}->getInclude();
 	return $include->resolveFile("article-template.html");
+}
+
+sub submitArticle {
+	my $self = shift;
+
+	my $subject = $self->{vars}->{article_subject};
+	my $contents = $self->{vars}->{article_contents};
+
+	my $container = $self->{container};
+	my $sqldb = $container->{sqldb};
+
+	$sqldb->insert('article',
+		id => 0,
+		proposal_id => undef,
+		title => $subject,
+		contents => $contents,
+		submitted_by => $container->getUserName(),
+		created_on => $container->dateTime(),
+	);
 }
 
 1;
