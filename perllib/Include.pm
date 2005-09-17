@@ -4,12 +4,33 @@
 #
 #	Include a file into our output
 
+=head1 NAME
+
+Include - template resolution class
+
+=head1 SYNOPSIS
+
+ $i = new Include(vars => {
+ 	our_name => 'Cyberdyne systems',
+	...
+ });
+
+ print $i->resolveFile("default.html");
+
+=cut
+
 package Include;
 
 use strict;
 
 use Carp qw(confess);
 use IO::File qw(O_RDONLY O_WRONLY O_APPEND O_CREAT O_EXCL);
+
+# ---------------------------------------------------------------------------
+# Instantiate a new Include.
+# Possible arguments:
+#    vars => { ... }      Variables to be substituted
+# ---------------------------------------------------------------------------
 
 sub new {
 	my $class = shift;
@@ -111,16 +132,42 @@ sub resolveMarker {
 	}
 	elsif ($command eq 'VAR') {
 		# VAR|variable-name
-		my $value = $self->{vars}->{$args[0]};
+		my $name = $args[0];
+		my $value;
+		if ($name =~ /^(.+)\.(.+)/) {
+			# Grab a value from inside an object
+			my ($obj_name, $name) = ($1,$2);
+			my $obj = $self->{view}->getObject($obj_name);
+			if (! $obj || !ref($obj)) {
+				$value = "Huh? $obj_name/$name";
+			} else {
+				$value = $obj->getVar($name);
+			}
+		} else {
+			$value = $self->{vars}->{$args[0]};
+		}
 		$value = '' if (!defined $value);
 		return $value;
 	}
 	elsif ($command eq 'VIEW') {
-		# VIEW|function-name|args
+		# VIEW|object-name|function-name|args
+		# VIEW|function-name
 		my $view = $self->{view};
-		my $value = $view->viewFunction($self, @args);
+		if (! $view) {
+			return "<b>Cannot view @args - no view</b>";
+		}
+
+		my $value;
+		my $object_name = '';
+		if ($args[1]) {
+			$object_name = shift @args;
+			$value = $view->viewFunction($self, $object_name, @args);
+		} else {
+			$value = $view->viewFunction($self, undef, @args);
+		}
+
 		if (!defined $value) {
-			return "<b>Nothing back from VIEW @args</b>";
+			return "<b>Nothing back from VIEW $object_name @args</b>";
 		}
 		return $value;
 	}

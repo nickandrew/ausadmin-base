@@ -1,5 +1,6 @@
 #!/usr/bin/perl -w
 #	@(#) $Header$
+#	vim:sw=4:ts=4:
 
 package View::MainPage;
 
@@ -9,91 +10,34 @@ use warnings;
 use VoteList qw();
 use Include qw();
 
+# ---------------------------------------------------------------------------
+# Create a new instance of this class.
+# ---------------------------------------------------------------------------
+
 sub new {
 	my $class = shift;
 	my $self = { @_ };
+
+	$self->{objects} = { };
 
 	bless $self, $class;
 	return $self;
 }
 
-sub output {
-	my $lr = shift;
+# ---------------------------------------------------------------------------
+# We are a container. Add an object to our container.
+# Later we might like to make the name a property of the object.
+# ---------------------------------------------------------------------------
 
-	foreach my $s (@$lr) {
-		if ((ref $s) eq 'ARRAY') {
-			output($s);
-		} elsif ((ref $s) eq 'HASH') {
-			print "<!-- unable to output a hashref -->";
-		} elsif (!defined $s) {
-			# undef
-		} elsif (!ref $s) {
-			print $s;
-		} else {
-			print "<!-- unknown reference -->";
-		}
+sub addObject {
+	my ($self, $obj_name, $obj) = @_;
+
+	if (exists $self->{objects}->{$obj_name}) {
+		die "Already exists: view $obj_name";
 	}
+
+	$self->{objects}->{$obj_name} = $obj;
 }
-
-# ---------------------------------------------------------------------------
-# Return a 'username/password/register' box
-# ---------------------------------------------------------------------------
-
-sub loginBox {
-	my $cookies = shift;
-
-	my $uri_prefix = Ausadmin::config('uri_prefix');
-	my $username = $cookies->getUserName();
-
-	if ($username) {
-		return qq{
-<form method="POST">
-<input type="hidden" name="action" value="logout" />
-<table border="1" cellpadding="1" cellspacing="0">
-<tr>
- <td>Logged in as $username</td>
-</tr>
-
-<tr>
- <td><input type="submit" value="Logout" /></td>
-</tr>
-</table>
-</form>
-};
-	}
-
-	# They are not logged in.
-
-	return qq{
-<form method="POST">
-<input type="hidden" name="action" value="login">
-<table border="1" cellpadding="1" cellspacing="0">
-<tr>
- <td colspan="3">Please login or register</td>
-</tr>
-
-<tr>
- <td>Username</td>
- <td colspan="2"><input name="username" maxlength="16"></td>
-</tr>
-
-<tr>
- <td>Password</td>
- <td><input name="password" type="password" size="10" maxlength="16"></td>
- <td><input type="submit" value="Go"></td>
-</tr>
-
-<tr>
- <td colspan="3" align="center" >
-  <a href="$uri_prefix/register.cgi">Register</a> /
-  <a href="$uri_prefix/lostpass.cgi">Lost Password</a>
-</tr>
-
-</table>
-</form>
-};
-
-};
 
 sub proposalList {
 	my $self = shift;
@@ -128,7 +72,9 @@ EOF
 }
 
 sub runningVotesList {
+	my $self = shift;
 	my $votelist = shift;
+
 	my @contents;
 
 	my @runningvotes = $votelist->voteList('runningVotes');
@@ -223,7 +169,119 @@ sub proposalContents {
 sub news {
 	my $self = shift;
 
-	return "<b>No news today</b>\n";
+	if (! $self->{articles}) {
+		require View::Articles;
+		$self->{newsitems} = new View::Articles();
+	}
+
+	my $ni = $self->{articles};
+	if (! $ni) {
+		return "The article section is not currently working";
+	}
+
+	return $ni->asHTML();
+}
+
+# ---------------------------------------------------------------------------
+# Submit article
+# ---------------------------------------------------------------------------
+
+sub submitArticle {
+	my $self = shift;
+
+	if (! $self->{submit_article}) {
+		require View::SubmitArticle;
+		$self->{submit_article} = new View::SubmitArticle(vars => $self->{vars});
+	}
+
+	my $sa = $self->{submit_article};
+	if (! $sa) {
+		return "Article submission is not currently working";
+	}
+
+	return $sa->asHTML();
+}
+
+# ---------------------------------------------------------------------------
+# Instantiate an object of the appropriate type, or return one we have
+# cached.
+# ---------------------------------------------------------------------------
+
+sub getObject {
+	my ($self, $object_name) = @_;
+
+	my $obj = $self->{objects}->{$object_name};
+	if ($obj) {
+		return $obj;
+	}
+
+	# Now instantiate it
+	my $classes = {
+		articleTemplate => 'ArticleTemplate',
+		loginBox => 'LoginBox',
+	};
+
+	my $class = $classes->{$object_name};
+	if (! $class) {
+		# Cannot do it
+		return undef;
+	}
+
+	eval "use $class";
+	if ($@) {
+		# Cannot do it
+		return undef;
+	}
+
+	$obj = $class->new(container => $self);
+	if (! $obj) {
+		# Cannot do it
+		return undef;
+	}
+
+	$self->{objects}->{$object_name} = $obj;
+	return $obj;
+}
+
+# ---------------------------------------------------------------------------
+# Set a reference to the Include object
+# ---------------------------------------------------------------------------
+
+sub setInclude {
+	my ($self, $include) = @_;
+
+	$self->{include} = $include;
+}
+
+sub getInclude {
+	my $self = shift;
+
+	return $self->{include};
+}
+
+# ---------------------------------------------------------------------------
+# Get CGI parameters.
+# That means instantiating objects to hold/process form contents
+# ---------------------------------------------------------------------------
+
+sub getCGIParameters {
+	my ($self, $cgi) = @_;
+
+	my $form = $cgi->param('_form') || '';
+
+	my $hr = { };
+	my @names = $cgi->param();
+	foreach (@names) {
+		next if ($_ eq '_form');
+		$hr->{$_} = $cgi->param($_);
+	}
+
+	if ($form) {
+		my $obj = $self->getObject($form);
+		if ($obj) {
+			$obj->setVars(%$hr);
+		}
+	}
 }
 
 # ---------------------------------------------------------------------------
@@ -231,11 +289,20 @@ sub news {
 # ---------------------------------------------------------------------------
 
 sub viewFunction {
-	my ($self, $include, $function_name, @args) = @_;
+	my ($self, $include, $object_name, $function_name, @args) = @_;
+
+	if ($object_name) {
+		my $obj = getObject($self, $object_name);
+		if (! $obj) {
+			return "<b>No object $object_name</b>";
+		}
+		# Call into the object
+		return $obj->$function_name(@args);
+	}
 
 	if ($function_name eq 'loginBox') {
 		my @contents;
-		push(@contents, loginBox($self->{cookies}));
+		push(@contents, $self->loginBox($self->{cookies}));
 		return join('', @contents);
 	}
 	elsif ($function_name eq 'proposalList') {
@@ -247,7 +314,7 @@ sub viewFunction {
 	elsif ($function_name eq 'runningVotesList') {
 		my @contents;
 		my $votelist = new VoteList(vote_dir => "$ENV{AUSADMIN_HOME}/vote");
-		push(@contents, runningVotesList($votelist));
+		push(@contents, $self->runningVotesList($votelist));
 		return join('', @contents);
 	}
 	elsif ($function_name eq 'newsgroupList') {
