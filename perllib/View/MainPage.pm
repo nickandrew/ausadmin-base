@@ -7,6 +7,8 @@ package View::MainPage;
 use strict;
 use warnings;
 
+use Date::Format qw(time2str);
+
 use VoteList qw();
 use Include qw();
 
@@ -39,119 +41,6 @@ sub addObject {
 	$self->{objects}->{$obj_name} = $obj;
 }
 
-sub proposalList {
-	my $self = shift;
-	my $votelist = shift;
-	my @contents;
-
-	my @proposals = $votelist->voteList('activeProposals');
-
-	if (! @proposals) {
-		return '';
-	}
-
-	my $uri_prefix = $self->{vars}->{URI_PREFIX};
-
-	push(@contents, <<EOF);
-<!-- start of proposals -->
-<p>
-<b>Proposals:</b><br />
-EOF
-
-	foreach my $v (@proposals) {
-		my $p = $v->getName();
-		my $s = "&nbsp;&nbsp;<a href=\"$uri_prefix/proposal.cgi?proposal=$p\">$p</a><br />\n";
-		push(@contents, $s);
-	}
-
-	push(@contents, <<EOF);
-</p>
-<!-- end of proposals -->
-EOF
-	return join('', @contents);
-}
-
-sub runningVotesList {
-	my $self = shift;
-	my $votelist = shift;
-
-	my @contents;
-
-	my @runningvotes = $votelist->voteList('runningVotes');
-
-	if (! @runningvotes) {
-		return '';
-	}
-
-	push(@contents, <<EOF);
-<!-- start of runningvotes -->
-<p>
-<b>Votes&nbsp;running:</b><br />
-EOF
-
-	my $now = time();
-
-	foreach my $v (@runningvotes) {
-		my $p = $v->getName();
-		my $endtime = $v->get_end_time();
-
-		if ($endtime < $now) {
-			# Ignore it completely
-			next;
-		}
-
-		my $ed = int(($endtime - $now)/86400);
-		my $eh = int(($endtime - $now)/3600);
-		my $em = int(($endtime - $now)/60);
-		my $es = ($endtime - $now);
-
-		my $ends = "$es seconds";
-		$ends = "$em minutes" if ($em > 1);
-		$ends = "$eh hours" if ($eh > 1);
-		$ends = "$ed days" if ($ed > 1);
-
-		my $s = "&nbsp;&nbsp;<a href=\"/proposal.cgi?proposal=$p\">$p (ends in $ends)</a><br />\n";
-		push(@contents, $s);
-	}
-
-	push(@contents, <<EOF);
-</p>
-<!-- end of runningvotes -->
-EOF
-
-	return join('', @contents);
-}
-
-sub newsgroupList {
-	my $self = shift;
-
-	my @contents;
-
-	# Return an array of newsgroup names
-	my @newsgrouplist = Newsgroup::list_newsgroups(datadir => "$ENV{AUSADMIN_DATA}");
-
-	if (!@newsgrouplist) {
-		return '';
-	}
-
-	my $uri_prefix = $self->{vars}->{URI_PREFIX};
-
-	push(@contents, <<EOF);
-<p>
-<b>Newsgroups:</b><br />
-EOF
-
-	foreach my $g (@newsgrouplist) {
-		my $s = qq{&nbsp;&nbsp;<a href="$uri_prefix/groupinfo.cgi/$g">$g</a><br />\n};
-		push(@contents, $s);
-	}
-
-	push(@contents, <<EOF);
-</p>
-EOF
-	return join('', @contents);
-}
-
 sub proposalContents {
 	my $self = shift;
 
@@ -171,7 +60,7 @@ sub news {
 
 	if (! $self->{articles}) {
 		require View::Articles;
-		$self->{newsitems} = new View::Articles();
+		$self->{articles} = new View::Articles();
 	}
 
 	my $ni = $self->{articles};
@@ -204,43 +93,94 @@ sub submitArticle {
 
 # ---------------------------------------------------------------------------
 # Instantiate an object of the appropriate type, or return one we have
-# cached.
+# cached. This function is for view objects only.
 # ---------------------------------------------------------------------------
 
 sub getObject {
 	my ($self, $object_name) = @_;
 
-	my $obj = $self->{objects}->{$object_name};
+	# Figure out class and id
+	my ($class, $id);
+	if ($object_name !~ /^([A-Za-z0-9_]+)(\|(.+))?/) {
+		die "Unparseable object name: $object_name";
+	}
+
+	my ($class, $id) = ($1, $3);
+	$id = '' if (!defined $id);
+		
+	my $obj = $self->{objects}->{$class}->{$id};
 	if ($obj) {
 		return $obj;
 	}
 
 	# Now instantiate it
 	my $classes = {
-		articleTemplate => 'ArticleTemplate',
-		loginBox => 'LoginBox',
+		Article => 'View::Article',
+		ArticleTemplate => 'View::ArticleTemplate',
+		Articles => 'View::Articles',
+		NewsgroupList => 'View::NewsgroupList',
+		LoginBox => 'View::LoginBox',
+		ProposalList => 'View::ProposalList',
+		RunningVotesList => 'View::RunningVotesList',
 	};
 
-	my $class = $classes->{$object_name};
-	if (! $class) {
+	my $perl_class = $classes->{$class};
+	if (! $perl_class) {
 		# Cannot do it
+		die "No class defined for $object_name ($class)";
 		return undef;
 	}
 
-	eval "use $class";
+	eval "use $perl_class";
 	if ($@) {
 		# Cannot do it
+		die "Unable to use $perl_class";
 		return undef;
 	}
 
-	$obj = $class->new(container => $self);
+	$obj = $perl_class->new(container => $self, id => $id);
 	if (! $obj) {
 		# Cannot do it
+		die "Unable to instantiate new $perl_class";
 		return undef;
 	}
 
 	$self->{objects}->{$object_name} = $obj;
 	return $obj;
+}
+
+# ---------------------------------------------------------------------------
+# Return a reference to a VoteList
+# ---------------------------------------------------------------------------
+
+sub getVoteList {
+	my $self = shift;
+
+	if (! $self->{votelist}) {
+		$self->{votelist} = new VoteList(vote_dir => "$ENV{AUSADMIN_HOME}/vote");
+	}
+
+	return $self->{votelist};
+}
+
+# ---------------------------------------------------------------------------
+# Return the current username
+# ---------------------------------------------------------------------------
+
+sub getUserName {
+	my $self = shift;
+
+	return $self->{cookies}->getUserName() || 'notloggedin';
+}
+
+# ---------------------------------------------------------------------------
+# Return the current date/time
+# ---------------------------------------------------------------------------
+
+sub dateTime {
+	my $self = shift;
+
+	return time2str('%Y-%m-%d %T', time());
 }
 
 # ---------------------------------------------------------------------------
@@ -280,6 +220,7 @@ sub getCGIParameters {
 		my $obj = $self->getObject($form);
 		if ($obj) {
 			$obj->setVars(%$hr);
+			$obj->executeForm();
 		}
 	}
 }
@@ -291,7 +232,7 @@ sub getCGIParameters {
 sub viewFunction {
 	my ($self, $include, $object_name, $function_name, @args) = @_;
 
-	if ($object_name) {
+	if ($object_name && $object_name ne 'self') {
 		my $obj = getObject($self, $object_name);
 		if (! $obj) {
 			return "<b>No object $object_name</b>";
@@ -300,29 +241,7 @@ sub viewFunction {
 		return $obj->$function_name(@args);
 	}
 
-	if ($function_name eq 'loginBox') {
-		my @contents;
-		push(@contents, $self->loginBox($self->{cookies}));
-		return join('', @contents);
-	}
-	elsif ($function_name eq 'proposalList') {
-		my @contents;
-		my $votelist = new VoteList(vote_dir => "$ENV{AUSADMIN_HOME}/vote");
-		push(@contents, $self->proposalList($votelist));
-		return join('', @contents);
-	}
-	elsif ($function_name eq 'runningVotesList') {
-		my @contents;
-		my $votelist = new VoteList(vote_dir => "$ENV{AUSADMIN_HOME}/vote");
-		push(@contents, $self->runningVotesList($votelist));
-		return join('', @contents);
-	}
-	elsif ($function_name eq 'newsgroupList') {
-		my @contents;
-		push(@contents, $self->newsgroupList());
-		return join('', @contents);
-	}
-	elsif ($function_name eq 'contentFile') {
+	if ($function_name eq 'contentFile') {
 		my $string = $include->resolveFile($self->{content});
 		if (!defined $string) {
 			return "<b>No file $self->{content}</b>";
@@ -333,12 +252,14 @@ sub viewFunction {
 		my $string = $self->proposalContents();
 		return $string;
 	}
-	elsif ($function_name eq 'news') {
-		my $string = $self->news();
-		return $string;
-	}
 
 	return "<b>Unable to do function: $function_name</b>";
+}
+
+sub getSQLDB {
+	my $self = shift;
+
+	return $self->{sqldb};
 }
 
 1;
