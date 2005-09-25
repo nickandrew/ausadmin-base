@@ -118,6 +118,7 @@ sub getObject {
 		Article => 'View::Article',
 		ArticleTemplate => 'View::ArticleTemplate',
 		Articles => 'View::Articles',
+		CommentTemplate => 'View::CommentTemplate',
 		NewsgroupList => 'View::NewsgroupList',
 		LoginBox => 'View::LoginBox',
 		ProposalList => 'View::ProposalList',
@@ -145,7 +146,7 @@ sub getObject {
 		return undef;
 	}
 
-	$self->{objects}->{$object_name} = $obj;
+	$self->{objects}->{$class}->{$id} = $obj;
 	return $obj;
 }
 
