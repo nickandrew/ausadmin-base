@@ -13,6 +13,22 @@ use VoteList qw();
 use Include qw();
 
 # ---------------------------------------------------------------------------
+# Map of HTML object classes to their real class names
+# ---------------------------------------------------------------------------
+
+my $classes = {
+	Article => 'View::Article',
+	ArticleTemplate => 'View::ArticleTemplate',
+	Articles => 'View::Articles',
+	CommentTemplate => 'View::CommentTemplate',
+	NewsgroupList => 'View::NewsgroupList',
+	LoginBox => 'View::LoginBox',
+	ProposalList => 'View::ProposalList',
+	ProposalEdit => 'View::ProposalEdit',
+	RunningVotesList => 'View::RunningVotesList',
+};
+
+# ---------------------------------------------------------------------------
 # Create a new instance of this class.
 # ---------------------------------------------------------------------------
 
@@ -100,7 +116,6 @@ sub getObject {
 	my ($self, $object_name) = @_;
 
 	# Figure out class and id
-	my ($class, $id);
 	if ($object_name !~ /^([A-Za-z0-9_]+)(\|(.+))?/) {
 		die "Unparseable object name: $object_name";
 	}
@@ -114,16 +129,6 @@ sub getObject {
 	}
 
 	# Now instantiate it
-	my $classes = {
-		Article => 'View::Article',
-		ArticleTemplate => 'View::ArticleTemplate',
-		Articles => 'View::Articles',
-		CommentTemplate => 'View::CommentTemplate',
-		NewsgroupList => 'View::NewsgroupList',
-		LoginBox => 'View::LoginBox',
-		ProposalList => 'View::ProposalList',
-		RunningVotesList => 'View::RunningVotesList',
-	};
 
 	my $perl_class = $classes->{$class};
 	if (! $perl_class) {
