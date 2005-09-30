@@ -103,6 +103,10 @@ out("205 Goodbye!\n");
 
 exit(0);
 
+# ---------------------------------------------------------------------------
+# Output data in correct CRLF format to the socket.
+# ---------------------------------------------------------------------------
+
 sub out {
 	my $s = shift;
 
@@ -112,6 +116,10 @@ sub out {
 	print $s;
 }
 
+# ---------------------------------------------------------------------------
+# Log an error to the logfile
+# ---------------------------------------------------------------------------
+
 sub logto {
 	my $s = shift;
 
@@ -119,10 +127,37 @@ sub logto {
 	print LOG "$now > ", $s;
 }
 
+# ---------------------------------------------------------------------------
+# Log an error by emailing it to me
+# ---------------------------------------------------------------------------
+
+sub log_error {
+	my $s = shift;
+
+	open(P, "|/usr/sbin/sendmail nick\@nick-andrew.net");
+	print P <<EOF;
+From: ausadmin\@aus.news-admin.org
+To: nick\@nick-andrew.net
+Subject: nntpd.pl error
+
+Error:
+
+$s
+EOF
+	close(P);
+}
+
+# ---------------------------------------------------------------------------
+# Output the contents of a slice of the active file
+# ---------------------------------------------------------------------------
+
 sub list_active {
 	my($hier, $regex) = @_;
 
-	open(F, "<data/$hier.data/grouplist") || return;
+	if (!open(F, "<data/$hier.data/grouplist")) {
+		log_error("Cannot open data/$hier.data/grouplist\n");
+		return;
+	}
 
 	while (<F>) {
 		m/(\S+)\s*(.*)/;
@@ -147,7 +182,10 @@ sub list_active {
 sub list_newsgroups {
 	my($hier, $regex) = @_;
 
-	open(F, "<data/$hier.data/grouplist") || return;
+	if (!open(F, "<data/$hier.data/grouplist")) {
+		log_error("Cannot open data/$hier.data/grouplist\n");
+		return;
+	}
 
 	while (<F>) {
 		m/(\S+)\s+(.*)/;
