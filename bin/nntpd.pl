@@ -6,6 +6,8 @@
 
 use lib '/home/ausadmin/perllib';
 
+use Date::Format qw(time2str);
+
 use Ausadmin qw();
 
 my $errs = 0;
@@ -19,6 +21,7 @@ $| = 1;
 chdir('/home/ausadmin');
 open(LOG, ">>/home/ausadmin/tmp/nntpd.log");
 
+logto("Connection from $remote\n");
 out("200 ausadmin newsserver welcomes $remote\n");
 
 $SIG{'ALRM'} = sub { out("503 timeout, exiting\n"); exit(0); };
@@ -33,7 +36,8 @@ while (1) {
 	chomp;
 	s/\r//;
 
-	print LOG "$time < ", $_, "\n";
+	my $now = time2str('%Y-%m-%d-%T', time());
+	print LOG "$now < ", $_, "\n";
 
 	if (/mode reader/) {
 		out("200 no-op\n");
@@ -102,18 +106,23 @@ exit(0);
 sub out {
 	my $s = shift;
 
-	print LOG "$time > ", $s;
-
 	$s =~ s/\r//g;
 	$s =~ s/\n/\r\n/g;
 
 	print $s;
 }
- 
+
+sub logto {
+	my $s = shift;
+
+	my $now = time2str('%Y-%m-%d-%T', time());
+	print LOG "$now > ", $s;
+}
+
 sub list_active {
 	my($hier, $regex) = @_;
 
-	open(F, "<$hier.data/grouplist") || return;
+	open(F, "<data/$hier.data/grouplist") || return;
 
 	while (<F>) {
 		m/(\S+)\s*(.*)/;
@@ -134,11 +143,11 @@ sub list_active {
 	close(F);
 }
 
- 
+
 sub list_newsgroups {
 	my($hier, $regex) = @_;
 
-	open(F, "<$hier.data/grouplist") || return;
+	open(F, "<data/$hier.data/grouplist") || return;
 
 	while (<F>) {
 		m/(\S+)\s+(.*)/;
