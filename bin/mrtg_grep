@@ -1,0 +1,37 @@
+#!/usr/bin/perl -w
+#	@(#) $Header$
+#	vim:sw=4:ts=4:
+#
+#	@(#) mrtg_grep: Pick out 4 lines from a mrtg_collect output file
+# Usage: mrtg_grep filename group_name
+#
+
+my $filename = shift @ARGV;
+my $group_name = shift @ARGV;
+
+if (!open(F, "<$filename")) {
+	die "Unable to open $filename: $!\n";
+}
+
+my($name);
+
+while (<F>) {
+	chomp;
+
+	$name = $_;
+
+	my @lines;
+	foreach (0..3) {
+		my $line = <F>;
+		push(@lines, $line);
+	}
+
+	if ($group_name eq $name) {
+		foreach (@lines) {
+			print $_;
+		}
+		exit(0);
+	}
+}
+
+exit(2);
