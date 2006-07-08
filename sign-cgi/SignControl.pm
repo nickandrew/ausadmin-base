@@ -28,7 +28,7 @@ sub new {
 	my $self = { @_ };
 	bless $self, $class;
 
-	$self->{pgpsigner} ||= 'ausadmin@aus.news-admin.org';
+	$self->{pgpsigner} || die "Need to specify pgpsigner";
 
 	# STORING YOUR PASS PHRASE IN A FILE IS A POTENTIAL SECURITY HOLE.
 	# make sure you know what you're doing if you do it.
@@ -58,11 +58,6 @@ sub new {
 	# Subject: is forced to be the Control header prepending by "cmsg".  also,
 	# Newsgroups: is forced to be just the group being added/removed.
 	#             (but is taken as-is for checkgroups)
-	$self->{force}->{'Path'} = 'bounce-back';
-	$self->{force}->{'From'} = 'aus Newsgroups Administration <ausadmin@aus.news-admin.org>';
-	$self->{force}->{'Approved'} = 'ausadmin@aus.news-admin.org';
-	$self->{force}->{'X-Info'}='ftp://ftp.isc.org/pub/pgpcontrol/README.html' . "\n\t" . 'ftp://ftp.isc.org/pub/pgpcontrol/README';
-	$self->{force}->{'X-Aussies'} = 'See http://aus.news-admin.org/ for Australian newsgroup information';
 
 	# host for message-id; this could be determined automatically based on
 	# where it is run, but consistency is the goal here
@@ -110,9 +105,7 @@ my @ignoreheaders = ('Sender');
 # any non-null header in the input but not in @orderheaders or @ignoreheaders
 #   is an error.
 # null headers are silently dropped.
-my @orderheaders =
-  ('Path', 'From', 'Newsgroups', 'Subject', 'Control', 'Approved',
-   'Message-ID', 'Date', 'Lines', 'X-Info', 'X-PGP-Sig');
+my @orderheaders = ('Path', 'From', 'Newsgroups', 'Subject', 'Control', 'Approved', 'Message-ID', 'Date', 'Lines', 'X-Info', 'X-PGP-Sig');
 
 # the draft news article format standard says:
 #   "subsequent components SHOULD begin with a letter"
@@ -354,166 +347,170 @@ sub readbody {
 # style is determined from the name of the program used.
 
 sub pgp_sign {
-  my ($self, $keyid, $passphrase, $message) = @_;
+	my ($self, $keyid, $passphrase, $message) = @_;
 
-  # Ignore SIGPIPE, since we're going to be talking to PGP.
-  local $SIG{PIPE} = 'IGNORE';
+	# Ignore SIGPIPE, since we're going to be talking to PGP.
+	local $SIG{PIPE} = 'IGNORE';
 
-  # Determine the PGP style.
-  my $pgpstyle = 'PGP2';
-  my $pgp = $self->{pgp_command};
+	# Determine the PGP style.
+	my $pgpstyle = 'PGP2';
+	my $pgp = $self->{pgp_command};
 
-  if    ($pgp =~ /pgps$/) { $pgpstyle = 'PGP5' }
-  elsif ($pgp =~ /gpg$/)  { $pgpstyle = 'GPG'  }
+	if    ($pgp =~ /pgps$/) { $pgpstyle = 'PGP5' }
+	elsif ($pgp =~ /gpg$/)  { $pgpstyle = 'GPG'  }
 
-  # Figure out what command line we'll be using.  PGP v6 and PGP v2 use
-  # compatible syntaxes for what we're trying to do.  PGP v5 would have,
-  # except that the -s option isn't valid when you call pgps.  *sigh*
-  my @command;
-  if ($pgpstyle eq 'PGP5') {
-    @command = ($pgp, qw/-baft -u/, $keyid);
-  } elsif ($pgpstyle eq 'GPG') {
-    @command = ($pgp, qw/--detach-sign --armor --textmode -u/, $keyid,
-                qw/--force-v3-sigs --pgp2/);
-  } else {
-    @command = ($pgp, qw/-sbaft -u/, $keyid);
-  }
+	# Figure out what command line we'll be using.  PGP v6 and PGP v2 use
+	# compatible syntaxes for what we're trying to do.  PGP v5 would have,
+	# except that the -s option isn't valid when you call pgps.  *sigh*
+	my @command;
+	if ($pgpstyle eq 'PGP5') {
+		@command = ($pgp, qw/-baft -u/, $keyid);
+	} elsif ($pgpstyle eq 'GPG') {
+		@command = ($pgp, qw/--detach-sign --armor --textmode -u/, $keyid,
+				qw/--force-v3-sigs --pgp2/);
+	} else {
+		@command = ($pgp, qw/-sbaft -u/, $keyid);
+	}
 
-  # We need to send the password to PGP, but we don't want to use either
-  # the command line or an environment variable, since both may expose us
-  # to snoopers on the system.  So we create a pipe, stick the password in
-  # it, and then pass the file descriptor to PGP.  PGP wants to know about
-  # this in an environment variable; GPG uses a command-line flag.
-  # 5.005_03 started setting close-on-exec on file handles > $^F, so we
-  # need to clear that here (but ignore errors on platforms where fcntl or
-  # F_SETFD doesn't exist, if any).
-  #
-  # Make sure that the file handles are created outside of the if
-  # statement, since otherwise they leave scope at the end of the if
-  # statement and are automatically closed by Perl.
-  my $passfh = new FileHandle;
-  my $writefh = new FileHandle;
-  local $ENV{PGPPASSFD};
-  if ($passphrase) {
-    pipe ($passfh, $writefh);
-    eval { fcntl ($passfh, F_SETFD, 0) };
-    print $writefh $passphrase;
-    close $writefh;
-    if ($pgpstyle eq 'GPG') {
-      push (@command, '--batch', '--passphrase-fd', $passfh->fileno);
-    } else {
-      push (@command, '+batchmode');
-      $ENV{PGPPASSFD} = $passfh->fileno;
-    }
-  }
+	# We need to send the password to PGP, but we don't want to use either
+	# the command line or an environment variable, since both may expose us
+	# to snoopers on the system.  So we create a pipe, stick the password in
+	# it, and then pass the file descriptor to PGP.  PGP wants to know about
+	# this in an environment variable; GPG uses a command-line flag.
+	# 5.005_03 started setting close-on-exec on file handles > $^F, so we
+	# need to clear that here (but ignore errors on platforms where fcntl or
+	# F_SETFD doesn't exist, if any).
+	#
+	# Make sure that the file handles are created outside of the if
+	# statement, since otherwise they leave scope at the end of the if
+	# statement and are automatically closed by Perl.
 
-  # Fork off a pgp process that we're going to be feeding data to, and tell
-  # it to just generate a signature using the given key id and pass phrase.
-  my $pgp_fh = new FileHandle;
-  my $signature = new FileHandle;
-  my $errors = new FileHandle;
-  my $pid = eval { open3 ($pgp_fh, $signature, $errors, @command) };
-  if ($@) {
-    die "$@ Execution of $command[0] failed.\n";
-    return undef;
-  }
+	my $passfh = new FileHandle;
+	my $writefh = new FileHandle;
+	local $ENV{PGPPASSFD};
+	if ($passphrase) {
+		pipe ($passfh, $writefh);
+		eval { fcntl ($passfh, F_SETFD, 0) };
+		print $writefh $passphrase;
+		close $writefh;
+		if ($pgpstyle eq 'GPG') {
+			push (@command, '--batch', '--passphrase-fd', $passfh->fileno);
+		} else {
+			push (@command, '+batchmode');
+			$ENV{PGPPASSFD} = $passfh->fileno;
+		}
+	}
 
-  # Write the message to the PGP process.  Strip all trailing whitespace
-  # for compatibility with older pgpverify and attached signature
-  # verification.
-  $message =~ s/[ \t]+\n/\n/g;
-  print $pgp_fh $message;
+	# Fork off a pgp process that we're going to be feeding data to, and tell
+	# it to just generate a signature using the given key id and pass phrase.
 
-  # All done.  Close the pipe to PGP, clean up, and see if we succeeded.
-  # If not, save the error output and return undef.
-  close $pgp_fh;
+	my $pgp_fh = new FileHandle;
+	my $signature = new FileHandle;
+	my $errors = new FileHandle;
+	my $pid = eval { open3 ($pgp_fh, $signature, $errors, @command) };
+	if ($@) {
+		die "$@ Execution of $command[0] failed.\n";
+		return undef;
+	}
 
-  local $/ = "\n";
-  my @errors = <$errors>;
-  my @signature = <$signature>;
-  close $signature;
-  close $errors;
-  close $passfh if $passphrase;
-  waitpid ($pid, 0);
-  if ($? != 0) {
-    die "@errors $command[0] returned exit status $?";
-  }
+	# Write the message to the PGP process.  Strip all trailing whitespace
+	# for compatibility with older pgpverify and attached signature
+	# verification.
 
-  # Now, clean up the returned signature and return it, along with the
-  # version number if desired.  PGP v2 calls this a PGP MESSAGE, whereas
-  # PGP v5 and v6 and GPG both (more correctly) call it a PGP SIGNATURE,
-  # so accept either.
-  while ((shift @signature) !~ /-----BEGIN PGP \S+-----\n/) {
-    unless (@signature) {
-      die "No signature from PGP (command not found?)";
-    }
-  }
-  my $version;
-  while ($signature[0] ne "\n" && @signature) {
-    $version = $1 if ((shift @signature) =~ /^Version:\s+(.*?)\s*$/);
-  }
-  shift @signature;
-  pop @signature;
-  $signature = join ('', @signature);
-  chomp $signature;
-  return wantarray ? ($signature, $version) : $signature;
+	$message =~ s/[ \t]+\n/\n/g;
+	print $pgp_fh $message;
+
+	# All done.  Close the pipe to PGP, clean up, and see if we succeeded.
+	# If not, save the error output and return undef.
+
+	close $pgp_fh;
+
+	local $/ = "\n";
+	my @errors = <$errors>;
+	my @signature = <$signature>;
+	close $signature;
+	close $errors;
+	close $passfh if $passphrase;
+	waitpid ($pid, 0);
+	if ($? != 0) {
+		die "@errors $command[0] returned exit status $?";
+	}
+
+	# Now, clean up the returned signature and return it, along with the
+	# version number if desired.  PGP v2 calls this a PGP MESSAGE, whereas
+	# PGP v5 and v6 and GPG both (more correctly) call it a PGP SIGNATURE,
+	# so accept either.
+
+	while ((shift @signature) !~ /-----BEGIN PGP \S+-----\n/) {
+		unless (@signature) {
+			die "No signature from PGP (command not found?)";
+		}
+	}
+
+	my $version;
+	while ($signature[0] ne "\n" && @signature) {
+		$version = $1 if ((shift @signature) =~ /^Version:\s+(.*?)\s*$/);
+	}
+	shift @signature;
+	pop @signature;
+	$signature = join ('', @signature);
+	chomp $signature;
+	return wantarray ? ($signature, $version) : $signature;
 }
 
 sub signit {
 	my ($self, $headers, $body) = @_;
 
-  # Form the message to be signed.
-  my $signheaders = join(",", @signheaders);
-  my $head = "X-Signed-Headers: $signheaders\n";
-  foreach my $header (@signheaders) {
-    $head .= "$header: $headers->{$header}\n";
-  }
+	# Form the message to be signed.
+	my $signheaders = join(",", @signheaders);
+	my $head = "X-Signed-Headers: $signheaders\n";
+	foreach my $header (@signheaders) {
+		$head .= "$header: $headers->{$header}\n";
+	}
 
-  my $message = "$head\n$body";
+	my $message = "$head\n$body";
 
-  # Get the passphrase if available.
-  my $passphrase;
-  my $pgppassfile = $self->{pgppassfile};
+	# Get the passphrase if available.
+	my $passphrase;
+	my $pgppassfile = $self->{pgppassfile};
 
-  if ($pgppassfile && -f $pgppassfile) {
-    $pgppassfile =~ s%^(\s)%./$1%;
-    if (open (PGPPASS, "< $pgppassfile\0")) {
-      $passphrase = <PGPPASS>;
-      close PGPPASS;
-      chomp $passphrase;
-    }
-  }
+	if ($pgppassfile && -f $pgppassfile) {
+		$pgppassfile =~ s%^(\s)%./$1%;
+		if (open (PGPPASS, "< $pgppassfile\0")) {
+			$passphrase = <PGPPASS>;
+			close PGPPASS;
+			chomp $passphrase;
+		}
+	}
 
-	$message .= "\n";
-	$message .= $body;
+	# Sign the message, getting the signature and PGP version number.
+	my $pgpsigner = $self->{pgpsigner};
+	my ($signature, $version) = $self->pgp_sign($pgpsigner, $passphrase, $message);
+	unless ($signature) {
+		die "Could not generate signature\n";
+	}
 
-  # Sign the message, getting the signature and PGP version number.
-  my $pgpsigner = $self->{pgpsigner};
-  my ($signature, $version) = $self->pgp_sign($pgpsigner, $passphrase, $message);
-  unless ($signature) {
-    die "Could not generate signature\n";
-  }
+	# GnuPG has version numbers containing spaces, which breaks our header
+	# format.  Find just some portion that contains a digit.
+	($version) = ($version =~ /(\S*\d\S*)/);
 
-  # GnuPG has version numbers containing spaces, which breaks our header
-  # format.  Find just some portion that contains a digit.
-  ($version) = ($version =~ /(\S*\d\S*)/);
+	# Put the signature into the headers.
+	$signature =~ s/^/\t/mg;
+	$headers->{'X-PGP-Sig'} = "$version $signheaders\n$signature";
+	$head = '';
 
-  # Put the signature into the headers.
-  $signature =~ s/^/\t/mg;
-  $headers->{'X-PGP-Sig'} = "$version $signheaders\n$signature";
+	for (@ignoreheaders) {
+		delete $headers->{$_} if defined $headers->{$_};
+	}
 
-  for (@ignoreheaders) {
-    delete $headers->{$_} if defined $headers->{$_};
-  }
+	foreach my $header (@orderheaders) {
+		$head .= "$header: $headers->{$header}\n" if $headers->{$header};
+		delete $headers->{$header};
+	}
 
-  foreach my $header (@orderheaders) {
-    $head .= "$header: $headers->{$header}\n" if $headers->{$header};
-    delete $headers->{$header};
-  }
-
-  foreach my $header (keys %$headers) {
-    die "unexpected header $header left in header array\n";
-  }
+	foreach my $header (keys %$headers) {
+		die "unexpected header $header left in header array\n";
+	}
 
 	return $head . "\n" . $body;
 }
