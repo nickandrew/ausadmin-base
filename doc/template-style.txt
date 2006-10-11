@@ -1,0 +1,20 @@
+Templates
+
+Submit an article:
+
+  - A link from the header-links to 'Ausadmin/SubmitArticle'
+  - Ausadmin/SubmitArticle is content, containing a view View::ArticleTemplate::form
+  - ArticleTemplate::form includes article-template.html
+  - article-template.html is content, containing a view View::ArticleTemplate::preview
+
+Main page (view recent articles):
+
+  - Ausadmin.dir/Default is content, containing a view View::Articles::asHTML
+  - View::Articles::asHTML creates all its html, including:
+    - a GET link to /ausadmin/index.cgi/Ausadmin/SubmitComment
+
+Submit a comment:
+
+  - Ausadmin/SubmitComment is content, containing a view CommentTemplate::form
+  - CommentTemplate::form includes comment-template.html
+  - comment-template.html is content, containing a view CommentTemplate::preview
