@@ -40,7 +40,7 @@ foreach my $group (@groups) {
 
 	print "Title[$group]: $group\n";
 	print "PageTop[$group]: <h1>$group</h1>\n";
-	print "Target[$group]: `/usr/local/sbin/mrtg_grep $data_path news-arrival:$group`\n";
+	print "Target[$group]: `/home/ausadmin/bin/mrtg_grep $data_path news-arrival:$group`\n";
 	print "MaxBytes[$group]: 20000\n";
 	print "Options[$group]: gauge,growright,nopercent\n";
 	print "ShortLegend[$group]: art/day\n";

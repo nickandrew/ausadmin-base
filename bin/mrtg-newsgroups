@@ -1,7 +1,10 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 #	@(#) mrtg-newsgroups: Create a mrtg file for newsgroup traffic
+#	vim:sw=4:ts=4:
 #
 #  Usage: mrtg-newsgroups nglist_file [config_file [arrival_file]]
+
+use strict;
 
 use Net::NNTP;
 use XML::Simple qw();
@@ -28,7 +31,12 @@ my $config;
 
 if (-f $config_file) {
 	$config = XML::Simple::XMLin($config_file);
-} else {
+	if (!exists $config->{newsgroup}) {
+		undef $config;
+	}
+}
+
+if (!defined $config) {
 	$config = { newsgroup => { } };
 }
 

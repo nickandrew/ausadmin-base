@@ -34,7 +34,8 @@ DONE - As newsgroup data structures are updated, also update summary data
  - Decide where our directory dependencies are:
    - current directory
    - AUSADMIN_HOME
-   - PATH or PERLLIB
+   - PATH
+   - PERLLIB
 
  - Change the code to enforce those dependencies consistently.
 
