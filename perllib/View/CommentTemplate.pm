@@ -11,6 +11,28 @@ use strict;
 use base 'Contained';
 use Carp qw(carp confess);
 
+# ---------------------------------------------------------------------------
+# A CommentTemplate was submitted. What do we do with it?
+# ---------------------------------------------------------------------------
+
+sub executeForm {
+	my $self = shift;
+
+	my $action = $self->{vars}->{action} || '';
+
+	if ($action eq 'Submit') {
+		submitComment($self);
+		$self->{submitted} = 1;
+		print "Thanks, I submitted it.\n";
+	}
+
+	# Otherwise do nothing
+}
+
+# ---------------------------------------------------------------------------
+# Preview this comment
+# ---------------------------------------------------------------------------
+
 sub preview {
 	my $self = shift;
 
@@ -26,6 +48,7 @@ sub preview {
 Your comment will look something like this:<br>
 Subject: $subject<br>
 $contents
+<hr>
 };
 
 	return $s;
@@ -37,8 +60,7 @@ sub form {
 	my $action = $self->{vars}->{action} || '';
 
 	if ($action eq 'Submit') {
-		submitComment($self);
-		return 'Thanks, I submitted it';
+		return 'Your new comment was submitted';
 	}
 
 	my $include = $self->{container}->getInclude();

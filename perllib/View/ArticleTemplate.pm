@@ -11,6 +11,28 @@ use strict;
 use base 'Contained';
 use Carp qw(carp confess);
 
+# ---------------------------------------------------------------------------
+# An ArticleTemplate was submitted. What do we do with it?
+# ---------------------------------------------------------------------------
+
+sub executeForm {
+	my $self = shift;
+
+	my $action = $self->{vars}->{action} || '';
+
+	if ($action eq 'Submit') {
+		submitArticle($self);
+		$self->{submitted} = 1;
+		print "Thanks, I submitted it.\n";
+	}
+
+	# Otherwise do nothing
+}
+
+# ---------------------------------------------------------------------------
+# Return HTML constituting a preview
+# ---------------------------------------------------------------------------
+
 sub preview {
 	my $self = shift;
 
@@ -26,19 +48,21 @@ sub preview {
 Your article will look something like this:<br>
 Subject: $subject<br>
 $contents
+<hr>
 };
 
 	return $s;
 }
 
+# ---------------------------------------------------------------------------
+# Return HTML constituting a preview
+# ---------------------------------------------------------------------------
+
 sub form {
 	my $self = shift;
 
-	my $action = $self->{vars}->{action} || '';
-
-	if ($action eq 'Submit') {
-		submitArticle($self);
-		return 'Thanks, I submitted it';
+	if ($self->{submitted}) {
+		return 'Your new article was submitted';
 	}
 
 	my $include = $self->{container}->getInclude();

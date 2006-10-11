@@ -27,9 +27,8 @@ sub new {
 sub asHTML {
 	my ($self) = @_;
 
-	my $text = proposalInputForm($self);
-
-	return $text;
+	my $include = $self->{container}->getInclude();
+	return $include->resolveFile("proposal-template.html");
 }
 
 # ---------------------------------------------------------------------------

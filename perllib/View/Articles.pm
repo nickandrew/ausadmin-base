@@ -64,8 +64,7 @@ EOF
  <input type="hidden" name="_form" value="Article|$id" />
  <input type="submit" name="action" value="delete" />
 </form>
-<form style="display: inline" method="POST">
- <input type="hidden" name="_form" value="Article|$id" />
+<form style="display: inline" method="GET" action="/ausadmin/index.cgi/Ausadmin/SubmitComment">
  <input type="hidden" name="article_id" value="$id" />
  <input type="submit" name="action" value="comment" />
 </form>
