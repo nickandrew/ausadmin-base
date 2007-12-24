@@ -1,0 +1,104 @@
+#!/bin/bash
+# @(#) logrun - 1999-03-24 - Run a script and log output to a file
+#	If its rc != 0 then copy script's stdout and stderr to our stdout
+#
+
+if [ $# -lt 1 ] ;  then
+	echo "* Usage: logrun command [arguments ...]"
+	echo "Optional environment variables:"
+	echo "   LOGDIR = directory to contain output files"
+	echo "   MAILTO = E-mail address for logs containing errors"
+	exit 2
+fi
+
+umask 027
+
+domail=0
+yyyymm=`date '+%Y%m'`
+
+if [ "x$MAILTO" = "x" ] ; then
+	gods="nick@tull.net"
+else
+	gods="$MAILTO"
+	domail=1
+fi
+
+# Initialise logdir: ~/Logrun takes precedence over /var/log/Logrun
+# If neither of those are directories and writable, use /tmp
+if [ "x$LOGDIR" = "x" ] ; then
+	ld=/tmp
+	nld=/var/log/Logrun
+	if [ -d $nld -a -w $nld ] ; then ld=$nld; fi
+	nld=~/Logrun
+	if [ -d $nld -a -w $nld ] ; then ld=$nld; fi
+else
+	ld="$LOGDIR"
+fi
+
+# Unfortunately this loop cannot be used to read multi-word parameters
+# (i.e. -p value) because the 2 shifts you do don't affect the list which
+# is traversed in the "for" statement.
+for i do
+	case "$i" in
+		-m)
+			domail=1
+			shift
+			continue;;
+		*)
+			break;;
+	esac
+done
+
+lf=$ld/log.$yyyymm
+
+cmd=`basename $1`
+now=`date '+%Y%m%d-%H%M%S'`
+
+tofn=$ld/$cmd.$now.$$
+
+$* < /dev/null > $tofn.1 2> $tofn.2
+rc=$?
+
+echo "$rc $tofn $*" >> $lf
+
+if [ $rc = 0 ] ; then
+	if [ -d $ld/ok -a -w $ld/ok ] ; then
+		mv $tofn.1 $tofn.2 $ld/ok/
+	fi
+	exit 0
+fi
+
+if [ $domail = 1 ] ; then
+	( \
+	echo "From: $USER" ; \
+	echo "To: $gods" ; \
+	echo "Subject: Logrun error $cmd $now" ; \
+	echo "X-Logrun: from $USER" ; \
+	echo "" ; \
+	echo "(Command: $*)" ; \
+	echo "(Files: $tofn)" ; \
+	echo "(Status: $rc)" ; \
+	echo "Standard Output follows: ------------------------------------------------" ; \
+	cat $tofn.1 ; \
+	echo "Standard Error follows: ------------------------------------------------" ; \
+	cat $tofn.2 ; \
+	echo "End of output: ------------------------------------------------" ; \
+	) | /usr/sbin/sendmail $gods
+else
+	echo "(Command: $*)"
+	echo "(Files: $tofn)"
+	echo "(Status: $rc)"
+	echo "Standard Output follows: ------------------------------------------------"
+	cat $tofn.1
+	echo "Standard Error follows: ------------------------------------------------"
+	cat $tofn.2
+	echo "End of output: ------------------------------------------------"
+fi
+
+if [ -d $ld/bad -a -w $ld/bad ] ; then
+	mv $tofn.1 $tofn.2 $ld/bad/
+fi
+
+exit $rc
+
+# end of logrun
