@@ -1,16 +1,18 @@
 #!/bin/bash
 #	Run from cron each 5 minutes
 
-DATADIR=~/data/aus.data
+HIER=${1:-aus}
+
+DATADIR=~/data/$HIER.data
 
 ts=`date '+%Y%m%d%H%M%S'`
-mrtg-newsgroups $DATADIR/checkgroups $DATADIR/mrtg-newsgroups-config.xml ~/tmp/mrtg-newsgroups-arrival.log > ~/tmp/news-$ts.mrtg 2> tmp/missing-groups
+mrtg-newsgroups $DATADIR/checkgroups $DATADIR/mrtg-newsgroups-config.xml $DATADIR/mrtg-newsgroups-arrival-$HIER.log > $DATADIR/news-$ts.mrtg 2> $DATADIR/missing-groups
 s=$?
 
 if [ $s -eq 0 ] ; then
 	echo 0 > $DATADIR/ng-fail-count
-	mv ~/tmp/news-$ts.mrtg ~/Mrtg/news-latest.mrtg
-	mrtg ~/Mrtg/newsgroups.cfg
+	mv $DATADIR/news-$ts.mrtg ~/Mrtg/news-latest-$HIER.mrtg
+	#mrtg ~/Mrtg/newsgroups.cfg
 else
 	NG_FAIL=$(cat $DATADIR/ng-fail-count)
 	NG_FAIL=$(expr $NG_FAIL + 1)
@@ -22,7 +24,8 @@ else
 	rm -f ~/tmp/news-$ts.mrtg
 fi
 
-bin/mrtg-newsgroups-arrival.pl > ~/Mrtg/arrival/news-latest.mrtg
-mrtg ~/Mrtg/arrival/newsgroups.cfg
+bin/mrtg-newsgroups-arrival.pl -f $DATADIR/mrtg-newsgroups-arrival-$HIER.log > ~/Mrtg/arrival/news-latest-$HIER.mrtg
+
+mrtg ~/Mrtg/arrival/newsgroups-$HIER.cfg
 
 exit 0
