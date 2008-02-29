@@ -24,7 +24,7 @@ else
 	rm -f ~/tmp/news-$ts.mrtg
 fi
 
-bin/mrtg-newsgroups-arrival.pl -f $DATADIR/mrtg-newsgroups-arrival-$HIER.log > ~/Mrtg/arrival/news-latest-$HIER.mrtg
+~/bin/mrtg-newsgroups-arrival.pl -f $DATADIR/mrtg-newsgroups-arrival-$HIER.log > ~/Mrtg/arrival/news-latest-$HIER.mrtg
 
 mrtg ~/Mrtg/arrival/newsgroups-$HIER.cfg
 
