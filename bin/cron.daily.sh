@@ -9,7 +9,7 @@ HIER=${1:-aus}
 DATADIR=data/$HIER.data
 
 # Make a new mrtg.cfg file for all aus groups
-make-mrtg-newsgroups.pl $DATADIR/checkgroups $AUSADMIN_HOME/config/mrtg.head $AUSADMIN_HOME/Mrtg/news-latest-$HIER.mrtg > $AUSADMIN_HOME/tmp/$$.cfg
+make-mrtg-newsgroups.pl $DATADIR/checkgroups $DATADIR/mrtg.head $AUSADMIN_HOME/Mrtg/news-latest-$HIER.mrtg > $AUSADMIN_HOME/tmp/$$.cfg
 s=$?
 
 if [ $s -eq 0 ] ; then
