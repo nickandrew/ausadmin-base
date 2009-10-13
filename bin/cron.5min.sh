@@ -6,7 +6,7 @@ HIER=${1:-aus}
 DATADIR=~/data/$HIER.data
 
 ts=`date '+%Y%m%d%H%M%S'`
-TEMPFILE="~/tmp/news-$ts.mrtg"
+TEMPFILE="$HOME/tmp/news-$ts.mrtg"
 FAILCOUNT_FILE="$DATADIR/server-fail-count"
 
 # Create a file in my 5-line mrtg format containing the highwater article
