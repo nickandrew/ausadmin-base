@@ -1,0 +1,7 @@
+Syncing newsgroup list with diablo:
+
+dsyncgroups -h aus.news-admin.org -w aus.* -a -D
+dsyncgroups -h aus.news-admin.org -w bne.* -a -D
+dsyncgroups -h aus.news-admin.org -w canb.* -a -D
+dsyncgroups -h aus.news-admin.org -w melb.* -a -D
+dsyncgroups -h aus.news-admin.org -w syd.* -a -D
